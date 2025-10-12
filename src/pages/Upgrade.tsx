@@ -37,7 +37,8 @@ const Upgrade = () => {
         body: JSON.stringify({
           plan: planType,
           interval,
-          customerEmail: user.email
+          customerEmail: user.email,
+          userId: user.uid
         })
       });
 
