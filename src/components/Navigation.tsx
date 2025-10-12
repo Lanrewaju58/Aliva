@@ -207,7 +207,7 @@ const Navigation = () => {
   return (
     <nav className="fixed top-6 left-0 right-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 relative">
-        <div className="h-14 sm:h-16 rounded-full bg-white shadow-xl border border-black/5 flex items-center justify-between px-3 sm:px-6 overflow-hidden">
+        <div className="h-14 sm:h-16 rounded-full bg-white shadow-xl border border-black/5 flex items-center justify-between px-2 sm:px-3 md:px-6 overflow-hidden">
           {/* Logo */}
           <div 
             className="flex items-center space-x-3 cursor-pointer group"
@@ -223,7 +223,7 @@ const Navigation = () => {
               <img 
                 src="/logo.svg" 
                 alt="Aliva Logo" 
-                className="h-10 w-auto shrink-0"
+                className="h-8 sm:h-10 w-auto shrink-0"
                 onError={(e) => {
                   // Fallback in case logo.svg is not found
                   console.warn("Logo image not found, check if /logo.svg exists in public folder");
@@ -291,36 +291,118 @@ const Navigation = () => {
             )}
           </div>
 
-          {/* Mobile menu icon on the far right */}
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-primary/10 transition-colors"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Menu"
-          >
-            {isMenuOpen ? (
-              <X className="w-6 h-6 text-primary" />
-            ) : (
-              <Menu className="w-6 h-6 text-primary" />
+          {/* Mobile upgrade button and menu */}
+          <div className="lg:hidden flex items-center gap-1 sm:gap-2">
+            {/* Upgrade button - only show if user is not on paid plan */}
+            {user && (!accountPlan || accountPlan === 'FREE') && (
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-xs px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-full min-w-0"
+                onClick={() => navigate('/upgrade')}
+              >
+                <Crown className="w-3 h-3 sm:mr-1" />
+                <span className="hidden sm:inline">Upgrade</span>
+                <span className="sm:hidden">Pro</span>
+              </Button>
             )}
-          </button>
+            
+            {/* Show plan status for paid users */}
+            {user && accountPlan && accountPlan !== 'FREE' && (
+              <div className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                {accountPlan}
+              </div>
+            )}
+            
+            {/* Mobile menu icon */}
+            <button
+              className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Menu"
+            >
+              {isMenuOpen ? (
+                <X className="w-6 h-6 text-primary" />
+              ) : (
+                <Menu className="w-6 h-6 text-primary" />
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile flyout with a single action button */}
+        {/* Mobile flyout with multiple action buttons */}
         {isMenuOpen && (
-          <div className="md:hidden absolute right-3 top-full mt-2 bg-white border border-black/5 rounded-xl shadow-xl p-2">
+          <div className="lg:hidden absolute right-3 top-full mt-2 bg-white border border-black/5 rounded-xl shadow-xl p-3 min-w-[200px]">
             {user ? (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
-                  {userInitials}
+              <div className="space-y-2">
+                {/* User info */}
+                <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
+                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
+                    {userInitials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">
+                      {user.displayName || user.email}
+                    </div>
+                    {accountPlan && (
+                      <div className="text-xs text-gray-500">
+                        {accountPlan}
+                        {accountExpiry && <span className="ml-1">(exp {accountExpiry})</span>}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <Button size="sm" className="rounded-full" onClick={() => { setIsMenuOpen(false); navigate('/profile'); }}>
-                  Profile
-                </Button>
+                
+                {/* Action buttons */}
+                <div className="space-y-1">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="w-full justify-start" 
+                    onClick={() => { setIsMenuOpen(false); navigate('/profile'); }}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Profile Settings
+                  </Button>
+                  
+                  <Button 
+                    size="sm" 
+                    className="w-full justify-start bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white" 
+                    onClick={() => { setIsMenuOpen(false); navigate('/upgrade'); }}
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade to Pro
+                  </Button>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" 
+                    onClick={() => { setIsMenuOpen(false); handleAuthAction(); }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
               </div>
             ) : (
-              <Button size="sm" className="rounded-full" onClick={() => { setIsMenuOpen(false); navigate('/auth'); }}>
-                <User className="w-4 h-4 mr-2" /> Sign In
-              </Button>
+              <div className="space-y-2">
+                <Button 
+                  size="sm" 
+                  className="w-full" 
+                  onClick={() => { setIsMenuOpen(false); navigate('/auth'); }}
+                >
+                  <User className="w-4 h-4 mr-2" /> Sign In
+                </Button>
+                
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => { setIsMenuOpen(false); navigate('/upgrade'); }}
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  View Plans
+                </Button>
+              </div>
             )}
           </div>
         )}
