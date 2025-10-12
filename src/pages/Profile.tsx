@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +30,7 @@ import { ArrowLeft, LogOut } from 'lucide-react';
 
 const Profile: React.FC = () => {
   const { user, loading, signOut } = useAuth();
+  const { theme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -150,22 +152,22 @@ const Profile: React.FC = () => {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-background">
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gradient-to-b from-primary/10 to-background' : 'bg-gradient-to-b from-primary/10 to-white'}`}>
         <div className="flex flex-col items-center gap-8">
           <img src="/logo.svg" alt="Aliva logo" className="h-28 w-28 animate-pulse" />
           <div className="h-16 w-16 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <div className="text-foreground text-base">Authenticating…</div>
+          <div className={`text-base ${theme === 'dark' ? 'text-foreground' : 'text-gray-700'}`}>Authenticating…</div>
         </div>
       </div>
     );
   }
   if (pageLoading || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-background">
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gradient-to-b from-primary/10 to-background' : 'bg-gradient-to-b from-primary/10 to-white'}`}>
         <div className="flex flex-col items-center gap-9">
           <img src="/logo.svg" alt="Aliva logo" className="h-32 w-32 animate-pulse" />
           <div className="h-20 w-20 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <div className="text-foreground text-base">Loading your profile…</div>
+          <div className={`text-base ${theme === 'dark' ? 'text-foreground' : 'text-gray-700'}`}>Loading your profile…</div>
         </div>
       </div>
     );

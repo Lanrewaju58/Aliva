@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -25,9 +25,15 @@
 
   <body>
     <script>
-      // Apply dark theme immediately to prevent flash
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
+      // Apply saved theme immediately to prevent flash
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        document.documentElement.classList.add(savedTheme);
+      } else {
+        // Default to dark if no saved theme
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

@@ -13,7 +13,7 @@ const BenefitsSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           {/* Left image mock */}
-          <div className="rounded-3xl overflow-hidden border border-black/5 shadow-xl h-[320px] md:h-[420px] bg-[url('https://images.unsplash.com/photo-1552611052-33e04de081de?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGZvb2QlMjBwaG90b2dyYXBoeXxlbnwwfHwwfHx8MA%3D%3D')] bg-cover bg-center" />
+          <div className="rounded-3xl overflow-hidden border border-border shadow-xl h-[320px] md:h-[420px] bg-[url('https://images.unsplash.com/photo-1552611052-33e04de081de?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGZvb2QlMjBwaG90b2dyYXBoeXxlbnwwfHwwfHx8MA%3D%3D')] bg-cover bg-center" />
 
           {/* Right text + icons */}
           <div>

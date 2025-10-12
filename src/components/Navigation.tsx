@@ -119,15 +119,29 @@ const Navigation = () => {
     return () => clearInterval(interval);
   }, [quotes.length]);
   const [lineH, setLineH] = useState(40); // default h-10
+  const [mobileLineH, setMobileLineH] = useState(24); // default h-6
   const lineRef = useRef<HTMLDivElement | null>(null);
+  const mobileLineRef = useRef<HTMLDivElement | null>(null);
   const lastScrollRef = useRef<number>(0);
   const touchStartYRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (lineRef.current) {
-      const rect = lineRef.current.getBoundingClientRect();
-      setLineH(rect.height || 40);
-    }
+    const updateLineHeight = () => {
+      if (lineRef.current) {
+        const rect = lineRef.current.getBoundingClientRect();
+        setLineH(rect.height || 32);
+      }
+      if (mobileLineRef.current) {
+        const rect = mobileLineRef.current.getBoundingClientRect();
+        setMobileLineH(rect.height || 24);
+      }
+    };
+    
+    updateLineHeight();
+    
+    // Update on window resize
+    window.addEventListener('resize', updateLineHeight);
+    return () => window.removeEventListener('resize', updateLineHeight);
   }, []);
 
   useEffect(() => {
@@ -137,36 +151,39 @@ const Navigation = () => {
       lastScrollRef.current = now;
       setQuoteIdx((prev) => {
         const dir = e.deltaY > 0 ? 1 : -1;
-        const next = (prev + dir + quotes.length) % quotes.length;
-        return next;
+        return Math.max(0, Math.min(quotes.length - 1, prev + dir));
       });
     };
 
     const onTouchStart = (e: TouchEvent) => {
       touchStartYRef.current = e.touches[0].clientY;
     };
+
     const onTouchEnd = (e: TouchEvent) => {
-      const startY = touchStartYRef.current;
-      if (startY == null) return;
-      const dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dy) < 24) return; // small swipe ignored
-      const now = Date.now();
-      if (now - lastScrollRef.current < 350) return;
-      lastScrollRef.current = now;
-      setQuoteIdx((prev) => {
-        const dir = dy < 0 ? 1 : -1; // swipe up -> next
-        const next = (prev + dir + quotes.length) % quotes.length;
-        return next;
-      });
+      if (touchStartYRef.current === null) return;
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaY = touchStartYRef.current - touchEndY;
+      
+      if (Math.abs(deltaY) > 50) { // minimum swipe distance
+        const now = Date.now();
+        if (now - lastScrollRef.current < 350) return;
+        lastScrollRef.current = now;
+        setQuoteIdx((prev) => {
+          const dir = deltaY > 0 ? 1 : -1;
+          return Math.max(0, Math.min(quotes.length - 1, prev + dir));
+        });
+      }
+      touchStartYRef.current = null;
     };
 
-    window.addEventListener('wheel', onWheel, { passive: true });
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.addEventListener('wheel', onWheel, { passive: true });
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+
     return () => {
-      window.removeEventListener('wheel', onWheel as any);
-      window.removeEventListener('touchstart', onTouchStart as any);
-      window.removeEventListener('touchend', onTouchEnd as any);
+      document.removeEventListener('wheel', onWheel);
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchend', onTouchEnd);
     };
   }, [quotes.length]);
 
@@ -208,10 +225,10 @@ const Navigation = () => {
   return (
     <nav className="fixed top-6 left-0 right-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 relative">
-        <div className="h-14 sm:h-16 rounded-full bg-card shadow-xl border border-border flex items-center justify-between px-2 sm:px-3 md:px-6 overflow-hidden">
+        <div className="h-14 sm:h-16 rounded-full bg-card shadow-xl border border-border flex items-center px-2 sm:px-3 md:px-6 overflow-hidden">
           {/* Logo */}
           <div 
-            className="flex items-center space-x-3 cursor-pointer group"
+            className="flex items-center cursor-pointer group shrink-0"
             onClick={() => {
               if (location.pathname !== '/') {
                 navigate('/#home');
@@ -224,7 +241,7 @@ const Navigation = () => {
               <img 
                 src="/logo.svg" 
                 alt="Aliva Logo" 
-                className="h-8 sm:h-10 w-auto shrink-0"
+                className="h-8 sm:h-10 w-auto"
                 onError={(e) => {
                   // Fallback in case logo.svg is not found
                   console.warn("Logo image not found, check if /logo.svg exists in public folder");
@@ -233,16 +250,16 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* Animated quotes */}
-          <div className="flex flex-1 min-w-0 justify-center text-sm sm:text-base md:text-lg lg:text-xl font-semibold">
-            <div ref={lineRef} className="overflow-hidden h-8 sm:h-10 md:h-12 relative w-full max-w-[1000px] text-center min-w-0">
+          {/* Animated quotes - Center */}
+          <div className="flex flex-1 min-w-0 justify-center items-center text-sm sm:text-base md:text-lg lg:text-xl font-semibold mx-4">
+            <div ref={lineRef} className="overflow-hidden h-8 sm:h-10 md:h-12 relative w-full text-center min-w-0 flex items-center justify-center">
               <div
-                className="absolute left-0 right-0 top-0"
-                style={{ transform: `translateY(-${quoteIdx * lineH}px)`, transition: 'transform 320ms ease' }}
+                className="absolute left-1/2 top-0 transform -translate-x-1/2 w-full"
+                style={{ transform: `translateX(-50%) translateY(-${quoteIdx * lineH}px)`, transition: 'transform 320ms ease' }}
               >
                 {quotes.map((q, i) => (
-                  <div key={i} className={`h-8 sm:h-10 md:h-12 flex items-center justify-center font-semibold whitespace-nowrap opacity-100 bg-gradient-to-r ${q.g} bg-clip-text text-transparent`}>
-                    {`"${q.t}"`}
+                  <div key={i} className={`h-8 sm:h-10 md:h-12 flex items-center justify-center font-semibold opacity-100 bg-gradient-to-r ${q.g} bg-clip-text text-transparent text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg px-2 w-full`}>
+                    <span className="text-center truncate max-w-full">{`"${q.t}"`}</span>
                   </div>
                 ))}
               </div>
@@ -259,11 +276,9 @@ const Navigation = () => {
                       {userInitials}
                     </div>
                     {user.displayName || user.email}
-                    {accountPlan && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full border">
-                        {accountPlan}
-                      </span>
-                    )}
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                      {userInitials}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -291,41 +306,60 @@ const Navigation = () => {
             )}
           </div>
 
-          {/* Mobile upgrade button and menu */}
-          <div className="lg:hidden flex items-center gap-1 sm:gap-2">
+          {/* Mobile navigation with quotes */}
+          <div className="lg:hidden flex items-center gap-0.5 sm:gap-1 flex-1 min-w-0 max-w-full">
             
-            {/* Upgrade button - only show if user is not on paid plan */}
-            {user && (!accountPlan || accountPlan === 'FREE') && (
-              <Button 
-                size="sm" 
-                className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-xs px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-full min-w-0"
-                onClick={() => navigate('/upgrade')}
-              >
-                <Crown className="w-3 h-3 sm:mr-1" />
-                <span className="hidden sm:inline">Upgrade</span>
-                <span className="sm:hidden">Pro</span>
-              </Button>
-            )}
-            
-            {/* Show plan status for paid users */}
-            {user && accountPlan && accountPlan !== 'FREE' && (
-              <div className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-medium">
-                {accountPlan}
+            {/* Mobile quotes - between logo and user initials */}
+            <div className="flex flex-1 min-w-0 justify-center items-center mx-0.5 sm:mx-1">
+              <div ref={mobileLineRef} className="overflow-hidden h-6 sm:h-8 relative w-full text-center min-w-0 flex items-center justify-center">
+                <div
+                  className="absolute left-0 right-0 top-0"
+                  style={{ transform: `translateY(-${quoteIdx * mobileLineH}px)`, transition: 'transform 320ms ease' }}
+                >
+                  {quotes.map((q, i) => (
+                    <div key={i} className={`h-6 sm:h-8 flex items-center justify-center font-semibold opacity-100 bg-gradient-to-r ${q.g} bg-clip-text text-transparent text-[7px] xs:text-[8px] sm:text-[9px] px-0.5 sm:px-1 w-full`}>
+                      <span className="text-center truncate max-w-full">{`"${q.t}"`}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
+            </div>
             
-            {/* Mobile menu icon */}
-            <button
-              className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Menu"
-            >
-              {isMenuOpen ? (
-                <X className="w-6 h-6 text-primary" />
-              ) : (
-                <Menu className="w-6 h-6 text-primary" />
+            {/* Mobile right section - compact */}
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+              {/* Upgrade button - only show if user is not on paid plan */}
+              {user && (!accountPlan || accountPlan === 'FREE') && (
+                <Button 
+                  size="sm" 
+                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-[10px] xs:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full min-w-0 shrink-0"
+                  onClick={() => navigate('/upgrade')}
+                >
+                  <Crown className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:mr-1" />
+                  <span className="hidden xs:inline sm:hidden">Pro</span>
+                  <span className="hidden sm:inline">Upgrade</span>
+                </Button>
               )}
-            </button>
+              
+              {/* Show user initials */}
+              {user && (
+                <div className="text-[10px] xs:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-primary/10 text-primary font-medium shrink-0">
+                  {userInitials}
+                </div>
+              )}
+              
+              {/* Mobile menu icon */}
+              <button
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-primary/10 transition-colors shrink-0"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label="Menu"
+              >
+                {isMenuOpen ? (
+                  <X className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                ) : (
+                  <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 

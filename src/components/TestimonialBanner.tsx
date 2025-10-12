@@ -31,7 +31,7 @@ const TestimonialBanner = () => {
               Try Aliva Today
             </button>
           </div>
-          <div className="rounded-[28px] overflow-hidden shadow-xl border border-black/5">
+          <div className="rounded-[28px] overflow-hidden shadow-xl border border-border">
             <div className="h-full w-full bg-[url('https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=1600&auto=format&fit=crop')] bg-cover bg-center">
               <div className="h-full w-full bg-black/30 p-8 flex items-end">
                 <p className="text-white text-2xl md:text-3xl leading-snug max-w-2xl">

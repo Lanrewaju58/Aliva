@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import FloatingThemeToggle from "@/components/FloatingThemeToggle";
+import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -48,7 +49,7 @@ const App: React.FC = () => {
               expand={false}
               duration={4000}
             />
-            <ScrollToHash />
+            <ScrollToTop />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -75,22 +76,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-// Helper component to scroll to an element by the URL hash
-function ScrollToHash() {
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.hash) {
-      const id = location.hash.replace('#', '');
-      const el = document.getElementById(id);
-      if (el) {
-        setTimeout(() => {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 0);
-      }
-    }
-  }, [location]);
-
-  return null;
-}

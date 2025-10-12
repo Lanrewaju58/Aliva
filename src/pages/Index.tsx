@@ -9,7 +9,7 @@ import FooterSection from "@/components/FooterSection";
 const Index = () => {
   console.log('Index page rendering');
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" data-testid="main-content">
       <Navigation />
       <HeroSection />
       <ChatPreviewSection />

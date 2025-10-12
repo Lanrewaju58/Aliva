@@ -42,9 +42,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Apply dark theme immediately on mount
+  // Apply saved theme immediately on mount to prevent flash
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(savedTheme);
+    } else {
+      // Default to dark if no saved theme
+      document.documentElement.classList.add('dark');
+    }
   }, []);
 
   const toggleTheme = () => {
