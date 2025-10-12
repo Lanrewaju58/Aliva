@@ -310,16 +310,11 @@ const Navigation = () => {
             
             {/* Mobile quotes - between logo and user initials */}
             <div className="flex flex-1 min-w-0 justify-center items-center mx-0.5 sm:mx-1">
-              <div ref={mobileLineRef} className="overflow-hidden h-6 sm:h-8 relative w-full text-center min-w-0 flex items-center justify-center">
-                <div
-                  className="absolute left-0 right-0 top-0"
-                  style={{ transform: `translateY(-${quoteIdx * mobileLineH}px)`, transition: 'transform 320ms ease' }}
-                >
-                  {quotes.map((q, i) => (
-                    <div key={i} className={`h-6 sm:h-8 flex items-center justify-center font-semibold opacity-100 bg-gradient-to-r ${q.g} bg-clip-text text-transparent text-[7px] xs:text-[8px] sm:text-[9px] px-0.5 sm:px-1 w-full`}>
-                      <span className="text-center truncate max-w-full">{`"${q.t}"`}</span>
-                    </div>
-                  ))}
+              <div className="overflow-hidden h-6 sm:h-8 relative w-full text-center min-w-0 flex items-center justify-center">
+                <div className="flex items-center justify-center h-6 sm:h-8">
+                  <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate max-w-full px-0.5 sm:px-1">
+                    {`"${quotes[quoteIdx]?.t || 'Loading...'}"`}
+                  </span>
                 </div>
               </div>
             </div>
@@ -339,34 +334,42 @@ const Navigation = () => {
                 </Button>
               )}
               
-              {/* Show user initials */}
+              {/* Show user initials as dropdown */}
               {user && (
-                <div className="text-[10px] xs:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-primary/10 text-primary font-medium shrink-0 relative">
-                  {userInitials}
-                  {(accountPlan === 'PRO' || accountPlan === 'PREMIUM') && (
-                    <Crown className="w-2.5 h-2.5 absolute -top-1 -right-1 text-yellow-400" />
-                  )}
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="text-[10px] xs:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-primary/10 text-primary font-medium shrink-0 relative hover:bg-primary/20 transition-colors">
+                      {userInitials}
+                      {(accountPlan === 'PRO' || accountPlan === 'PREMIUM') && (
+                        <Crown className="w-2.5 h-2.5 absolute -top-1 -right-1 text-yellow-400" />
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <Settings className="w-4 h-4 mr-2" />
+                      Profile Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/upgrade')}>
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade to Pro
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleAuthAction}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
               
-              {/* Mobile menu icon */}
-              <button
-                className="p-1.5 sm:p-2 rounded-lg hover:bg-primary/10 transition-colors shrink-0"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                aria-label="Menu"
-              >
-                {isMenuOpen ? (
-                  <X className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                ) : (
-                  <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                )}
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile flyout with multiple action buttons */}
-        {isMenuOpen && (
+        {/* Mobile flyout removed - using dropdown on initials instead */}
+        {false && (
           <div className="lg:hidden absolute right-3 top-full mt-2 bg-card border border-border rounded-xl shadow-xl p-3 min-w-[200px]">
             {user ? (
               <div className="space-y-2">
