@@ -130,17 +130,29 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
   }, [user]);
 
   useEffect(() => {
-    // Use setTimeout to ensure DOM is updated before scrolling
-    setTimeout(() => {
-      if (listRef.current) {
-        // Try multiple scroll methods for better compatibility
-        listRef.current.scrollTop = listRef.current.scrollHeight;
-        listRef.current.scrollTo({ 
-          top: listRef.current.scrollHeight, 
-          behavior: "smooth" 
-        });
-      }
-    }, 100);
+    // Auto-scroll when messages change (immediate for streaming)
+    if (listRef.current) {
+      // Use requestAnimationFrame for immediate, smooth scrolling
+      requestAnimationFrame(() => {
+        if (listRef.current) {
+          // Try multiple scroll methods for better compatibility
+          const container = listRef.current;
+          container.scrollTop = container.scrollHeight;
+          
+          // Also try to scroll the parent ScrollArea if it exists
+          const scrollArea = container.closest('[data-radix-scroll-area-viewport]');
+          if (scrollArea) {
+            scrollArea.scrollTop = scrollArea.scrollHeight;
+          }
+          
+          // Try scrolling the parent container as well
+          const parentContainer = container.parentElement;
+          if (parentContainer && parentContainer.scrollHeight > parentContainer.clientHeight) {
+            parentContainer.scrollTop = parentContainer.scrollHeight;
+          }
+        }
+      });
+    }
   }, [messages, thinking]);
 
   // Auto ads enabled globally via index.html; no manual slot loading needed
@@ -571,16 +583,28 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
   };
 
   const scrollToBottom = () => {
+    if (listRef.current) {
+      // Immediate scroll for real-time updates
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+      
+      // Also scroll the parent ScrollArea
+      const scrollArea = listRef.current.closest('[data-radix-scroll-area-viewport]');
+      if (scrollArea) {
+        scrollArea.scrollTop = scrollArea.scrollHeight;
+      }
+    }
+  };
+
+  const scrollToBottomSmooth = () => {
     setTimeout(() => {
       if (listRef.current) {
-        // Try multiple scroll methods for better compatibility
-        listRef.current.scrollTop = listRef.current.scrollHeight;
+        // Smooth scroll for final positioning
         listRef.current.scrollTo({ 
           top: listRef.current.scrollHeight, 
           behavior: "smooth" 
         });
       }
-    }, 100);
+    }, 50);
   };
 
   // Stream assistant response like ChatGPT (type-out effect)
@@ -608,7 +632,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
         }
         return next;
       });
-      scrollToBottom();
+      
       await new Promise(r => setTimeout(r, delayMs));
     }
   };
@@ -623,8 +647,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
     setThinking(true);
     setError(null);
 
-    // Scroll after user message
-    scrollToBottom();
+    // Scroll will be handled by useEffect
 
     // Lightweight crisis detection
     const crisisPatterns = [
@@ -663,8 +686,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
         setTimeout(() => initializeMap(keyword), 400);
       }
       
-      // Scroll after AI response
-      scrollToBottom();
+      // Scroll will be handled by useEffect
     } catch (error: any) {
       setError(error.message || "Sorry, I'm having trouble connecting right now.");
     } finally {
