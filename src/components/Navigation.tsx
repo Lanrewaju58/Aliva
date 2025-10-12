@@ -238,18 +238,21 @@ const Navigation = () => {
 
           {/* Mobile navigation */}
           <div className="lg:hidden flex items-center gap-0.5 sm:gap-1 shrink-0">
-              {/* Upgrade button - only show if user is not on paid plan */}
-              {user && (!accountPlan || accountPlan === 'FREE') && (
-                <Button 
-                  size="sm" 
-                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-[10px] xs:text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full min-w-0 shrink-0"
-                  onClick={() => navigate('/upgrade')}
-                >
-                  <Crown className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:mr-1" />
-                  <span className="hidden xs:inline sm:hidden">Pro</span>
-                  <span className="hidden sm:inline">Upgrade</span>
-                </Button>
-              )}
+              {/* Theme toggle button for mobile */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleTheme}
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </Button>
               
               {/* Show user initials as dropdown */}
               {user && (

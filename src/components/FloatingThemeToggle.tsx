@@ -8,7 +8,7 @@ const FloatingThemeToggle: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
-  // Hide theme toggle on auth page and during loading states
+  // Hide theme toggle on auth page, during loading states, and on mobile devices
   const shouldHide = location.pathname === '/auth' || 
                      location.pathname === '/' && !document.querySelector('[data-testid="main-content"]');
 
@@ -19,7 +19,7 @@ const FloatingThemeToggle: React.FC = () => {
   return (
     <Button
       onClick={toggleTheme}
-      className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-primary hover:bg-primary/90 text-primary-foreground border-2 border-primary/20 hover:scale-110"
+      className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-primary hover:bg-primary/90 text-primary-foreground border-2 border-primary/20 hover:scale-110 hidden lg:flex"
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
