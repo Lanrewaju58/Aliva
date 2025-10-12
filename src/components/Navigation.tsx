@@ -118,74 +118,9 @@ const Navigation = () => {
     }, 3000);
     return () => clearInterval(interval);
   }, [quotes.length]);
-  const [lineH, setLineH] = useState(40); // default h-10
-  const [mobileLineH, setMobileLineH] = useState(24); // default h-6
-  const lineRef = useRef<HTMLDivElement | null>(null);
-  const mobileLineRef = useRef<HTMLDivElement | null>(null);
-  const lastScrollRef = useRef<number>(0);
-  const touchStartYRef = useRef<number | null>(null);
+  // Simplified quote display - no complex animation needed
 
-  useEffect(() => {
-    const updateLineHeight = () => {
-      if (lineRef.current) {
-        const rect = lineRef.current.getBoundingClientRect();
-        setLineH(rect.height || 32);
-      }
-      if (mobileLineRef.current) {
-        const rect = mobileLineRef.current.getBoundingClientRect();
-        setMobileLineH(rect.height || 24);
-      }
-    };
-    
-    updateLineHeight();
-    
-    // Update on window resize
-    window.addEventListener('resize', updateLineHeight);
-    return () => window.removeEventListener('resize', updateLineHeight);
-  }, []);
-
-  useEffect(() => {
-    const onWheel = (e: WheelEvent) => {
-      const now = Date.now();
-      if (now - lastScrollRef.current < 350) return; // throttle ~0.35s
-      lastScrollRef.current = now;
-      setQuoteIdx((prev) => {
-        const dir = e.deltaY > 0 ? 1 : -1;
-        return Math.max(0, Math.min(quotes.length - 1, prev + dir));
-      });
-    };
-
-    const onTouchStart = (e: TouchEvent) => {
-      touchStartYRef.current = e.touches[0].clientY;
-    };
-
-    const onTouchEnd = (e: TouchEvent) => {
-      if (touchStartYRef.current === null) return;
-      const touchEndY = e.changedTouches[0].clientY;
-      const deltaY = touchStartYRef.current - touchEndY;
-      
-      if (Math.abs(deltaY) > 50) { // minimum swipe distance
-        const now = Date.now();
-        if (now - lastScrollRef.current < 350) return;
-        lastScrollRef.current = now;
-        setQuoteIdx((prev) => {
-          const dir = deltaY > 0 ? 1 : -1;
-          return Math.max(0, Math.min(quotes.length - 1, prev + dir));
-        });
-      }
-      touchStartYRef.current = null;
-    };
-
-    document.addEventListener('wheel', onWheel, { passive: true });
-    document.addEventListener('touchstart', onTouchStart, { passive: true });
-    document.addEventListener('touchend', onTouchEnd, { passive: true });
-
-    return () => {
-      document.removeEventListener('wheel', onWheel);
-      document.removeEventListener('touchstart', onTouchStart);
-      document.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [quotes.length]);
+  // No scroll/touch handlers needed since we're using simple quote display
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -226,45 +161,41 @@ const Navigation = () => {
     <nav className="fixed top-6 left-0 right-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 relative">
         <div className="h-14 sm:h-16 rounded-full bg-card shadow-xl border border-border flex items-center px-2 sm:px-3 md:px-6 overflow-hidden">
-          {/* Logo */}
-          <div 
-            className="flex items-center cursor-pointer group shrink-0"
-            onClick={() => {
-              if (location.pathname !== '/') {
-                navigate('/#home');
-              } else {
-                scrollToSection('home');
-              }
-            }}
-          >
-            <div className="flex items-center justify-center group-hover:scale-110 transition-transform">
-              <img 
-                src="/logo.svg" 
-                alt="Aliva Logo" 
-                className="h-8 sm:h-10 w-auto"
-                onError={(e) => {
-                  // Fallback in case logo.svg is not found
-                  console.warn("Logo image not found, check if /logo.svg exists in public folder");
-                }}
-              />
+          {/* Logo and Quotes */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div 
+              className="flex items-center cursor-pointer group"
+              onClick={() => {
+                if (location.pathname !== '/') {
+                  navigate('/#home');
+                } else {
+                  scrollToSection('home');
+                }
+              }}
+            >
+              <div className="flex items-center justify-center group-hover:scale-110 transition-transform">
+                <img 
+                  src="/logo.svg" 
+                  alt="Aliva Logo" 
+                  className="h-8 sm:h-10 w-auto"
+                  onError={(e) => {
+                    // Fallback in case logo.svg is not found
+                    console.warn("Logo image not found, check if /logo.svg exists in public folder");
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* Animated quotes - Right after logo */}
+            <div className="hidden md:flex items-center text-sm sm:text-base md:text-lg lg:text-xl font-semibold">
+              <span className={`text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg font-semibold bg-gradient-to-r ${quotes[quoteIdx]?.g || 'from-primary to-secondary'} bg-clip-text text-transparent truncate max-w-full px-2`}>
+                {`"${quotes[quoteIdx]?.t || 'Loading...'}"`}
+              </span>
             </div>
           </div>
 
-          {/* Animated quotes - Center */}
-          <div className="flex flex-1 min-w-0 justify-center items-center text-sm sm:text-base md:text-lg lg:text-xl font-semibold mx-4">
-            <div ref={lineRef} className="overflow-hidden h-8 sm:h-10 md:h-12 relative w-full text-center min-w-0 flex items-center justify-center">
-              <div
-                className="absolute left-1/2 top-0 transform -translate-x-1/2 w-full"
-                style={{ transform: `translateX(-50%) translateY(-${quoteIdx * lineH}px)`, transition: 'transform 320ms ease' }}
-              >
-                {quotes.map((q, i) => (
-                  <div key={i} className={`h-8 sm:h-10 md:h-12 flex items-center justify-center font-semibold opacity-100 bg-gradient-to-r ${q.g} bg-clip-text text-transparent text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg px-2 w-full`}>
-                    <span className="text-center truncate max-w-full">{`"${q.t}"`}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* Spacer to push user section to the right */}
+          <div className="flex-1"></div>
 
           {/* Profile button (desktop only) */}
           <div className="hidden md:flex items-center space-x-3 shrink-0">
@@ -305,22 +236,8 @@ const Navigation = () => {
             )}
           </div>
 
-          {/* Mobile navigation with quotes */}
-          <div className="lg:hidden flex items-center gap-0.5 sm:gap-1 flex-1 min-w-0 max-w-full">
-            
-            {/* Mobile quotes - between logo and user initials */}
-            <div className="flex flex-1 min-w-0 justify-center items-center mx-0.5 sm:mx-1">
-              <div className="overflow-hidden h-6 sm:h-8 relative w-full text-center min-w-0 flex items-center justify-center">
-                <div className="flex items-center justify-center h-6 sm:h-8">
-                  <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate max-w-full px-0.5 sm:px-1">
-                    {`"${quotes[quoteIdx]?.t || 'Loading...'}"`}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Mobile right section - compact */}
-            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+          {/* Mobile navigation */}
+          <div className="lg:hidden flex items-center gap-0.5 sm:gap-1 shrink-0">
               {/* Upgrade button - only show if user is not on paid plan */}
               {user && (!accountPlan || accountPlan === 'FREE') && (
                 <Button 
@@ -363,8 +280,6 @@ const Navigation = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              
-            </div>
           </div>
         </div>
 

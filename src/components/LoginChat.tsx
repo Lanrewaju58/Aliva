@@ -620,8 +620,10 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
     // Small delay to ensure DOM node exists before updates
     await new Promise(r => setTimeout(r, 20));
 
-    const step = 4; // chars per tick
-    const delayMs = 15; // typing speed
+    // More realistic typing speed and variable delays like ChatGPT
+    const step = 2; // chars per tick for more realistic typing
+    const baseDelay = 20; // base delay in ms
+    
     for (let i = 0; i < fullText.length; i += step) {
       const slice = fullText.slice(0, i + step);
       setMessages(prev => {
@@ -633,7 +635,20 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
         return next;
       });
       
-      await new Promise(r => setTimeout(r, delayMs));
+      // Variable delay based on character type (like ChatGPT)
+      const char = fullText[i];
+      let delay = baseDelay;
+      
+      // Longer pauses for punctuation
+      if (char === '.' || char === '!' || char === '?') {
+        delay = baseDelay * 3;
+      } else if (char === ',' || char === ';' || char === ':') {
+        delay = baseDelay * 2;
+      } else if (char === ' ') {
+        delay = baseDelay * 1.5;
+      }
+      
+      await new Promise(r => setTimeout(r, delay));
     }
   };
 
@@ -749,7 +764,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
             <ScrollArea className="flex-1 w-full">
               <div ref={listRef} className="p-4 space-y-4 min-h-full flex flex-col justify-end">
                 {messages.map((m, idx) => (
-                  <div key={idx} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} ${idx === 0 ? 'items-center min-h-[50vh]' : ''}`}>
+                  <div key={idx} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} ${idx === 0 ? 'items-center min-h-[50vh]' : ''} animate-in fade-in-0 slide-in-from-bottom-2 duration-300`}>
                     {m.role !== "user" && idx !== 0 && (
                       <Avatar className="h-7 w-7 mr-2">
                         <AvatarFallback className="bg-primary text-primary-foreground">
@@ -764,12 +779,17 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                         <p className="text-sm text-muted-foreground mt-2">What can I help with today?</p>
                       </div>
                     ) : (
-                      <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                      <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 transition-all duration-200 ${
                         m.role === "user" 
                           ? "bg-card shadow-sm border border-border" 
                           : "bg-primary/10 border border-primary/20"
                       }`}>
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap">{m.content}</div>
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {m.content}
+                          {m.role === "assistant" && thinking && (
+                            <span className="inline-block w-2 h-4 bg-primary ml-1 animate-pulse"></span>
+                          )}
+                        </div>
                       </div>
                     )}
                     {m.role === "user" && idx !== 0 && (
@@ -791,8 +811,11 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                     </Avatar>
                     <div className="max-w-[85%] rounded-2xl px-4 py-2.5 bg-primary/10 border border-primary/20">
                       <div className="flex items-center gap-2 text-sm">
-                        <Sparkles className="h-4 w-4 animate-spin text-primary" />
-                        Aliva is thinking...
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -810,7 +833,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                     key={i}
                     size="sm"
                     variant="outline"
-                    className="rounded-full text-xs hover:bg-primary/10 hover:text-primary border-primary/20 px-4 py-2"
+                    className="rounded-full text-xs hover:bg-primary/10 hover:text-primary border-primary/20 px-4 py-2 transition-all duration-200 hover:scale-105 active:scale-95"
                     onClick={() => {
                       if (q === "Find restaurants near me") {
                         handleFindRestaurants();
@@ -829,7 +852,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
           )}
 
           <div className="mt-auto pt-4 pb-2">
-            <div className="flex gap-2 items-center bg-muted rounded-full px-4 py-2.5 border border-border">
+            <div className="flex gap-2 items-center bg-muted rounded-full px-4 py-2.5 border border-border hover:border-primary/50 transition-colors duration-200 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
               <Input
                 placeholder="Ask about nutrition, mindset, or life — I'm here for you"
                 value={input}
@@ -841,7 +864,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                 onClick={handleSend} 
                 disabled={!input.trim() || thinking} 
                 size="icon"
-                className="rounded-full h-9 w-9 bg-primary hover:bg-primary/90"
+                className="rounded-full h-9 w-9 bg-primary hover:bg-primary/90 transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 <Send className="h-4 w-4" />
               </Button>
