@@ -150,22 +150,22 @@ const Profile: React.FC = () => {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-background">
         <div className="flex flex-col items-center gap-8">
           <img src="/logo.svg" alt="Aliva logo" className="h-28 w-28 animate-pulse" />
           <div className="h-16 w-16 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <div className="text-gray-700 text-base">Authenticating…</div>
+          <div className="text-foreground text-base">Authenticating…</div>
         </div>
       </div>
     );
   }
   if (pageLoading || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-white">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-background">
         <div className="flex flex-col items-center gap-9">
           <img src="/logo.svg" alt="Aliva logo" className="h-32 w-32 animate-pulse" />
           <div className="h-20 w-20 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <div className="text-gray-700 text-base">Loading your profile…</div>
+          <div className="text-foreground text-base">Loading your profile…</div>
         </div>
       </div>
     );
@@ -225,9 +225,9 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Navigation Bar */}
-      <nav className="bg-white shadow-sm border-b">
+      <nav className="bg-card shadow-sm border-b">
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
@@ -238,7 +238,7 @@ const Profile: React.FC = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="rounded-full">
-                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold mr-2">
+                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold mr-2">
                       {userInitials}
                     </div>
                     {user?.displayName || user?.email}
@@ -270,16 +270,16 @@ const Profile: React.FC = () => {
 
         {/* Plan status */}
         <div className="mb-6">
-          <div className="bg-white border rounded-lg p-4 flex items-center gap-3">
-            <div className={`px-2 py-1 rounded text-xs font-medium ${profile?.plan && profile.plan !== 'FREE' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-50 text-gray-700 border border-gray-200'}`}>
+          <div className="bg-card border rounded-lg p-4 flex items-center gap-3">
+            <div className={`px-2 py-1 rounded text-xs font-medium ${profile?.plan && profile.plan !== 'FREE' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-muted text-muted-foreground border border-border'}`}>
               {profile?.plan || 'FREE'}
             </div>
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-foreground">
               {profile?.plan && profile.plan !== 'FREE' ? (
                 <>
                   Active plan
                   {profile?.planExpiresAt && (
-                    <span className="ml-2 text-gray-500">
+                    <span className="ml-2 text-muted-foreground">
                       Expires on {new Date((profile as any).planExpiresAt?.toDate ? (profile as any).planExpiresAt.toDate() : (profile as any).planExpiresAt).toLocaleDateString()}
                     </span>
                   )}
@@ -504,14 +504,14 @@ const Profile: React.FC = () => {
               </div>
               <div className="space-y-2">
                 {(profile.weightHistory || []).length === 0 && (
-                  <div className="text-sm text-gray-500">No entries yet.</div>
+                  <div className="text-sm text-muted-foreground">No entries yet.</div>
                 )}
                 {(profile.weightHistory || [])
                   .slice()
                   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                   .map((w, idx) => (
                     <div key={idx} className="flex items-center justify-between gap-3 text-sm border rounded-md p-2">
-                      <span className="text-gray-600">{new Date(w.date).toLocaleDateString()}</span>
+                      <span className="text-muted-foreground">{new Date(w.date).toLocaleDateString()}</span>
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"

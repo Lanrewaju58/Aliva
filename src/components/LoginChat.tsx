@@ -696,11 +696,11 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
 
   return (
     <>
-      <div className="mx-auto w-full h-screen flex flex-col bg-white">
+      <div className="mx-auto w-full h-screen flex flex-col bg-background">
         <div className="w-full max-w-2xl mx-auto flex flex-col h-full py-4 px-4">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <Salad className="h-4 w-4 text-white" />
+              <Salad className="h-4 w-4 text-primary-foreground" />
             </div>
             <div className="font-semibold">Chat with Aliva</div>
             
@@ -752,7 +752,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                   <div key={idx} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} ${idx === 0 ? 'items-center min-h-[50vh]' : ''}`}>
                     {m.role !== "user" && idx !== 0 && (
                       <Avatar className="h-7 w-7 mr-2">
-                        <AvatarFallback className="bg-primary text-white">
+                        <AvatarFallback className="bg-primary text-primary-foreground">
                           <Bot className="h-3.5 w-3.5" />
                         </AvatarFallback>
                       </Avatar>
@@ -761,12 +761,12 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                       <div className="text-center w-full">
                         <h2 className="text-3xl font-semibold mb-2">Hi, I am Aliva.</h2>
                         <p className="text-xl text-primary font-medium">Your health, wellness, and mental health companion</p>
-                        <p className="text-sm text-gray-500 mt-2">What can I help with today?</p>
+                        <p className="text-sm text-muted-foreground mt-2">What can I help with today?</p>
                       </div>
                     ) : (
                       <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
                         m.role === "user" 
-                          ? "bg-white shadow-sm border border-gray-200" 
+                          ? "bg-card shadow-sm border border-border" 
                           : "bg-primary/10 border border-primary/20"
                       }`}>
                         <div className="text-sm leading-relaxed whitespace-pre-wrap">{m.content}</div>
@@ -785,7 +785,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                 {thinking && (
                   <div className="flex justify-start">
                     <Avatar className="h-7 w-7 mr-2">
-                      <AvatarFallback className="bg-primary text-white">
+                      <AvatarFallback className="bg-primary text-primary-foreground">
                         <Bot className="h-3.5 w-3.5" />
                       </AvatarFallback>
                     </Avatar>
@@ -829,13 +829,13 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
           )}
 
           <div className="mt-auto pt-4 pb-2">
-            <div className="flex gap-2 items-center bg-gray-100 rounded-full px-4 py-2.5 border border-gray-200">
+            <div className="flex gap-2 items-center bg-muted rounded-full px-4 py-2.5 border border-border">
               <Input
                 placeholder="Ask about nutrition, mindset, or life — I'm here for you"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500 px-0"
+                className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground px-0"
               />
               <Button 
                 onClick={handleSend} 
@@ -898,7 +898,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
               <div ref={mapRef} className="w-full h-full" />
             </div>
             
-            <div className="w-full md:w-96 border-l bg-white">
+            <div className="w-full md:w-96 border-l bg-card">
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-3">
                   {mapRestaurants.length === 0 ? (
@@ -925,7 +925,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                       return (
                         <div 
                           key={index} 
-                          className="p-4 border rounded-xl hover:shadow-md hover:border-primary/50 cursor-pointer transition-all bg-white"
+                          className="p-4 border rounded-xl hover:shadow-md hover:border-primary/50 cursor-pointer transition-all bg-card"
                           onClick={() => {
                             if (place.geometry?.location && googleMapRef.current) {
                               googleMapRef.current.panTo(place.geometry.location);
@@ -934,7 +934,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                           }}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={`w-8 h-8 rounded-full text-white flex items-center justify-center text-sm font-bold ${
+                            <div className={`w-8 h-8 rounded-full text-primary-foreground flex items-center justify-center text-sm font-bold ${
                               place.rating && place.rating >= 4 ? 'bg-green-500' : 'bg-amber-500'
                             }`}>
                               {index + 1}
@@ -954,12 +954,12 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                                     <span>⭐</span>
                                     <span>{place.rating}</span>
                                     {place.user_ratings_total && (
-                                      <span className="text-gray-500">({place.user_ratings_total})</span>
+                                      <span className="text-muted-foreground">({place.user_ratings_total})</span>
                                     )}
                                   </div>
                                 )}
                                 {place.price_level && (
-                                  <div className="text-gray-600">
+                                  <div className="text-muted-foreground">
                                     {Array(place.price_level).fill('$').join('')}
                                   </div>
                                 )}
@@ -969,7 +969,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                                   {place.types.slice(0, 3).map((type: string, typeIndex: number) => (
                                     <span 
                                       key={typeIndex}
-                                      className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                                      className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-full"
                                     >
                                       {type.replace(/_/g, ' ')}
                                     </span>

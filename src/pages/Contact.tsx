@@ -98,7 +98,7 @@ const Contact = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-background">
       <Navigation />
       <main className="flex-1">
         {/* Hero Section */}
@@ -113,7 +113,7 @@ const Contact = () => {
               <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-gray-900 via-emerald-800 to-gray-900 bg-clip-text text-transparent">
                 Contact Us
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed mb-8">
+              <p className="text-xl text-muted-foreground leading-relaxed mb-8">
                 Have questions, feedback, or partnership ideas? We'd love to hear from you and help you on your nutrition journey.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
@@ -146,9 +146,9 @@ const Contact = () => {
                           </div>
                           <div className="flex-1">
                             <h3 className="font-semibold text-lg mb-1">{method.title}</h3>
-                            <p className="text-gray-600 text-sm mb-2">{method.description}</p>
+                            <p className="text-muted-foreground text-sm mb-2">{method.description}</p>
                             <p className="font-medium text-emerald-600 mb-1">{method.contact}</p>
-                            <p className="text-xs text-gray-500">{method.response}</p>
+                            <p className="text-xs text-muted-foreground">{method.response}</p>
                           </div>
                         </div>
                       </CardContent>
@@ -168,7 +168,7 @@ const Contact = () => {
                           <item.icon className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
                           <div>
                             <h4 className="font-semibold text-sm mb-1">{item.question}</h4>
-                            <p className="text-xs text-gray-600">{item.answer}</p>
+                            <p className="text-xs text-muted-foreground">{item.answer}</p>
                           </div>
                         </div>
                       </CardContent>
@@ -281,7 +281,7 @@ const Contact = () => {
                           </>
                         )}
                       </Button>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-muted-foreground">
                         <CheckCircle className="w-4 h-4 inline mr-1" />
                         We'll respond within 24 hours
                 </div>

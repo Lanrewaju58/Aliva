@@ -92,24 +92,32 @@ const Navigation = () => {
 
   const userInitials = getUserInitials(user?.displayName, user?.email);
 
-  // Quotes data (text + gradient)
+  // Quotes data (text + gradient) - vibrant colors that work in both light and dark modes
   const quotes = [
-    { t: "Eat well, live well.", g: "from-primary to-primary-dark" },
-    { t: "Small choices, big changes.", g: "from-secondary to-primary" },
-    { t: "Food is fuel. Choose quality.", g: "from-accent to-primary" },
-    { t: "Healthy today, stronger tomorrow.", g: "from-lavender to-primary" },
-    { t: "Good food, good mood.", g: "from-primary to-secondary" },
-    { t: "Eat simple, feel amazing.", g: "from-primary-dark to-primary" },
-    { t: "Healthy plate, happy life.", g: "from-secondary to-primary" },
-    { t: "Choose greens, gain energy.", g: "from-accent to-primary" },
-    { t: "Nourish to flourish.", g: "from-lavender to-primary" },
-    { t: "Better bites, better days.", g: "from-primary to-primary-dark" },
-    { t: "Whole foods, whole you.", g: "from-secondary to-primary" },
-    { t: "Eat natural, feel powerful.", g: "from-accent to-primary" },
+    { t: "Eat well, live well.", g: "from-emerald-400 via-green-500 to-teal-500" },
+    { t: "Small choices, big changes.", g: "from-blue-400 via-cyan-500 to-sky-500" },
+    { t: "Food is fuel. Choose quality.", g: "from-purple-400 via-violet-500 to-pink-500" },
+    { t: "Healthy today, stronger tomorrow.", g: "from-orange-400 via-red-500 to-rose-500" },
+    { t: "Good food, good mood.", g: "from-teal-400 via-emerald-500 to-green-500" },
+    { t: "Eat simple, feel amazing.", g: "from-indigo-400 via-purple-500 to-violet-500" },
+    { t: "Healthy plate, happy life.", g: "from-green-400 via-emerald-500 to-teal-500" },
+    { t: "Choose greens, gain energy.", g: "from-lime-400 via-green-500 to-emerald-500" },
+    { t: "Nourish to flourish.", g: "from-rose-400 via-pink-500 to-fuchsia-500" },
+    { t: "Better bites, better days.", g: "from-cyan-400 via-sky-500 to-blue-500" },
+    { t: "Whole foods, whole you.", g: "from-violet-400 via-purple-500 to-indigo-500" },
+    { t: "Eat natural, feel powerful.", g: "from-amber-400 via-orange-500 to-red-500" },
   ];
 
   // Quote index controlled by page scroll direction
   const [quoteIdx, setQuoteIdx] = useState(0);
+  
+  // Auto-rotate quotes every 3 seconds as fallback
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuoteIdx((prev) => (prev + 1) % quotes.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [quotes.length]);
   const [lineH, setLineH] = useState(40); // default h-10
   const lineRef = useRef<HTMLDivElement | null>(null);
   const lastScrollRef = useRef<number>(0);
@@ -200,7 +208,7 @@ const Navigation = () => {
   return (
     <nav className="fixed top-6 left-0 right-0 z-50">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 relative">
-        <div className="h-14 sm:h-16 rounded-full bg-white shadow-xl border border-black/5 flex items-center justify-between px-2 sm:px-3 md:px-6 overflow-hidden">
+        <div className="h-14 sm:h-16 rounded-full bg-card shadow-xl border border-border flex items-center justify-between px-2 sm:px-3 md:px-6 overflow-hidden">
           {/* Logo */}
           <div 
             className="flex items-center space-x-3 cursor-pointer group"
@@ -225,15 +233,15 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* Animated quotes (desktop only) */}
-          <div className="hidden md:flex flex-1 min-w-0 justify-center text-base sm:text-lg md:text-2xl font-semibold">
+          {/* Animated quotes */}
+          <div className="flex flex-1 min-w-0 justify-center text-sm sm:text-base md:text-lg lg:text-xl font-semibold">
             <div ref={lineRef} className="overflow-hidden h-8 sm:h-10 md:h-12 relative w-full max-w-[1000px] text-center min-w-0">
               <div
                 className="absolute left-0 right-0 top-0"
                 style={{ transform: `translateY(-${quoteIdx * lineH}px)`, transition: 'transform 320ms ease' }}
               >
                 {quotes.map((q, i) => (
-                  <div key={i} className={`h-8 sm:h-10 md:h-12 flex items-center justify-center bg-gradient-to-r ${q.g} bg-clip-text text-transparent`}>
+                  <div key={i} className={`h-8 sm:h-10 md:h-12 flex items-center justify-center font-semibold whitespace-nowrap opacity-100 bg-gradient-to-r ${q.g} bg-clip-text text-transparent`}>
                     {`"${q.t}"`}
                   </div>
                 ))}
@@ -247,7 +255,7 @@ const Navigation = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="rounded-full">
-                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold mr-2">
+                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold mr-2">
                       {userInitials}
                     </div>
                     {user.displayName || user.email}
@@ -323,12 +331,12 @@ const Navigation = () => {
 
         {/* Mobile flyout with multiple action buttons */}
         {isMenuOpen && (
-          <div className="lg:hidden absolute right-3 top-full mt-2 bg-white border border-black/5 rounded-xl shadow-xl p-3 min-w-[200px]">
+          <div className="lg:hidden absolute right-3 top-full mt-2 bg-card border border-border rounded-xl shadow-xl p-3 min-w-[200px]">
             {user ? (
               <div className="space-y-2">
                 {/* User info */}
-                <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
-                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
+                <div className="flex items-center gap-3 pb-2 border-b border-border">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
                     {userInitials}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -336,7 +344,7 @@ const Navigation = () => {
                       {user.displayName || user.email}
                     </div>
                     {accountPlan && (
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         {accountPlan}
                       </div>
                     )}

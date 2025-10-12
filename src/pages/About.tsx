@@ -86,7 +86,7 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 via-white to-purple-50/30">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-background">
       <Navigation />
       <main className="flex-1">
         {/* Hero Section */}
@@ -101,7 +101,7 @@ const About = () => {
               <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-green-600 via-purple-600 to-green-600 bg-clip-text text-transparent">
                 About Aliva
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed mb-8">
+              <p className="text-xl text-muted-foreground leading-relaxed mb-8">
                 We believe better nutrition should be accessible, delightful, and deeply personal. 
                 Aliva blends AI with expert guidance to help you discover healthier choices, plan meals, 
                 and build lasting habits—without friction.
@@ -129,7 +129,7 @@ const About = () => {
                   <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-600 to-purple-600 bg-clip-text text-transparent mb-2">
                     {stat.number}
                   </div>
-                  <div className="text-gray-600 font-medium">{stat.label}</div>
+                  <div className="text-muted-foreground font-medium">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -142,7 +142,7 @@ const About = () => {
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
                 <h2 className="text-4xl font-bold mb-6">Our Mission</h2>
-                <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
                   Empower every person to eat well with confidence and convenience. We're building the future 
                   of personalized nutrition, where AI meets human expertise to create truly individualized 
                   health experiences.
@@ -152,21 +152,21 @@ const About = () => {
                     <CheckCircle className="w-6 h-6 text-green-500 mt-1 flex-shrink-0" />
                     <div>
                       <h3 className="font-semibold text-lg mb-1">Evidence-Based Approach</h3>
-                      <p className="text-gray-600">All recommendations grounded in scientific research and clinical expertise</p>
+                      <p className="text-muted-foreground">All recommendations grounded in scientific research and clinical expertise</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-6 h-6 text-green-500 mt-1 flex-shrink-0" />
                     <div>
                       <h3 className="font-semibold text-lg mb-1">Personalized Experience</h3>
-                      <p className="text-gray-600">AI that adapts to your unique needs, preferences, and health goals</p>
+                      <p className="text-muted-foreground">AI that adapts to your unique needs, preferences, and health goals</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-6 h-6 text-green-500 mt-1 flex-shrink-0" />
                     <div>
                       <h3 className="font-semibold text-lg mb-1">Privacy & Security</h3>
-                      <p className="text-gray-600">Your health data is protected with enterprise-grade security</p>
+                      <p className="text-muted-foreground">Your health data is protected with enterprise-grade security</p>
                     </div>
                   </div>
                 </div>
@@ -184,10 +184,10 @@ const About = () => {
                 <div className="bg-gradient-to-br from-green-100 to-purple-100 rounded-2xl p-8">
                   <div className="text-center">
                     <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Heart className="w-12 h-12 text-white" />
+                      <Heart className="w-12 h-12 text-primary-foreground" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Making Health Accessible</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-2xl font-bold text-foreground mb-4">Making Health Accessible</h3>
+                    <p className="text-muted-foreground">
                       We're democratizing access to expert nutrition guidance, making it available 
                       to everyone, everywhere, at any time.
                     </p>
@@ -203,7 +203,7 @@ const About = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-600 to-purple-600 bg-clip-text text-transparent">Our Values</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                 These principles guide everything we do, from product development to user support.
               </p>
             </div>
@@ -215,7 +215,7 @@ const About = () => {
                       <value.icon className="w-8 h-8 text-green-600" />
                     </div>
                     <h3 className="text-xl font-bold mb-4">{value.title}</h3>
-                    <p className="text-gray-600">{value.description}</p>
+                        <p className="text-muted-foreground">{value.description}</p>
             </CardContent>
           </Card>
               ))}
@@ -228,7 +228,7 @@ const About = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-600 to-purple-600 bg-clip-text text-transparent">What We're Building</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
                 The modern nutrition companion for everyday life, powered by AI and human expertise.
               </p>
             </div>
@@ -242,7 +242,7 @@ const About = () => {
                       </div>
                       <div>
                         <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                        <p className="text-gray-600">{feature.description}</p>
+                        <p className="text-muted-foreground">{feature.description}</p>
                       </div>
                     </div>
             </CardContent>
@@ -275,7 +275,7 @@ const About = () => {
                   <Button 
                     size="lg" 
                     variant="secondary" 
-                    className="bg-white text-green-600 hover:bg-gray-100"
+                    className="bg-card text-green-600 hover:bg-muted"
                     onClick={() => navigate('/auth')}
                   >
                     Get Started Free
@@ -283,7 +283,7 @@ const About = () => {
                   <Button 
                     size="lg" 
                     variant="outline" 
-                    className="border-white text-white hover:bg-white hover:text-green-600"
+                    className="border-primary text-primary-foreground hover:bg-card hover:text-green-600"
                     onClick={() => navigate('/contact')}
                   >
                     Learn More

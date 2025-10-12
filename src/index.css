@@ -69,33 +69,33 @@ All colors MUST be HSL for perfect theme integration.
   }
 
   .dark {
-    --background: 220 15% 8%;
-    --foreground: 0 0% 95%;
+    --background: 220 15% 6%;
+    --foreground: 0 0% 98%;
     
-    --primary: 158 64% 52%;
-    --primary-foreground: 220 15% 8%;
-    --primary-glow: 158 64% 65%;
+    --primary: 158 64% 55%;
+    --primary-foreground: 220 15% 6%;
+    --primary-glow: 158 64% 68%;
     
-    --secondary: 158 100% 42%;
-    --secondary-foreground: 220 15% 8%;
-    --secondary-glow: 158 100% 55%;
+    --secondary: 158 100% 45%;
+    --secondary-foreground: 220 15% 6%;
+    --secondary-glow: 158 100% 58%;
     
-    --accent: 24 95% 65%;
-    --accent-foreground: 220 15% 8%;
-    --accent-glow: 24 95% 78%;
+    --accent: 24 95% 68%;
+    --accent-foreground: 220 15% 6%;
+    --accent-glow: 24 95% 80%;
     
-    --muted: 220 15% 15%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 220 15% 12%;
+    --muted-foreground: 220 10% 70%;
     
-    --card: 220 15% 10%;
-    --card-foreground: 0 0% 95%;
+    --card: 220 15% 8%;
+    --card-foreground: 0 0% 98%;
     
-    --popover: 220 15% 10%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 220 15% 8%;
+    --popover-foreground: 0 0% 98%;
     
-    --border: 220 15% 20%;
-    --input: 220 15% 20%;
-    --ring: 158 64% 52%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 158 64% 55%;
     
     --destructive: 0 75% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -110,6 +110,11 @@ All colors MUST be HSL for perfect theme integration.
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  
+  /* Force dark theme by default */
+  html {
+    color-scheme: dark;
   }
   
   /* Glassmorphism Base */

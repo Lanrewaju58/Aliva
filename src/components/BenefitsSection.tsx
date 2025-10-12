@@ -21,7 +21,7 @@ const BenefitsSection = () => {
             <p className="text-muted-foreground mb-6 max-w-prose">Small choices add up. Aliva keeps it simple with clear suggestions and quick wins you can use today.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {perks.map((p, i) => (
-                <div key={i} className="flex items-start gap-3 p-4 rounded-xl border border-primary/10 bg-white">
+                <div key={i} className="flex items-start gap-3 p-4 rounded-xl border border-primary/10 bg-card">
                   <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                     <p.icon className="h-5 w-5" />
                   </div>

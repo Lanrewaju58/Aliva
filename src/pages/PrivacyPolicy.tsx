@@ -18,7 +18,7 @@ const PrivacyPolicy = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-background">
       <Navigation />
       <main className="flex-1">
         {/* Hero Section */}
@@ -33,7 +33,7 @@ const PrivacyPolicy = () => {
               <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
                 Privacy Policy
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed mb-8">
+              <p className="text-xl text-muted-foreground leading-relaxed mb-8">
                 Your privacy is fundamental to our mission. We're transparent about what we collect, 
                 how we use it, and how you can control it.
               </p>
@@ -64,7 +64,7 @@ const PrivacyPolicy = () => {
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
                         activeSection === section.id
                           ? "bg-primary text-white shadow-lg"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                     >
                       <section.icon className="w-5 h-5" />
@@ -134,17 +134,17 @@ const PrivacyPolicy = () => {
                         <div className="grid gap-4">
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Account Information</h4>
-                            <p className="text-sm text-gray-600 mb-2">Email, name, and profile details you provide</p>
+                            <p className="text-sm text-muted-foreground mb-2">Email, name, and profile details you provide</p>
                             <Badge variant="outline">Required for service</Badge>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Health & Dietary Data</h4>
-                            <p className="text-sm text-gray-600 mb-2">Goals, preferences, allergies, and health conditions</p>
+                            <p className="text-sm text-muted-foreground mb-2">Goals, preferences, allergies, and health conditions</p>
                             <Badge variant="outline">Required for personalization</Badge>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Usage Analytics</h4>
-                            <p className="text-sm text-gray-600 mb-2">How you interact with our app to improve features</p>
+                            <p className="text-sm text-muted-foreground mb-2">How you interact with our app to improve features</p>
                             <Badge variant="outline">Optional</Badge>
                           </div>
                         </div>
@@ -170,19 +170,19 @@ const PrivacyPolicy = () => {
                         <div className="grid md:grid-cols-2 gap-4">
                           <div className="p-4 bg-primary/5 rounded-lg">
                             <h4 className="font-semibold mb-2">Personalization</h4>
-                            <p className="text-sm text-gray-600">Create meal plans and recommendations tailored to your needs</p>
+                            <p className="text-sm text-muted-foreground">Create meal plans and recommendations tailored to your needs</p>
                           </div>
                           <div className="p-4 bg-primary/5 rounded-lg">
                             <h4 className="font-semibold mb-2">Service Improvement</h4>
-                            <p className="text-sm text-gray-600">Analyze usage patterns to enhance our features</p>
+                            <p className="text-sm text-muted-foreground">Analyze usage patterns to enhance our features</p>
                           </div>
                           <div className="p-4 bg-primary/5 rounded-lg">
                             <h4 className="font-semibold mb-2">Security</h4>
-                            <p className="text-sm text-gray-600">Protect your account and prevent unauthorized access</p>
+                            <p className="text-sm text-muted-foreground">Protect your account and prevent unauthorized access</p>
                           </div>
                           <div className="p-4 bg-primary/5 rounded-lg">
                             <h4 className="font-semibold mb-2">Communication</h4>
-                            <p className="text-sm text-gray-600">Send important updates about your account and our service</p>
+                            <p className="text-sm text-muted-foreground">Send important updates about your account and our service</p>
                           </div>
                         </div>
                       </CardContent>
@@ -210,7 +210,7 @@ const PrivacyPolicy = () => {
                         </div>
                         <div className="space-y-3">
                           <h4 className="font-semibold">Limited Sharing Only When:</h4>
-                          <ul className="space-y-2 text-sm text-gray-600">
+                          <ul className="space-y-2 text-sm text-muted-foreground">
                             <li className="flex items-start gap-2">
                               <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
                               Required by law or legal process
@@ -247,22 +247,22 @@ const PrivacyPolicy = () => {
                         <div className="grid gap-4">
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Access Your Data</h4>
-                            <p className="text-sm text-gray-600 mb-2">Download a copy of all your personal information</p>
+                            <p className="text-sm text-muted-foreground mb-2">Download a copy of all your personal information</p>
                             <Badge variant="outline">Available in settings</Badge>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Update Information</h4>
-                            <p className="text-sm text-gray-600 mb-2">Modify your profile and preferences anytime</p>
+                            <p className="text-sm text-muted-foreground mb-2">Modify your profile and preferences anytime</p>
                             <Badge variant="outline">Self-service</Badge>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Delete Account</h4>
-                            <p className="text-sm text-gray-600 mb-2">Permanently remove your account and all data</p>
+                            <p className="text-sm text-muted-foreground mb-2">Permanently remove your account and all data</p>
                             <Badge variant="outline">Irreversible</Badge>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Opt Out</h4>
-                            <p className="text-sm text-gray-600 mb-2">Disable data collection for analytics and personalization</p>
+                            <p className="text-sm text-muted-foreground mb-2">Disable data collection for analytics and personalization</p>
                             <Badge variant="outline">Partial service</Badge>
                           </div>
                         </div>
@@ -288,13 +288,13 @@ const PrivacyPolicy = () => {
                         <div className="grid md:grid-cols-2 gap-6">
                           <div className="p-4 bg-primary/5 rounded-lg">
                             <h4 className="font-semibold mb-2">Email Us</h4>
-                            <p className="text-sm text-gray-600 mb-2">privacy@aliva.com</p>
-                            <p className="text-xs text-gray-500">We respond within 24 hours</p>
+                            <p className="text-sm text-muted-foreground mb-2">privacy@aliva.com</p>
+                            <p className="text-xs text-muted-foreground">We respond within 24 hours</p>
                           </div>
                           <div className="p-4 bg-primary/5 rounded-lg">
                             <h4 className="font-semibold mb-2">Data Requests</h4>
-                            <p className="text-sm text-gray-600 mb-2">Use our self-service portal</p>
-                            <p className="text-xs text-gray-500">Instant access to your data</p>
+                            <p className="text-sm text-muted-foreground mb-2">Use our self-service portal</p>
+                            <p className="text-xs text-muted-foreground">Instant access to your data</p>
                           </div>
                         </div>
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">

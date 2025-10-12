@@ -127,7 +127,7 @@ const Upgrade = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sage/10 via-white to-lavender/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background">
       <Navigation />
 
       <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto">
@@ -143,12 +143,12 @@ const Upgrade = () => {
             Unlock premium features and take your nutrition journey to the next level
           </p>
 
-          <div className="inline-flex items-center justify-center rounded-full bg-white border border-black/5 p-1 shadow-lg">
+          <div className="inline-flex items-center justify-center rounded-full bg-card border border-border p-1 shadow-lg">
             <button
               onClick={() => setSelectedPlan('monthly')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 selectedPlan === 'monthly'
-                  ? 'bg-primary text-white shadow-md'
+                  ? 'bg-primary text-primary-foreground shadow-md'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -158,7 +158,7 @@ const Upgrade = () => {
               onClick={() => setSelectedPlan('yearly')}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 selectedPlan === 'yearly'
-                  ? 'bg-primary text-white shadow-md'
+                  ? 'bg-primary text-primary-foreground shadow-md'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -182,7 +182,7 @@ const Upgrade = () => {
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-0 right-0 flex justify-center">
-                    <Badge className="bg-gradient-to-r from-primary to-secondary text-white">
+                    <Badge className="bg-gradient-to-r from-primary to-secondary text-primary-foreground">
                       Most Popular
                     </Badge>
                   </div>

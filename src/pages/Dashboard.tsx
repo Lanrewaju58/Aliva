@@ -17,12 +17,12 @@ const Dashboard = () => {
   if (loading || !user) return null; // handled by ProtectedRoute
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background">
       <Navigation />
       <main className="pt-28 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <Card className="p-4 bg-white shadow-xl border border-black/5 rounded-[20px]">
+            <Card className="p-4 bg-card shadow-xl border border-border rounded-[20px]">
               <LoginChat />
             </Card>
           </div>

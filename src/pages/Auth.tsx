@@ -95,7 +95,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-white flex items-center justify-center p-3 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-4xl">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -109,7 +109,7 @@ const Auth = () => {
         </div>
 
         <div className="w-full max-w-md mx-auto">
-          <Card className="bg-white border border-primary/10 shadow-xl">
+          <Card className="bg-card border border-primary/10 shadow-xl">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Welcome</CardTitle>
               <CardDescription>Sign in or create a new account</CardDescription>

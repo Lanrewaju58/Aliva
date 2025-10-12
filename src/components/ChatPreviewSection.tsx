@@ -5,7 +5,7 @@ const ChatPreviewSection = () => {
   return (
     <section className="mt-0 md:mt-0 -translate-y-0 pb-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-[28px] bg-white shadow-xl border border-black/5 p-4 sm:p-6 md:p-8">
+        <div className="rounded-[28px] bg-card shadow-xl border border-border p-4 sm:p-6 md:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
             <div className="order-2 md:order-1">
               <LoginChat />

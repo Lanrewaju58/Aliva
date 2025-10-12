@@ -20,7 +20,7 @@ const TermsOfService = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-background">
       <Navigation />
       <main className="flex-1">
         {/* Hero Section */}
@@ -35,7 +35,7 @@ const TermsOfService = () => {
               <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-gray-900 via-amber-800 to-gray-900 bg-clip-text text-transparent">
                 Terms of Service
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed mb-8">
+              <p className="text-xl text-muted-foreground leading-relaxed mb-8">
                 Clear, fair terms that protect both you and us. Please read these carefully before using Aliva.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
@@ -65,7 +65,7 @@ const TermsOfService = () => {
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
                         activeSection === section.id
                           ? "bg-amber-500 text-white shadow-lg"
-                          : "text-gray-600 hover:bg-amber-50 hover:text-amber-900"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                     >
                       <section.icon className="w-5 h-5" />
@@ -146,7 +146,7 @@ const TermsOfService = () => {
                         </div>
                         <div className="space-y-3">
                           <h4 className="font-semibold">What This Means:</h4>
-                          <ul className="space-y-2 text-sm text-gray-600">
+                          <ul className="space-y-2 text-sm text-muted-foreground">
                             <li className="flex items-start gap-2">
                               <span className="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0"></span>
                               You understand and accept our terms
@@ -187,22 +187,22 @@ const TermsOfService = () => {
                         <div className="grid gap-4">
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Personal Use</h4>
-                            <p className="text-sm text-gray-600 mb-2">Use Aliva for your personal nutrition and health goals</p>
+                            <p className="text-sm text-muted-foreground mb-2">Use Aliva for your personal nutrition and health goals</p>
                             <Badge variant="outline" className="bg-green-50 text-green-700">✅ Allowed</Badge>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Create Account</h4>
-                            <p className="text-sm text-gray-600 mb-2">Sign up and create a profile to access personalized features</p>
+                            <p className="text-sm text-muted-foreground mb-2">Sign up and create a profile to access personalized features</p>
                             <Badge variant="outline" className="bg-green-50 text-green-700">✅ Allowed</Badge>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Provide Feedback</h4>
-                            <p className="text-sm text-gray-600 mb-2">Share your experience to help us improve</p>
+                            <p className="text-sm text-muted-foreground mb-2">Share your experience to help us improve</p>
                             <Badge variant="outline" className="bg-green-50 text-green-700">✅ Encouraged</Badge>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Export Data</h4>
-                            <p className="text-sm text-gray-600 mb-2">Download your personal data anytime</p>
+                            <p className="text-sm text-muted-foreground mb-2">Download your personal data anytime</p>
                             <Badge variant="outline" className="bg-green-50 text-green-700">✅ Your Right</Badge>
                           </div>
                         </div>
@@ -275,15 +275,15 @@ const TermsOfService = () => {
                         <div className="space-y-4">
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Consult Healthcare Providers</h4>
-                            <p className="text-sm text-gray-600">Always consult qualified healthcare professionals for medical decisions</p>
+                            <p className="text-sm text-muted-foreground">Always consult qualified healthcare professionals for medical decisions</p>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Individual Results May Vary</h4>
-                            <p className="text-sm text-gray-600">Nutrition advice affects people differently based on individual circumstances</p>
+                            <p className="text-sm text-muted-foreground">Nutrition advice affects people differently based on individual circumstances</p>
                           </div>
                           <div className="p-4 border rounded-lg">
                             <h4 className="font-semibold mb-2">Emergency Situations</h4>
-                            <p className="text-sm text-gray-600">In case of medical emergency, contact emergency services immediately</p>
+                            <p className="text-sm text-muted-foreground">In case of medical emergency, contact emergency services immediately</p>
                           </div>
                         </div>
                 </CardContent>
@@ -313,7 +313,7 @@ const TermsOfService = () => {
                         </div>
                         <div className="space-y-3">
                           <h4 className="font-semibold">What We're Not Liable For:</h4>
-                          <ul className="space-y-2 text-sm text-gray-600">
+                          <ul className="space-y-2 text-sm text-muted-foreground">
                             <li className="flex items-start gap-2">
                               <span className="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0"></span>
                               Health outcomes from following our recommendations
@@ -359,7 +359,7 @@ const TermsOfService = () => {
                         </div>
                         <div className="space-y-3">
                           <h4 className="font-semibold">Your Options:</h4>
-                          <ul className="space-y-2 text-sm text-gray-600">
+                          <ul className="space-y-2 text-sm text-muted-foreground">
                             <li className="flex items-start gap-2">
                               <span className="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0"></span>
                               Continue using the service (accepts new terms)
@@ -374,9 +374,9 @@ const TermsOfService = () => {
                             </li>
                           </ul>
                         </div>
-                        <div className="p-4 bg-gray-50 border rounded-lg">
+                        <div className="p-4 bg-muted border rounded-lg">
                           <h4 className="font-semibold mb-2">Minor Changes</h4>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-muted-foreground">
                             Minor clarifications or corrections may be made without notice, but won't affect your rights or obligations.
                           </p>
                         </div>

@@ -29,22 +29,23 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       return savedTheme;
     }
     
-    // Check system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    
-    return 'light';
+    // Default to dark theme
+    return 'dark';
   });
 
   useEffect(() => {
-    // Apply theme to document
+    // Apply theme to document immediately
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
     
     // Save to localStorage
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Apply dark theme immediately on mount
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');

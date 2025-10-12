@@ -17,7 +17,7 @@ const TestimonialBanner = () => {
     <section className="py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-          <div className="rounded-[28px] bg-white shadow-xl border border-black/5 p-8 flex flex-col justify-between">
+          <div className="rounded-[28px] bg-card shadow-xl border border-border p-8 flex flex-col justify-between">
             <div>
               <div className="text-6xl font-bold text-foreground mb-6">92%</div>
               <p className="text-muted-foreground text-lg max-w-md">
