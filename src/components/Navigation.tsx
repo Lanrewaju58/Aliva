@@ -272,8 +272,11 @@ const Navigation = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="rounded-full">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold relative">
                       {userInitials}
+                      {(accountPlan === 'PRO' || accountPlan === 'PREMIUM') && (
+                        <Crown className="w-3 h-3 absolute -top-1 -right-1 text-yellow-400" />
+                      )}
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
@@ -338,8 +341,11 @@ const Navigation = () => {
               
               {/* Show user initials */}
               {user && (
-                <div className="text-[10px] xs:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-primary/10 text-primary font-medium shrink-0">
+                <div className="text-[10px] xs:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-primary/10 text-primary font-medium shrink-0 relative">
                   {userInitials}
+                  {(accountPlan === 'PRO' || accountPlan === 'PREMIUM') && (
+                    <Crown className="w-2.5 h-2.5 absolute -top-1 -right-1 text-yellow-400" />
+                  )}
                 </div>
               )}
               
@@ -366,8 +372,11 @@ const Navigation = () => {
               <div className="space-y-2">
                 {/* User info */}
                 <div className="flex items-center gap-3 pb-2 border-b border-border">
-                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold relative">
                     {userInitials}
+                    {(accountPlan === 'PRO' || accountPlan === 'PREMIUM') && (
+                      <Crown className="w-3 h-3 absolute -top-1 -right-1 text-yellow-400" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">
