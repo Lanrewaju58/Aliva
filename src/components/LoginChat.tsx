@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, Salad, Sparkles, User, AlertCircle, MapPin, RotateCcw, ChefHat, Settings } from "lucide-react";
+import { Bot, Send, Salad, Sparkles, User, AlertCircle, MapPin, RotateCcw, ChefHat, Settings, MessageSquare, Clock, Trash2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,14 @@ type RestaurantResult = {
   distanceKm: number;
   dish: string;
   logo?: string;
+};
+
+type ChatSession = {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 const API_URL = import.meta.env.DEV 
@@ -58,13 +66,127 @@ const LoginChat = () => {
   const [dailyCount, setDailyCount] = useState<number>(0);
   const [adsVisible, setAdsVisible] = useState<boolean>(false);
 
+  // Recent chats functionality
+  const [recentChats, setRecentChats] = useState<ChatSession[]>([]);
+  const [showRecentChats, setShowRecentChats] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+
   // Persona and safety guardrails
-  const AI_PERSONA_HEADER = `You are Aliva — an AI wellness companion combining a friendly, down-to-earth tone with practical guidance.
-Role: supportive friend + mental health coach + nutritionist.
-Style: warm, validating, non-judgmental, concise, and actionable. Use first person plural when encouraging ("let's try...").
-Boundaries: You are not a licensed clinician and cannot provide diagnosis. Encourage professional help for clinical concerns.
-Safety: If user mentions intent to harm self or others, or a medical emergency, advise immediate help and crisis resources. Avoid providing instructions that could increase risk. Focus on grounding, coping skills, and seeking support.
-Nutrition: Respect allergies and medical conditions. Prefer simple, budget-friendly, culturally adaptable suggestions.`;
+  const AI_PERSONA_HEADER = `You are Aliva — a compassionate AI health companion focused exclusively on health, wellness, and medical topics.
+
+CORE IDENTITY:
+- You are a supportive health advisor, nutritionist, and wellness coach
+- You ONLY discuss health-related topics: nutrition, fitness, mental health, medical conditions, wellness, lifestyle, and preventive care
+- If asked about non-health topics, politely redirect to health discussions
+
+COMMUNICATION STYLE:
+- Write in a warm, conversational, and human-like manner
+- Use natural language without markdown formatting (no #, *, -, or bullet points)
+- Write in flowing paragraphs like a caring friend or health professional
+- Be encouraging, supportive, and non-judgmental
+- Use "we" and "you" naturally in conversation
+
+RESPONSE FORMAT:
+- Write responses as flowing, natural text
+- Use line breaks for readability but no markdown symbols
+- Focus on practical, actionable health advice
+- Include relevant health information and tips
+- Keep responses comprehensive but conversational
+
+BOUNDARIES:
+- You are not a licensed clinician and cannot provide medical diagnosis
+- Always encourage professional medical help for serious health concerns
+- Focus on general wellness, nutrition, and lifestyle advice
+- Respect allergies and medical conditions when giving advice
+
+SAFETY:
+- If user mentions self-harm or medical emergencies, advise immediate professional help
+- Provide grounding techniques and coping strategies for mental health
+- Always prioritize safety and professional medical care when needed`;
+
+  // Load recent chats from localStorage
+  const loadRecentChats = () => {
+    if (!user?.uid) return;
+    try {
+      const savedChats = localStorage.getItem(`recent_chats_${user.uid}`);
+      if (savedChats) {
+        const chats = JSON.parse(savedChats).map((chat: any) => ({
+          ...chat,
+          createdAt: new Date(chat.createdAt),
+          updatedAt: new Date(chat.updatedAt)
+        }));
+        setRecentChats(chats);
+      }
+    } catch (error) {
+      console.error('Error loading recent chats:', error);
+    }
+  };
+
+  // Save recent chats to localStorage
+  const saveRecentChats = (chats: ChatSession[]) => {
+    if (!user?.uid) return;
+    try {
+      localStorage.setItem(`recent_chats_${user.uid}`, JSON.stringify(chats));
+    } catch (error) {
+      console.error('Error saving recent chats:', error);
+    }
+  };
+
+  // Generate chat title from first user message
+  const generateChatTitle = (firstMessage: string): string => {
+    const words = firstMessage.trim().split(' ');
+    if (words.length <= 4) return firstMessage;
+    return words.slice(0, 4).join(' ') + '...';
+  };
+
+  // Create new chat session
+  const createNewChat = (): string => {
+    const chatId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    setCurrentChatId(chatId);
+    return chatId;
+  };
+
+  // Save current chat
+  const saveCurrentChat = () => {
+    if (!currentChatId || messages.length <= 1) return;
+    
+    const firstUserMessage = messages.find(m => m.role === 'user');
+    if (!firstUserMessage) return;
+
+    const chatTitle = generateChatTitle(firstUserMessage.content);
+    const newChat: ChatSession = {
+      id: currentChatId,
+      title: chatTitle,
+      messages: messages,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const updatedChats = [newChat, ...recentChats.filter(chat => chat.id !== currentChatId)].slice(0, 10);
+    setRecentChats(updatedChats);
+    saveRecentChats(updatedChats);
+  };
+
+  // Load specific chat
+  const loadChat = (chatId: string) => {
+    const chat = recentChats.find(c => c.id === chatId);
+    if (chat) {
+      setMessages(chat.messages);
+      setCurrentChatId(chatId);
+      setShowRecentChats(false);
+    }
+  };
+
+  // Delete chat
+  const deleteChat = (chatId: string) => {
+    const updatedChats = recentChats.filter(chat => chat.id !== chatId);
+    setRecentChats(updatedChats);
+    saveRecentChats(updatedChats);
+    
+    if (currentChatId === chatId) {
+      handleStartNewConsultation();
+    }
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -100,11 +222,12 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
     };
 
     loadProfile();
+    loadRecentChats();
 
     setMessages([
       {
         role: "assistant",
-        content: "Hi, I am Aliva. What can I help with?",
+        content: "Hi, I'm Aliva, your health and wellness companion. I'm here to help you with nutrition, fitness, mental health, and overall wellness. What health topic would you like to discuss today?",
       },
     ]);
 
@@ -155,25 +278,36 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
     }
   }, [messages, thinking]);
 
+  // Save chat when messages change
+  useEffect(() => {
+    if (currentChatId && messages.length > 1) {
+      const timeoutId = setTimeout(() => {
+        saveCurrentChat();
+      }, 1000); // Debounce saving
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages, currentChatId]);
+
   // Auto ads enabled globally via index.html; no manual slot loading needed
 
   const quickPrompts = useMemo(
     () => [
-      "Suggest meals for me",
-      "I'm feeling stressed",
-      "Help me feel better",
-      "Find restaurants near me",
-      "I need advice",
-      "Talk to me about my day",
+      "Suggest healthy meals for me",
+      "I'm feeling stressed and anxious",
+      "Help me with my health goals",
+      "Find healthy restaurants near me",
+      "I need nutrition advice",
+      "Help me with my mental health",
     ],
     [userProfile]
   );
 
   const actionButtons = useMemo(
     () => [
-      { label: "Start new consultation", icon: RotateCcw, action: "new" },
-      { label: "Generate a recipe", icon: ChefHat, action: "recipe" },
-      { label: "Edit Profile", icon: Settings, action: "profile" },
+      { label: "Start new health consultation", icon: RotateCcw, action: "new" },
+      { label: "Generate healthy recipe", icon: ChefHat, action: "recipe" },
+      { label: "Update health profile", icon: Settings, action: "profile" },
     ],
     []
   );
@@ -182,11 +316,12 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
     setMessages([
       {
         role: "assistant",
-        content: "Hi, I am Aliva. What can I help with?",
+        content: "Hi, I'm Aliva, your health and wellness companion. I'm here to help you with nutrition, fitness, mental health, and overall wellness. What health topic would you like to discuss today?",
       },
     ]);
     setInput("");
     setError(null);
+    setCurrentChatId(null);
   };
 
   const handleGenerateRecipe = () => {
@@ -656,6 +791,11 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
     const text = input.trim();
     if (!text || thinking) return;
 
+    // Create new chat if this is the first user message
+    if (messages.length === 1) {
+      createNewChat();
+    }
+
     const userMsg: ChatMessage = { role: "user", content: text };
     setMessages(prev => [...prev, userMsg]);
     setInput("");
@@ -713,23 +853,35 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
     <>
       <div className="mx-auto w-full h-screen flex flex-col bg-background">
         <div className="w-full max-w-2xl mx-auto flex flex-col h-full py-4 px-4">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <Salad className="h-4 w-4 text-primary-foreground" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                <Salad className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <div className="font-semibold">Chat with Aliva</div>
+              
+              {userProfile && (
+                <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50">
+                  Profile Active
+                </Badge>
+              )}
+              {userLocation && (
+                <Badge variant="outline" className="border-blue-300 text-blue-700 bg-blue-50">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  Location Active
+                </Badge>
+              )}
             </div>
-            <div className="font-semibold">Chat with Aliva</div>
             
-            {userProfile && (
-              <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50">
-                Profile Active
-              </Badge>
-            )}
-            {userLocation && (
-              <Badge variant="outline" className="border-blue-300 text-blue-700 bg-blue-50">
-                <MapPin className="h-3 w-3 mr-1" />
-                Location Active
-              </Badge>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowRecentChats(true)}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Chat History</span>
+            </Button>
           </div>
 
           {/* Auto ads enabled globally; no manual ad unit rendered here */}
@@ -774,9 +926,9 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                     )}
                     {idx === 0 ? (
                       <div className="text-center w-full">
-                        <h2 className="text-3xl font-semibold mb-2">Hi, I am Aliva.</h2>
-                        <p className="text-xl text-primary font-medium">Your health, wellness, and mental health companion</p>
-                        <p className="text-sm text-muted-foreground mt-2">What can I help with today?</p>
+                        <h2 className="text-3xl font-semibold mb-2">Hi, I'm Aliva.</h2>
+                        <p className="text-xl text-primary font-medium">Your dedicated health and wellness companion</p>
+                        <p className="text-sm text-muted-foreground mt-2">I'm here to help with nutrition, fitness, mental health, and wellness. What health topic would you like to discuss?</p>
                       </div>
                     ) : (
                       <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 transition-all duration-200 ${
@@ -826,7 +978,6 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
 
           {messages.length === 1 && (
             <>
-              
               <div className="flex flex-wrap gap-2 justify-center mb-4">
                 {quickPrompts.map((q, i) => (
                   <Button
@@ -835,7 +986,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                     variant="outline"
                     className="rounded-full text-xs hover:bg-primary/10 hover:text-primary border-primary/20 px-4 py-2 transition-all duration-200 hover:scale-105 active:scale-95"
                     onClick={() => {
-                      if (q === "Find restaurants near me") {
+                      if (q === "Find healthy restaurants near me") {
                         handleFindRestaurants();
                       } else {
                         setInput(q);
@@ -843,7 +994,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                     }}
                     disabled={thinking}
                   >
-                    {q === "Find restaurants near me" && <MapPin className="h-3 w-3 mr-1" />}
+                    {q === "Find healthy restaurants near me" && <MapPin className="h-3 w-3 mr-1" />}
                     {q}
                   </Button>
                 ))}
@@ -854,7 +1005,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
           <div className="mt-auto pt-4 pb-2">
             <div className="flex gap-2 items-center bg-muted rounded-full px-4 py-2.5 border border-border hover:border-primary/50 transition-colors duration-200 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20">
               <Input
-                placeholder="Ask about nutrition, mindset, or life — I'm here for you"
+                placeholder="Ask about your health, nutrition, fitness, or wellness — I'm here to help"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
@@ -907,6 +1058,7 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
                 )}
               </div>
             )}
+
           </div>
         </div>
       </div>
@@ -1023,6 +1175,70 @@ Nutrition: Respect allergies and medical conditions. Prefer simple, budget-frien
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ChatGPT-style Recent Chats Sheet */}
+      <Sheet open={showRecentChats} onOpenChange={setShowRecentChats}>
+        <SheetContent className="w-[320px] sm:w-[400px] p-0">
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="p-4 border-b border-border">
+              <h2 className="text-lg font-semibold">Chat History</h2>
+            </div>
+
+            {/* Chat List */}
+            <div className="flex-1 overflow-hidden">
+              {recentChats.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                  <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground text-sm">No conversations yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">Start a new chat to see your history here</p>
+                </div>
+              ) : (
+                <ScrollArea className="h-full">
+                  <div className="p-2">
+                    {recentChats.map((chat) => (
+                      <div
+                        key={chat.id}
+                        className={`group relative flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all hover:bg-muted/50 ${
+                          currentChatId === chat.id ? 'bg-muted' : ''
+                        }`}
+                        onClick={() => loadChat(chat.id)}
+                      >
+                        <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{chat.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {chat.updatedAt.toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteChat(chat.id);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-border">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                <span>Aliva is ready to help</span>
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };
