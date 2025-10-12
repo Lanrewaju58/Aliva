@@ -284,13 +284,16 @@ app.post('/api/payments/init', async (req, res) => {
       return res.status(503).json({ error: 'Payment service unavailable: PAYSTACK_SECRET_KEY not set' });
     }
 
-    const { plan, interval = 'monthly', customerEmail } = req.body || {};
-    console.log('🔔 Init Paystack:', { plan, interval, customerEmail });
+    const { plan, interval = 'monthly', customerEmail, userId } = req.body || {};
+    console.log('🔔 Init Paystack:', { plan, interval, customerEmail, userId });
     const normalizedPlan = (plan || '').toString().toUpperCase();
     const normalizedInterval = (interval || 'monthly').toString().toLowerCase();
 
     if (!customerEmail) {
       return res.status(400).json({ error: 'Customer email is required' });
+    }
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
     }
     if (!['PRO', 'PREMIUM'].includes(normalizedPlan)) {
       return res.status(400).json({ error: 'Invalid plan' });
@@ -328,7 +331,8 @@ app.post('/api/payments/init', async (req, res) => {
         callback_url: callbackUrl,
         metadata: {
           plan: normalizedPlan,
-          interval: normalizedInterval
+          interval: normalizedInterval,
+          userId: userId
         }
       })
     });
