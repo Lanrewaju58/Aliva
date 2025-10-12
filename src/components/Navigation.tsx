@@ -9,19 +9,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, MessageCircle, ChefHat, MapPin, MoreHorizontal, User, Settings, LogOut, Crown } from "lucide-react";
+import { Menu, X, MessageCircle, ChefHat, MapPin, MoreHorizontal, User, Settings, LogOut, Crown, Sun, Moon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { profileService } from "@/services/profileService";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { toast } = useToast();
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [accountPlan, setAccountPlan] = useState<string>('');
-  const [accountExpiry, setAccountExpiry] = useState<string>('');
   // Handle post-payment activation on redirect
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -63,20 +64,12 @@ const Navigation = () => {
     (async () => {
       if (!user?.uid) {
         setAccountPlan('');
-        setAccountExpiry('');
         return;
       }
       try {
         const profile = await profileService.getProfile(user.uid);
         const plan = (profile as any)?.plan || 'FREE';
-        let expires = '';
-        const exp = (profile as any)?.planExpiresAt;
-        if (exp) {
-          const d = typeof exp?.toDate === 'function' ? exp.toDate() : (exp instanceof Date ? exp : new Date(exp));
-          if (!Number.isNaN(d.getTime())) expires = d.toLocaleDateString();
-        }
         setAccountPlan(plan);
-        setAccountExpiry(expires);
       } catch {}
     })();
   }, [user]);
@@ -261,7 +254,6 @@ const Navigation = () => {
                     {accountPlan && (
                       <span className="ml-2 text-xs px-2 py-0.5 rounded-full border">
                         {accountPlan}
-                        {accountExpiry && <span className="ml-1 opacity-70">(exp {accountExpiry})</span>}
                       </span>
                     )}
                   </Button>
@@ -293,6 +285,7 @@ const Navigation = () => {
 
           {/* Mobile upgrade button and menu */}
           <div className="lg:hidden flex items-center gap-1 sm:gap-2">
+            
             {/* Upgrade button - only show if user is not on paid plan */}
             {user && (!accountPlan || accountPlan === 'FREE') && (
               <Button 
@@ -345,7 +338,6 @@ const Navigation = () => {
                     {accountPlan && (
                       <div className="text-xs text-gray-500">
                         {accountPlan}
-                        {accountExpiry && <span className="ml-1">(exp {accountExpiry})</span>}
                       </div>
                     )}
                   </div>
@@ -361,6 +353,21 @@ const Navigation = () => {
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Profile Settings
+                  </Button>
+                  
+                  {/* Theme toggle in mobile menu */}
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="w-full justify-start" 
+                    onClick={() => { toggleTheme(); setIsMenuOpen(false); }}
+                  >
+                    {theme === 'light' ? (
+                      <Moon className="w-4 h-4 mr-2" />
+                    ) : (
+                      <Sun className="w-4 h-4 mr-2" />
+                    )}
+                    {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
                   </Button>
                   
                   <Button 
