@@ -23,8 +23,6 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [accountPlan, setAccountPlan] = useState<string>('');
-  const [isScrolled, setIsScrolled] = useState(false);
-  
   // Handle post-payment activation on redirect
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -120,16 +118,9 @@ const Navigation = () => {
     }, 3000);
     return () => clearInterval(interval);
   }, [quotes.length]);
+  // Simplified quote display - no complex animation needed
 
-  // Track scroll position for sticky header effects
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // No scroll/touch handlers needed since we're using simple quote display
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -167,11 +158,9 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 pt-6 transition-all duration-300">
+    <nav className="fixed top-0 left-0 right-0 z-50 pt-6">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 relative">
-        <div className={`h-14 sm:h-16 rounded-full bg-card border border-border flex items-center px-2 sm:px-3 md:px-6 overflow-hidden transition-all duration-300 ${
-          isScrolled ? 'shadow-2xl backdrop-blur-lg bg-card/95' : 'shadow-xl'
-        }`}>
+        <div className="h-14 sm:h-16 rounded-full bg-card shadow-xl border border-border flex items-center px-2 sm:px-3 md:px-6 overflow-hidden">
           {/* Logo and Quotes */}
           <div className="flex items-center gap-3 shrink-0">
             <div 

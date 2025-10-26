@@ -24,13 +24,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth(): AuthContextType {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -44,12 +44,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Update the user's display name
       await updateProfile(result.user, {
         displayName: fullName
       });
       
-      // Create user profile in Firestore
       await profileService.createProfile(result.user.uid, {
         fullName,
         userId: result.user.uid
@@ -57,6 +55,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       return { user: result.user, error: null };
     } catch (error) {
+      console.error('Sign up error:', error);
       return { user: null, error };
     }
   };
@@ -66,6 +65,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const result = await signInWithEmailAndPassword(auth, email, password);
       return { user: result.user, error: null };
     } catch (error) {
+      console.error('Sign in error:', error);
       return { user: null, error };
     }
   };
@@ -73,21 +73,57 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
+      
+      // These settings help with popup reliability
+      provider.setCustomParameters({
+        prompt: 'select_account',
+        // Use localhost for redirect during development
+        redirect_uri: window.location.origin
+      });
+      
+      console.log('Opening Google sign-in popup...');
       const result = await signInWithPopup(auth, provider);
+      console.log('Sign-in successful!');
       
-      // Check if this is a new user and create profile if needed
-      const userProfile = await profileService.getProfile(result.user.uid);
-      
-      if (!userProfile) {
-        // Create user profile in Firestore for new Google users
-        await profileService.createProfile(result.user.uid, {
-          fullName: result.user.displayName || '',
-          userId: result.user.uid
-        });
-      }
+      // Create profile in background (don't block sign-in)
+      setTimeout(async () => {
+        try {
+          const userProfile = await profileService.getProfile(result.user.uid);
+          if (!userProfile) {
+            await profileService.createProfile(result.user.uid, {
+              fullName: result.user.displayName || '',
+              userId: result.user.uid
+            });
+          }
+        } catch (error) {
+          console.error('Profile creation error:', error);
+        }
+      }, 0);
       
       return { user: result.user, error: null };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      
+      // Provide user-friendly error messages
+      if (error.code === 'auth/popup-blocked') {
+        return { 
+          user: null, 
+          error: { message: 'Popup blocked. Please allow popups for this site.' } 
+        };
+      }
+      if (error.code === 'auth/popup-closed-by-user') {
+        return { 
+          user: null, 
+          error: { message: 'Sign-in cancelled.' } 
+        };
+      }
+      if (error.code === 'auth/network-request-failed') {
+        return { 
+          user: null, 
+          error: { message: 'Network error. Please check your connection.' } 
+        };
+      }
+      
       return { user: null, error };
     }
   };
@@ -101,6 +137,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (auth.currentUser) {
         await auth.currentUser.reload();
       }
+    } catch (error) {
+      console.error('Error refreshing user:', error);
     } finally {
       setUser(auth.currentUser);
     }
