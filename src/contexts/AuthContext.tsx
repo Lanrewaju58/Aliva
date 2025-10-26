@@ -5,6 +5,8 @@ import {
   signOut, 
   onAuthStateChanged,
   updateProfile,
+  signInWithPopup,
+  GoogleAuthProvider,
   User
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -15,6 +17,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ user: User | null; error: any }>;
   signIn: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
+  signInWithGoogle: () => Promise<{ user: User | null; error: any }>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -67,6 +70,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Check if this is a new user and create profile if needed
+      const userProfile = await profileService.getProfile(result.user.uid);
+      
+      if (!userProfile) {
+        // Create user profile in Firestore for new Google users
+        await profileService.createProfile(result.user.uid, {
+          fullName: result.user.displayName || '',
+          userId: result.user.uid
+        });
+      }
+      
+      return { user: result.user, error: null };
+    } catch (error) {
+      return { user: null, error };
+    }
+  };
+
   const logout = async () => {
     return signOut(auth);
   };
@@ -95,6 +120,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut: logout,
     refreshUser,
   };
