@@ -158,7 +158,7 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 pt-6">
+    <nav className="relative z-50 pt-6">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 relative">
         <div className="h-14 sm:h-16 rounded-full bg-card shadow-xl border border-border flex items-center px-2 sm:px-3 md:px-6 overflow-hidden">
           {/* Logo and Quotes */}
