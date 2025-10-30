@@ -5,8 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 import { profileService } from "@/services/profileService";
 import { mealService, Meal, MealType } from "@/services/mealService";
 import { UserProfile } from "@/types/profile";
+
 import Navigation from "@/components/Navigation";
 import LoginChat from "@/components/LoginChat";
+import PhotoCalorieChecker from "@/components/PhotoCalorieChecker";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +29,7 @@ import {
   Trash2
 } from "lucide-react";
 
-// Types
+// ==================== TYPES ====================
 interface DailyTargets {
   calories: number;
   protein: number;
@@ -42,6 +44,8 @@ interface NutritionTotals {
   carbs: number;
   fat: number;
 }
+
+// ==================== COMPONENTS ====================
 
 // QuickStatCard Component
 const QuickStatCard = ({ 
@@ -105,7 +109,7 @@ const MealCard = ({
   onDeleteMeal: (id: string) => void;
 }) => {
   const totalCalories = meals.reduce((sum, meal) => sum + meal.calories, 0);
-  const mealIcon = {
+  const mealIcons = {
     breakfast: '🌅',
     lunch: '☀️',
     dinner: '🌙',
@@ -117,7 +121,7 @@ const MealCard = ({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{mealIcon[mealType as keyof typeof mealIcon]}</span>
+            <span className="text-2xl">{mealIcons[mealType as keyof typeof mealIcons]}</span>
             <div>
               <CardTitle className="text-sm font-medium capitalize">{mealType}</CardTitle>
               <CardDescription className="text-xs">
@@ -204,8 +208,6 @@ const AddMealForm = ({
         carbs: Number(formData.carbs),
         fat: Number(formData.fat),
       });
-    } catch (error) {
-      console.error('Error submitting form:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -318,21 +320,62 @@ const AddMealForm = ({
   );
 };
 
-// Main Dashboard Component
+// ==================== HOOKS ====================
+
+const useDashboardData = (userId: string, today: string) => {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [waterIntake, setWaterIntake] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const [userProfile, todaysMeals, dailyLog] = await Promise.all([
+          profileService.getProfile(userId),
+          mealService.getMealsByDate(userId, today),
+          mealService.getDailyLog(userId, today),
+        ]);
+        
+        setProfile(userProfile);
+        setMeals(todaysMeals);
+        setWaterIntake(dailyLog?.waterIntake || 0);
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setError('Failed to load dashboard data');
+        toast({
+          title: 'Error loading data',
+          description: 'Some features may not work correctly.',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [userId, today, toast]);
+
+  return { profile, meals, setMeals, waterIntake, setWaterIntake, isLoading, error };
+};
+
+// ==================== MAIN COMPONENT ====================
+
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [meals, setMeals] = useState<Meal[]>([]);
-  const [waterIntake, setWaterIntake] = useState(0);
   const [showAddMeal, setShowAddMeal] = useState<string | null>(null);
-  const [streak, setStreak] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  const { profile, meals, setMeals, waterIntake, setWaterIntake, isLoading, error } = 
+    useDashboardData(user?.uid || '', today);
 
   // Calculate daily targets
   const dailyTargets: DailyTargets = useMemo(() => ({
@@ -365,52 +408,15 @@ const Dashboard = () => {
     snack: meals.filter(m => m.mealType === 'snack')
   }), [meals]);
 
-  // Load user data
+  // Redirect to onboarding if profile incomplete
   useEffect(() => {
-    if (!user) {
-      if (!authLoading) {
-        navigate('/login');
-      }
-      return;
+    if (!authLoading && !isLoading && profile && !profile.preferredCalorieTarget) {
+      navigate('/onboarding');
     }
+  }, [authLoading, isLoading, profile, navigate]);
 
-    const loadData = async () => {
-      setIsLoading(true);
-      setError(null);
+  // ==================== HANDLERS ====================
 
-      try {
-        const [userProfile, todaysMeals, dailyLog] = await Promise.all([
-          profileService.getProfile(user.uid),
-          mealService.getMealsByDate(user.uid, today),
-          mealService.getDailyLog(user.uid, today),
-        ]);
-        
-        setProfile(userProfile);
-        setMeals(todaysMeals);
-        setWaterIntake(dailyLog?.waterIntake || 0);
-        setStreak(7); // TODO: Calculate actual streak
-
-        // Redirect to onboarding if profile is incomplete
-        if (!userProfile?.preferredCalorieTarget) {
-          navigate('/onboarding');
-        }
-      } catch (err) {
-        console.error('Error loading data:', err);
-        setError('Failed to load dashboard data');
-        toast({
-          title: 'Error loading data',
-          description: 'Some features may not work correctly. Please try refreshing.',
-          variant: 'destructive'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, [user, authLoading, today, navigate, toast]);
-
-  // Handle adding a meal
   const handleAddMeal = useCallback(async (
     mealData: Omit<Meal, 'id' | 'userId' | 'date' | 'time' | 'createdAt' | 'updatedAt'>
   ) => {
@@ -426,7 +432,7 @@ const Dashboard = () => {
 
       const mealId = await mealService.addMeal(newMeal);
       
-      setMeals(prevMeals => [...prevMeals, {  
+      setMeals(prev => [...prev, { 
         ...newMeal, 
         id: mealId,
         createdAt: new Date().toISOString(),
@@ -443,35 +449,33 @@ const Dashboard = () => {
       console.error('Error adding meal:', err);
       toast({
         title: 'Error',
-        description: 'Failed to add meal. Please try again.',
+        description: 'Failed to add meal.',
         variant: 'destructive'
       });
     }
-  }, [user, today, toast]);
+  }, [user, today, setMeals, toast]);
 
-  // Handle deleting a meal
   const handleDeleteMeal = useCallback(async (mealId: string) => {
     if (!user) return;
 
     try {
       await mealService.deleteMeal(user.uid, mealId);
-      setMeals(prevMeals => prevMeals.filter(m => m.id !== mealId));
+      setMeals(prev => prev.filter(m => m.id !== mealId));
       
       toast({
         title: 'Meal deleted',
-        description: 'Meal removed from today\'s log'
+        description: 'Meal removed from log'
       });
     } catch (err) {
       console.error('Error deleting meal:', err);
       toast({
         title: 'Error',
-        description: 'Failed to delete meal. Please try again.',
+        description: 'Failed to delete meal.',
         variant: 'destructive'
       });
     }
-  }, [user, toast]);
+  }, [user, setMeals, toast]);
 
-  // Handle adding water
   const handleAddWater = useCallback(async () => {
     if (!user || waterIntake >= dailyTargets.water) return;
 
@@ -488,11 +492,13 @@ const Dashboard = () => {
       console.error('Error updating water:', err);
       toast({
         title: 'Error',
-        description: 'Failed to log water. Please try again.',
+        description: 'Failed to log water.',
         variant: 'destructive'
       });
     }
-  }, [user, waterIntake, dailyTargets.water, today, toast]);
+  }, [user, waterIntake, dailyTargets.water, today, setWaterIntake, toast]);
+
+  // ==================== RENDER ====================
 
   // Loading state
   if (authLoading || isLoading) {
@@ -506,15 +512,7 @@ const Dashboard = () => {
     );
   }
 
-  // Not authenticated
-  if (!user) {
-    return null;
-  }
-
-  // Profile incomplete (will redirect via useEffect)
-  if (!profile?.preferredCalorieTarget) {
-    return null;
-  }
+  if (!user || !profile) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background">
@@ -535,7 +533,7 @@ const Dashboard = () => {
           </Button>
         </div>
 
-        {/* Error message */}
+        {/* Error Alert */}
         {error && (
           <Card className="mb-6 border-destructive">
             <CardContent className="pt-6">
@@ -544,7 +542,7 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Main content */}
+        {/* Main Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -554,44 +552,17 @@ const Dashboard = () => {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Quick Stats */}
+            {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <QuickStatCard 
-                icon={Flame} 
-                label="Calories" 
-                value={totals.calories} 
-                target={dailyTargets.calories} 
-                color="orange" 
-              />
-              <QuickStatCard 
-                icon={Target} 
-                label="Protein" 
-                value={totals.protein} 
-                target={dailyTargets.protein} 
-                unit="g" 
-                color="blue" 
-              />
-              <QuickStatCard 
-                icon={Apple} 
-                label="Carbs" 
-                value={totals.carbs} 
-                target={dailyTargets.carbs} 
-                unit="g" 
-                color="green" 
-              />
-              <QuickStatCard 
-                icon={Droplet} 
-                label="Water" 
-                value={waterIntake} 
-                target={dailyTargets.water} 
-                unit=" glasses" 
-                color="cyan" 
-              />
+              <QuickStatCard icon={Flame} label="Calories" value={totals.calories} target={dailyTargets.calories} color="orange" />
+              <QuickStatCard icon={Target} label="Protein" value={totals.protein} target={dailyTargets.protein} unit="g" color="blue" />
+              <QuickStatCard icon={Apple} label="Carbs" value={totals.carbs} target={dailyTargets.carbs} unit="g" color="green" />
+              <QuickStatCard icon={Droplet} label="Water" value={waterIntake} target={dailyTargets.water} unit=" glasses" color="cyan" />
             </div>
 
-            {/* Streak and Quick Actions */}
+            {/* Streak & Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <Card className="lg:col-span-1">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-sm font-medium">Daily Streak</CardTitle>
                 </CardHeader>
@@ -601,7 +572,7 @@ const Dashboard = () => {
                       <Award className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-3xl font-bold">{streak}</p>
+                      <p className="text-3xl font-bold">7</p>
                       <p className="text-sm text-muted-foreground">days in a row</p>
                     </div>
                   </div>
@@ -614,28 +585,15 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
-                      className="justify-start gap-2" 
-                      onClick={handleAddWater}
-                      disabled={waterIntake >= dailyTargets.water}
-                    >
+                    <Button variant="outline" className="justify-start gap-2" onClick={handleAddWater} disabled={waterIntake >= dailyTargets.water}>
                       <Droplet className="h-4 w-4 text-blue-500" />
                       Log Water
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      className="justify-start gap-2" 
-                      onClick={() => navigate('/profile')}
-                    >
+                    <Button variant="outline" className="justify-start gap-2" onClick={() => navigate('/profile')}>
                       <TrendingUp className="h-4 w-4 text-green-500" />
                       Log Weight
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      className="justify-start gap-2"
-                      onClick={() => navigate('/meal-planner')}
-                    >
+                    <Button variant="outline" className="justify-start gap-2" onClick={() => navigate('/meal-planner')}>
                       <Calendar className="h-4 w-4 text-purple-500" />
                       Meal Plan
                     </Button>
@@ -679,10 +637,7 @@ const Dashboard = () => {
                 <CardContent>
                   <div className="space-y-2">
                     {meals.slice(-3).reverse().map((meal) => (
-                      <div 
-                        key={meal.id} 
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                      >
+                      <div key={meal.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                         <div>
                           <p className="font-medium">{meal.name}</p>
                           <p className="text-xs text-muted-foreground capitalize">{meal.mealType}</p>
@@ -698,12 +653,13 @@ const Dashboard = () => {
 
           {/* Meals Tab */}
           <TabsContent value="meals" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Today's Meals</h3>
+              <PhotoCalorieChecker onAddMeal={handleAddMeal} />
+            </div>
+
             {showAddMeal && (
-              <AddMealForm
-                mealType={showAddMeal}
-                onClose={() => setShowAddMeal(null)}
-                onAdd={handleAddMeal}
-              />
+              <AddMealForm mealType={showAddMeal} onClose={() => setShowAddMeal(null)} onAdd={handleAddMeal} />
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
