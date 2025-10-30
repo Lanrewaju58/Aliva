@@ -7,6 +7,7 @@ import {
   updateProfile,
   signInWithPopup,
   GoogleAuthProvider,
+  sendPasswordResetEmail,
   User
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -19,6 +20,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
   signInWithGoogle: () => Promise<{ user: User | null; error: any }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
   refreshUser: () => Promise<void>;
 }
 
@@ -132,6 +134,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return signOut(auth);
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { error: null };
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      
+      // Provide user-friendly error messages
+      if (error.code === 'auth/user-not-found') {
+        return { 
+          error: { message: 'No account found with this email address.' } 
+        };
+      }
+      if (error.code === 'auth/invalid-email') {
+        return { 
+          error: { message: 'Invalid email address.' } 
+        };
+      }
+      if (error.code === 'auth/too-many-requests') {
+        return { 
+          error: { message: 'Too many requests. Please try again later.' } 
+        };
+      }
+      
+      return { error };
+    }
+  };
+
   const refreshUser = async () => {
     try {
       if (auth.currentUser) {
@@ -160,6 +190,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signIn,
     signInWithGoogle,
     signOut: logout,
+    resetPassword,
     refreshUser,
   };
 
