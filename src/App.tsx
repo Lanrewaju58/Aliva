@@ -23,7 +23,6 @@ import TermsOfService from "./pages/TermsOfService";
 import Progress from "./pages/Progress";
 import Security from "./pages/Security";
 import MealPlanner from "./pages/MealPlanner";
-import Recipes from "./pages/Recipes";
 import Upgrade from "./pages/Upgrade";
 import Onboarding from "./pages/Onboarding";
 
@@ -108,14 +107,7 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   } 
                 />
-                <Route 
-                  path="/recipes" 
-                  element={
-                    <ProtectedRoute>
-                      <Recipes />
-                    </ProtectedRoute>
-                  } 
-                />
+          
                 <Route 
                   path="/upgrade" 
                   element={

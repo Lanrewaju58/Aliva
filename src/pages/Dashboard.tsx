@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { profileService } from "@/services/profileService";
 import { mealService, Meal, MealType } from "@/services/mealService";
 import { UserProfile } from "@/types/profile";
-
 import Navigation from "@/components/Navigation";
 import LoginChat from "@/components/LoginChat";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -427,7 +426,7 @@ const Dashboard = () => {
 
       const mealId = await mealService.addMeal(newMeal);
       
-      setMeals(prevMeals => [...prevMeals, { 
+      setMeals(prevMeals => [...prevMeals, {  
         ...newMeal, 
         id: mealId,
         createdAt: new Date().toISOString(),
@@ -632,13 +631,13 @@ const Dashboard = () => {
                       <TrendingUp className="h-4 w-4 text-green-500" />
                       Log Weight
                     </Button>
-                    <Button variant="outline" className="justify-start gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="justify-start gap-2"
+                      onClick={() => navigate('/meal-planner')}
+                    >
                       <Calendar className="h-4 w-4 text-purple-500" />
                       Meal Plan
-                    </Button>
-                    <Button variant="outline" className="justify-start gap-2">
-                      <UtensilsCrossed className="h-4 w-4 text-orange-500" />
-                      Recipes
                     </Button>
                   </div>
                 </CardContent>
