@@ -6,15 +6,35 @@ import {
   serverTimestamp,
   DocumentReference 
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { UserProfile } from '@/types/profile';
 
 export class ProfileService {
-  private getProfileRef(userId: string): DocumentReference {
-    return doc(db, 'profiles', userId);
+  /**
+   * Verify user is authenticated
+   */
+  private verifyAuth(userId: string): void {
+    const currentUser = auth.currentUser;
+    
+    if (!currentUser) {
+      throw new Error('User must be authenticated');
+    }
+    
+    if (currentUser.uid !== userId) {
+      throw new Error('User ID mismatch. Cannot access another user\'s profile.');
+    }
   }
 
-  // Remove undefined fields (Firestore does not accept undefined in set/update)
+  /**
+   * Get profile document reference
+   */
+  private getProfileRef(userId: string): DocumentReference {
+    return doc(db, 'users', userId); // Changed from 'profiles' to 'users'
+  }
+
+  /**
+   * Remove undefined fields (Firestore does not accept undefined in set/update)
+   */
   private sanitizeUpdate(data: Partial<UserProfile>): Record<string, any> {
     const cleaned: Record<string, any> = {};
     Object.entries(data).forEach(([key, value]) => {
@@ -31,8 +51,13 @@ export class ProfileService {
     return cleaned;
   }
 
+  /**
+   * Get user profile
+   */
   async getProfile(userId: string): Promise<UserProfile | null> {
     try {
+      this.verifyAuth(userId);
+      
       const profileRef = this.getProfileRef(userId);
       const profileSnap = await getDoc(profileRef);
       
@@ -68,6 +93,7 @@ export class ProfileService {
         return profile;
       }
       
+      console.log('No profile found for user:', userId);
       return null;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -75,8 +101,13 @@ export class ProfileService {
     }
   }
 
+  /**
+   * Create new profile
+   */
   async createProfile(userId: string, profileData: Partial<UserProfile>): Promise<void> {
     try {
+      this.verifyAuth(userId);
+      
       const profileRef = this.getProfileRef(userId);
       await setDoc(profileRef, {
         userId,
@@ -104,38 +135,118 @@ export class ProfileService {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      console.log('Profile created successfully');
     } catch (error) {
       console.error('Error creating profile:', error);
+      
+      // Provide more detailed error message
+      if (error instanceof Error) {
+        if (error.message.includes('Missing or insufficient permissions')) {
+          throw new Error('Permission denied. Please check your Firestore security rules.');
+        }
+      }
+      
       throw error;
     }
   }
 
+  /**
+   * Update existing profile
+   */
   async updateProfile(userId: string, profileData: Partial<UserProfile>): Promise<void> {
     try {
+      this.verifyAuth(userId);
+      
       const profileRef = this.getProfileRef(userId);
       const cleaned = this.sanitizeUpdate(profileData);
       await updateDoc(profileRef, {
         ...cleaned,
         updatedAt: serverTimestamp(),
       });
+      console.log('Profile updated successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
       throw error;
     }
   }
 
+  /**
+   * Create or update profile (upsert)
+   */
   async upsertProfile(userId: string, profileData: Partial<UserProfile>): Promise<void> {
     try {
+      this.verifyAuth(userId);
+      
       const existingProfile = await this.getProfile(userId);
       
       if (existingProfile) {
+        console.log('Profile exists, updating...');
         await this.updateProfile(userId, profileData);
       } else {
+        console.log('Profile does not exist, creating...');
         await this.createProfile(userId, profileData);
       }
     } catch (error) {
       console.error('Error upserting profile:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Add weight entry to weight history
+   */
+  async addWeightEntry(userId: string, weightKg: number): Promise<void> {
+    try {
+      this.verifyAuth(userId);
+      
+      const profile = await this.getProfile(userId);
+      
+      if (!profile) {
+        throw new Error('Profile not found');
+      }
+
+      const weightHistory = profile.weightHistory || [];
+      weightHistory.push({
+        date: new Date(),
+        weightKg: weightKg,
+      });
+
+      await this.updateProfile(userId, {
+        currentWeightKg: weightKg,
+        weightHistory: weightHistory,
+      });
+      
+      console.log('Weight entry added successfully');
+    } catch (error) {
+      console.error('Error adding weight entry:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if user has completed onboarding
+   */
+  async hasCompletedOnboarding(userId: string): Promise<boolean> {
+    try {
+      const profile = await this.getProfile(userId);
+      
+      if (!profile) {
+        return false;
+      }
+
+      // Check if essential profile fields are filled
+      return !!(
+        profile.age &&
+        profile.gender &&
+        profile.heightCm &&
+        profile.currentWeightKg &&
+        profile.targetWeightKg &&
+        profile.activityLevel &&
+        profile.preferredCalorieTarget
+      );
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+      return false;
     }
   }
 }

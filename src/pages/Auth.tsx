@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Sparkles, Shield, Zap } from 'lucide-react';
 
 // Types
 interface FormData {
@@ -41,6 +41,12 @@ const MESSAGES = {
   EMAIL_REQUIRED: 'Email required',
   EMAIL_REQUIRED_DESC: 'Please enter your email address.',
 } as const;
+
+const features = [
+  { icon: Sparkles, text: "AI-Powered Nutrition" },
+  { icon: Shield, text: "Secure & Private" },
+  { icon: Zap, text: "Instant Results" }
+];
 
 // Sub-components
 const GoogleIcon = () => (
@@ -119,6 +125,7 @@ const Divider = ({ text }: { text: string }) => (
 // Main Component
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -131,6 +138,10 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
   // Redirect if authenticated
   useEffect(() => {
     if (user) {
@@ -141,11 +152,6 @@ const Auth = () => {
   // Form handlers
   const updateFormData = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const resetForm = () => {
-    setFormData({ email: '', password: '', fullName: '' });
-    setShowPassword(false);
   };
 
   const validateSignUp = (): boolean => {
@@ -291,81 +297,101 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex items-center justify-center p-3 sm:p-4">
-      <div className="w-full max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <img src="/logo.svg" alt="Aliva Logo" className="h-10 w-auto" />
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5 flex items-center justify-center p-3 sm:p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-6xl relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          {/* Left side - Branding */}
+          <div className={`hidden lg:block transition-all duration-1000 ${
+            isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
+          }`}>
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <img src="/logo.svg" alt="Aliva Logo" className="h-12 w-auto" />
+              </div>
+              
+              <div>
+                <h2 className="text-4xl font-bold text-foreground mb-4">
+                  Your AI-Powered<br />Nutrition Companion
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Start your journey to better health with personalized meal plans, smart tracking, and AI-powered insights.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {features.map((feature, idx) => (
+                  <div 
+                    key={idx}
+                    className="flex items-center gap-3 p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-primary/10 hover:border-primary/30 transition-all duration-300 hover:scale-105"
+                    style={{ animationDelay: `${idx * 150}ms` }}
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <feature.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="font-medium text-foreground">{feature.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-6 pt-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-foreground">10K+</div>
+                  <div className="text-sm text-muted-foreground">Active Users</div>
+                </div>
+                <div className="w-px h-12 bg-border" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-foreground">1M+</div>
+                  <div className="text-sm text-muted-foreground">Meals Tracked</div>
+                </div>
+                <div className="w-px h-12 bg-border" />
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-foreground">4.9⭐</div>
+                  <div className="text-sm text-muted-foreground">User Rating</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-muted-foreground">Your AI-powered nutrition companion</p>
-        </div>
 
-        {/* Auth Card */}
-        <div className="w-full max-w-md mx-auto">
-          <Card className="bg-card border border-primary/10 shadow-xl">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Welcome</CardTitle>
-              <CardDescription>Sign in or create a new account</CardDescription>
-            </CardHeader>
+          {/* Right side - Auth Form */}
+          <div className={`transition-all duration-1000 delay-200 ${
+            isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+          }`}>
+            {/* Mobile header */}
+            <div className="lg:hidden text-center mb-8">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <img src="/logo.svg" alt=" Logo" className="h-10 w-auto" />
+              </div>
+              <p className="text-muted-foreground">Your AI-powered nutrition companion</p>
+            </div>
 
-            <CardContent>
-              <Tabs defaultValue="signin" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Sign In</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                </TabsList>
+            <Card className="bg-card/80 backdrop-blur-xl border-2 border-primary/20 shadow-2xl">
+              <CardHeader className="text-center space-y-2">
+                <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
+                <CardDescription>Sign in or create a new account to get started</CardDescription>
+              </CardHeader>
 
-                {/* Sign In Tab */}
-                <TabsContent value="signin">
-                  {showForgotPassword ? (
-                    // Forgot Password Form
-                    <form onSubmit={handleForgotPassword} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="reset-email">Email</Label>
-                        <Input
-                          id="reset-email"
-                          type="email"
-                          placeholder="your@email.com"
-                          value={formData.email}
-                          onChange={(e) => updateFormData('email', e.target.value)}
-                          required
-                        />
-                      </div>
+              <CardContent>
+                <Tabs defaultValue="signin" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsTrigger value="signin">Sign In</TabsTrigger>
+                    <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                  </TabsList>
 
-                      <Button
-                        type="submit"
-                        className="w-full rounded-full h-11 sm:h-12 bg-gradient-to-b from-primary-dark to-primary text-white"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending reset link...
-                          </>
-                        ) : (
-                          'Send Reset Link'
-                        )}
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="link"
-                        className="w-full text-sm"
-                        onClick={() => setShowForgotPassword(false)}
-                        disabled={isLoading}
-                      >
-                        Back to Sign In
-                      </Button>
-                    </form>
-                  ) : (
-                    // Sign In Form
-                    <>
-                      <form onSubmit={handleSignIn} className="space-y-4">
+                  {/* Sign In Tab */}
+                  <TabsContent value="signin">
+                    {showForgotPassword ? (
+                      <form onSubmit={handleForgotPassword} className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="signin-email">Email</Label>
+                          <Label htmlFor="reset-email">Email</Label>
                           <Input
-                            id="signin-email"
+                            id="reset-email"
                             type="email"
                             placeholder="your@email.com"
                             value={formData.email}
@@ -374,135 +400,193 @@ const Auth = () => {
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <Label htmlFor="signin-password">Password</Label>
-                            <Button
-                              type="button"
-                              variant="link"
-                              className="h-auto p-0 text-xs text-primary hover:underline"
-                              onClick={() => setShowForgotPassword(true)}
-                            >
-                              Forgot password?
-                            </Button>
-                          </div>
-                          <PasswordInput
-                            id="signin-password"
-                            value={formData.password}
-                            onChange={(e) => updateFormData('password', e.target.value)}
-                            showPassword={showPassword}
-                            onTogglePassword={togglePasswordVisibility}
-                          />
-                        </div>
-
                         <Button
                           type="submit"
-                          className="w-full rounded-full h-11 sm:h-12 bg-gradient-to-b from-primary-dark to-primary text-white"
+                          className="w-full rounded-full h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-primary/20 transition-all duration-300"
                           disabled={isLoading}
                         >
                           {isLoading ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Signing in...
+                              Sending reset link...
                             </>
                           ) : (
-                            'Sign In'
+                            'Send Reset Link'
                           )}
                         </Button>
-                      </form>
 
-                      <Divider text="Or continue with" />
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="w-full text-sm"
+                          onClick={() => setShowForgotPassword(false)}
+                          disabled={isLoading}
+                        >
+                          Back to Sign In
+                        </Button>
+                      </form>
+                    ) : (
+                      <>
+                        <form onSubmit={handleSignIn} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="signin-email">Email</Label>
+                            <Input
+                              id="signin-email"
+                              type="email"
+                              placeholder="your@email.com"
+                              value={formData.email}
+                              onChange={(e) => updateFormData('email', e.target.value)}
+                              required
+                              className="h-11"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <Label htmlFor="signin-password">Password</Label>
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="h-auto p-0 text-xs text-primary hover:underline"
+                                onClick={() => setShowForgotPassword(true)}
+                              >
+                                Forgot password?
+                              </Button>
+                            </div>
+                            <PasswordInput
+                              id="signin-password"
+                              value={formData.password}
+                              onChange={(e) => updateFormData('password', e.target.value)}
+                              showPassword={showPassword}
+                              onTogglePassword={togglePasswordVisibility}
+                            />
+                          </div>
+
+                          <Button
+                            type="submit"
+                            className="w-full rounded-full h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-primary/20 transition-all duration-300 hover:scale-[1.02]"
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Signing in...
+                              </>
+                            ) : (
+                              'Sign In'
+                            )}
+                          </Button>
+                        </form>
+
+                        <Divider text="Or continue with" />
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full h-11 hover:bg-muted/50 transition-all duration-300"
+                          onClick={handleGoogleSignIn}
+                          disabled={isLoading}
+                        >
+                          <GoogleIcon />
+                          Sign in with Google
+                        </Button>
+                      </>
+                    )}
+                  </TabsContent>
+
+                  {/* Sign Up Tab */}
+                  <TabsContent value="signup">
+                    <form onSubmit={handleSignUp} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-name">Full Name</Label>
+                        <Input
+                          id="signup-name"
+                          type="text"
+                          placeholder="Your full name"
+                          value={formData.fullName}
+                          onChange={(e) => updateFormData('fullName', e.target.value)}
+                          required
+                          className="h-11"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email">Email</Label>
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          placeholder="your@email.com"
+                          value={formData.email}
+                          onChange={(e) => updateFormData('email', e.target.value)}
+                          required
+                          className="h-11"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password">Password</Label>
+                        <PasswordInput
+                          id="signup-password"
+                          value={formData.password}
+                          onChange={(e) => updateFormData('password', e.target.value)}
+                          showPassword={showPassword}
+                          onTogglePassword={togglePasswordVisibility}
+                        />
+                      </div>
 
                       <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        onClick={handleGoogleSignIn}
+                        type="submit"
+                        className="w-full rounded-full h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-primary/20 transition-all duration-300 hover:scale-[1.02]"
                         disabled={isLoading}
                       >
-                        <GoogleIcon />
-                        Sign in with Google
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating account...
+                          </>
+                        ) : (
+                          'Create Account'
+                        )}
                       </Button>
-                    </>
-                  )}
-                </TabsContent>
+                    </form>
 
-                {/* Sign Up Tab */}
-                <TabsContent value="signup">
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name">Full Name</Label>
-                      <Input
-                        id="signup-name"
-                        type="text"
-                        placeholder="Your full name"
-                        value={formData.fullName}
-                        onChange={(e) => updateFormData('fullName', e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={formData.email}
-                        onChange={(e) => updateFormData('email', e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <PasswordInput
-                        id="signup-password"
-                        value={formData.password}
-                        onChange={(e) => updateFormData('password', e.target.value)}
-                        showPassword={showPassword}
-                        onTogglePassword={togglePasswordVisibility}
-                      />
-                    </div>
+                    <Divider text="Or continue with" />
 
                     <Button
-                      type="submit"
-                      className="w-full rounded-full h-11 sm:h-12 bg-gradient-to-b from-primary-dark to-primary text-white"
+                      type="button"
+                      variant="outline"
+                      className="w-full h-11 hover:bg-muted/50 transition-all duration-300"
+                      onClick={handleGoogleSignIn}
                       disabled={isLoading}
                     >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating account...
-                        </>
-                      ) : (
-                        'Create Account'
-                      )}
+                      <GoogleIcon />
+                      Sign up with Google
                     </Button>
-                  </form>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
 
-                  <Divider text="Or continue with" />
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading}
-                  >
-                    <GoogleIcon />
-                    Sign up with Google
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </p>
+            <p className="text-center text-sm text-muted-foreground mt-6">
+              By continuing, you agree to our{' '}
+              <a href="/terms" className="text-primary hover:underline">Terms of Service</a>
+              {' '}and{' '}
+              <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+            </p>
+          </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.6; }
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse-slow 4s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
