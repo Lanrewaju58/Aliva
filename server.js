@@ -380,13 +380,16 @@ app.post('/api/payments/init', async (req, res) => {
     // kobo = NGN * 100
     const amountByPlan = {
       PRO: { monthly: 999000, yearly: 9900000 }, // ₦9,990.00 and ₦99,000.00
-      PREMIUM: { monthly: 1999000, yearly: 9999000 } // ₦19,990.00 and ₦99,999.00
+      PREMIUM: { monthly: 1999000, yearly: 9999900 } // ₦19,990.00 and ₦99,999.00
     };
 
     const amount = amountByPlan[normalizedPlan]?.[normalizedInterval];
     if (!amount) {
       return res.status(500).json({ error: 'Amount not configured' });
     }
+
+    // Log for debugging
+    console.log(`💰 Payment Init - Plan: ${normalizedPlan}, Interval: ${normalizedInterval}, Amount: ${amount} kobo (₦${amount / 100})`);
 
     const originHeader = req.headers['origin'];
     const baseUrl = typeof originHeader === 'string' ? originHeader : CONFIG.FRONTEND_URL;

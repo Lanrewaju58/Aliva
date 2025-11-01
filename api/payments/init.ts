@@ -53,12 +53,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const amountByPlan: Record<string, Record<string, number>> = {
       PRO: { monthly: 999000, yearly: 9900000 },
-      PREMIUM: { monthly: 1999000, yearly: 9999000 } // ₦19,990.00 and ₦99,999.00
+      PREMIUM: { monthly: 1999000, yearly: 9999900 } // ₦19,990.00 and ₦99,999.00
     };
     const amount = amountByPlan[normalizedPlan]?.[normalizedInterval];
     if (!amount) {
       return res.status(500).json({ error: 'Amount not configured' });
     }
+
+    // Log for debugging
+    console.log(`💰 Payment Init (Vercel) - Plan: ${normalizedPlan}, Interval: ${normalizedInterval}, Amount: ${amount} kobo (₦${amount / 100})`);
 
     const origin = (req.headers['origin'] as string) || (req.headers['referer'] as string) || '';
     const host = (req.headers['host'] as string) || '';

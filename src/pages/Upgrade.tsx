@@ -49,7 +49,10 @@ const Upgrade = () => {
       }
 
       // Normalize plan name: "Premium" -> "PREMIUM"
-      const normalizedPlan = planType.toUpperCase() === 'PREMIUM' ? 'PREMIUM' : planType.toUpperCase();
+      const normalizedPlan = planType.toUpperCase();
+      
+      // Debug logging
+      console.log('💳 Upgrade request:', { planType, normalizedPlan, interval });
 
       const apiBase = import.meta.env.VITE_API_BASE_URL || '';
       const response = await fetch(`${apiBase}/api/payments/init`, {
