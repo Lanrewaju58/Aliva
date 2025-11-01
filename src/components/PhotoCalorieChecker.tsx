@@ -1,12 +1,16 @@
 // src/components/PhotoCalorieChecker.tsx
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Upload, X, Loader2, Sparkles, Image as ImageIcon, Check } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { profileService } from "@/services/profileService";
+import { UserProfile } from "@/types/profile";
+import { Camera, Upload, X, Loader2, Sparkles, Image as ImageIcon, Check, Crown } from "lucide-react";
 
 interface NutritionData {
   name: string;
@@ -39,6 +43,53 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [dailyScanCount, setDailyScanCount] = useState(0);
+
+  // Check if user has active premium plan
+  const isPremium = useMemo(() => {
+    if (!userProfile?.plan || userProfile.plan === 'FREE') return false;
+    const expires = (userProfile as any).planExpiresAt;
+    if (!expires) return true; // No expiry = lifetime
+    const expDate = (typeof expires?.toDate === 'function')
+      ? expires.toDate()
+      : (expires instanceof Date ? expires : new Date(expires));
+    return expDate > new Date();
+  }, [userProfile]);
+
+  // Load user profile
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.uid) {
+        setUserProfile(null);
+        return;
+      }
+      try {
+        const profile = await profileService.getProfile(user.uid);
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        setUserProfile(null);
+      }
+    };
+    loadProfile();
+  }, [user]);
+
+  // Track daily scan count
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const storageKey = `foodScanCount_${user?.uid || 'anonymous'}_${today}`;
+    const stored = localStorage.getItem(storageKey);
+    const count = stored ? parseInt(stored, 10) : 0;
+    setDailyScanCount(count);
+  }, [user, isOpen]);
+
+  // Free plan limit: 2 scans per day
+  const FREE_SCAN_LIMIT = 2;
+  const canScan = isPremium || dailyScanCount < FREE_SCAN_LIMIT;
+  const scansRemaining = isPremium ? Infinity : Math.max(0, FREE_SCAN_LIMIT - dailyScanCount);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -63,6 +114,16 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
 
   const analyzeFoodImage = async () => {
     if (!image) return;
+
+    // Check scan limit for free users
+    if (!canScan) {
+      toast({
+        title: 'Daily scan limit reached',
+        description: `Free users can scan up to ${FREE_SCAN_LIMIT} times per day. Upgrade to Premium for unlimited scans.`,
+        variant: 'destructive'
+      });
+      return;
+    }
 
     setIsAnalyzing(true);
     
@@ -134,6 +195,15 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
       const nutritionData: NutritionData = JSON.parse(jsonMatch[0]);
       
       setResult(nutritionData);
+      
+      // Increment scan count for free users
+      if (!isPremium && user?.uid) {
+        const today = new Date().toISOString().split('T')[0];
+        const storageKey = `foodScanCount_${user.uid}_${today}`;
+        const newCount = dailyScanCount + 1;
+        localStorage.setItem(storageKey, newCount.toString());
+        setDailyScanCount(newCount);
+      }
       
       toast({
         title: 'Analysis complete!',
@@ -219,6 +289,35 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
               Upload a photo or take a picture of your meal for instant nutrition info
             </CardDescription>
           </DialogHeader>
+
+          {/* Scan Limit Info */}
+          {!isPremium && (
+            <div className="bg-muted/50 border border-border rounded-lg p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm text-muted-foreground">
+                  Scans today: {dailyScanCount}/{FREE_SCAN_LIMIT}
+                </span>
+              </div>
+              {scansRemaining === 0 ? (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/upgrade');
+                  }}
+                  className="gap-2"
+                >
+                  <Crown className="h-3 w-3" />
+                  Upgrade
+                </Button>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  {scansRemaining} remaining
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="space-y-4 mt-2">
             {/* Upload Area */}
@@ -327,14 +426,40 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
                 </div>
 
                 {!result && !isAnalyzing && (
-                  <Button 
-                    onClick={analyzeFoodImage}
-                    className="w-full gap-2 h-12 text-base hover:scale-[1.02] transition-transform"
-                    size="lg"
-                  >
-                    <Sparkles className="h-5 w-5 animate-pulse" />
-                    Analyze Food with AI
-                  </Button>
+                  <>
+                    {!canScan ? (
+                      <Card className="border-destructive/50 bg-destructive/5">
+                        <CardContent className="p-6 text-center space-y-4">
+                          <p className="text-sm font-medium text-destructive">
+                            Daily scan limit reached
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Free users can scan up to {FREE_SCAN_LIMIT} times per day. Upgrade to Premium for unlimited scans.
+                          </p>
+                          <Button
+                            onClick={() => {
+                              setIsOpen(false);
+                              navigate('/upgrade');
+                            }}
+                            className="gap-2"
+                            variant="default"
+                          >
+                            <Crown className="h-4 w-4" />
+                            Upgrade to Premium
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Button 
+                        onClick={analyzeFoodImage}
+                        className="w-full gap-2 h-12 text-base hover:scale-[1.02] transition-transform"
+                        size="lg"
+                      >
+                        <Sparkles className="h-5 w-5 animate-pulse" />
+                        Analyze Food with AI
+                      </Button>
+                    )}
+                  </>
                 )}
 
                 {isAnalyzing && (
