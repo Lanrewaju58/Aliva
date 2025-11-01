@@ -139,6 +139,7 @@ const Upgrade = () => {
         "1-on-1 nutritionist consultations",
         "Custom diet plans",
         "Meal calendar export & download",
+        "AI-powered photo food scanning",
       ],
       buttonText: isPro ? "Current Plan" : "Upgrade to Pro",
       buttonVariant: isPro ? "outline" as const : "default" as const,

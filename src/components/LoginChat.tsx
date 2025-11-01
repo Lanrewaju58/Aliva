@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, Salad, Sparkles, User, AlertCircle, MapPin, RotateCcw, ChefHat, Settings, MessageSquare, Clock, Trash2, X, Menu } from "lucide-react";
+import { Bot, Send, Salad, Sparkles, User, AlertCircle, MapPin, RotateCcw, ChefHat, Settings, MessageSquare, Clock, Trash2, X, Menu, Loader2, Filter } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { profileService } from "@/services/profileService";
@@ -74,10 +74,20 @@ const LoginChat = ({ dashboardData }: LoginChatProps) => {
   const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const [showMapDialog, setShowMapDialog] = useState(false);
   const [mapRestaurants, setMapRestaurants] = useState<any[]>([]);
+  const [allMapRestaurants, setAllMapRestaurants] = useState<any[]>([]); // Store all results for filtering
   const [mapKeyword, setMapKeyword] = useState<string | null>(null);
+  const [mapFilters, setMapFilters] = useState({
+    minRating: 0,
+    maxDistance: 10,
+    priceLevel: 0, // 0 = all, 1-4 = price levels
+  });
+  const [mapSortBy, setMapSortBy] = useState<'rating' | 'distance'>('rating');
+  const [isSearchingRestaurants, setIsSearchingRestaurants] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const locationWatchIdRef = useRef<number | null>(null);
+  const bestAccuracyRef = useRef<number>(Infinity);
   const [decidedFood, setDecidedFood] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [dailyCount, setDailyCount] = useState<number>(0);
@@ -227,24 +237,115 @@ SAFETY:
     ]);
 
     if (navigator.geolocation) {
+      const highAccuracyOptions = {
+        enableHighAccuracy: true, // Request precise GPS location
+        timeout: 15000, // Wait up to 15 seconds for high accuracy
+        maximumAge: 0 // Don't use cached location, always get fresh one
+      };
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation({
+          const coords = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
+          };
+          setUserLocation(coords);
+          const initialAccuracy = position.coords.accuracy || Infinity;
+          bestAccuracyRef.current = initialAccuracy;
+          
+          console.log('📍 Precise location obtained:', {
+            lat: coords.latitude,
+            lng: coords.longitude,
+            accuracy: initialAccuracy !== Infinity ? `${Math.round(initialAccuracy)}m` : 'unknown',
+            altitude: position.coords.altitude,
+            altitudeAccuracy: position.coords.altitudeAccuracy,
           });
+
+          // Start watching position for continuous updates (improves accuracy over time)
+          if (locationWatchIdRef.current !== null) {
+            navigator.geolocation.clearWatch(locationWatchIdRef.current);
+          }
+          
+          const watchId = navigator.geolocation.watchPosition(
+            (updatedPosition) => {
+              // Only update if accuracy improved or we get very accurate reading (<50m)
+              const newAccuracy = updatedPosition.coords.accuracy || Infinity;
+              
+              if (newAccuracy < bestAccuracyRef.current || newAccuracy < 50) {
+                bestAccuracyRef.current = newAccuracy;
+                setUserLocation({
+                  latitude: updatedPosition.coords.latitude,
+                  longitude: updatedPosition.coords.longitude,
+                });
+                console.log('📍 Location accuracy improved:', `${Math.round(newAccuracy)}m`);
+              }
+            },
+            (error) => {
+              // Handle location watch errors gracefully
+              if (error.code === error.TIMEOUT) {
+                console.warn('Location watch timeout - continuing with current location');
+              } else if (error.code === error.PERMISSION_DENIED) {
+                console.warn('Location permission denied - stopping watch');
+                if (locationWatchIdRef.current !== null) {
+                  navigator.geolocation.clearWatch(locationWatchIdRef.current);
+                  locationWatchIdRef.current = null;
+                }
+              } else if (error.code === error.POSITION_UNAVAILABLE) {
+                console.warn('Location unavailable - continuing with current location');
+              } else {
+                console.warn('Location watch error:', error);
+              }
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 20000,
+              maximumAge: 5000 // Update every 5 seconds
+            }
+          );
+
+          locationWatchIdRef.current = watchId;
         },
-        (error) => console.log('Could not get user location:', error)
+        (error) => {
+          console.error('High accuracy location failed:', error);
+          // Fallback to less precise location
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              setUserLocation({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              });
+              console.log('📍 Using fallback location (less precise)');
+            },
+            (fallbackError) => {
+              console.error('Fallback location also failed:', fallbackError);
+              setError('Unable to get your location. Please enable location services.');
+            },
+            {
+              enableHighAccuracy: false,
+              timeout: 10000,
+              maximumAge: 300000 // Accept location up to 5 minutes old
+            }
+          );
+        },
+        highAccuracyOptions
       );
     }
 
     if (!document.querySelector('script[src*="maps.googleapis.com"]')) {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyD5SzaJLsPAqsE1t_e_6c8A0vHbxb2fcBo&libraries=places,geometry`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyD5SzaJLsPAqsE1t_e_6c8A0vHbxb2fcBo&libraries=places,geometry&loading=async`;
       script.async = true;
       script.defer = true;
+      script.setAttribute('loading', 'async');
       document.head.appendChild(script);
     }
+
+    // Cleanup location watch on unmount
+    return () => {
+      if (locationWatchIdRef.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(locationWatchIdRef.current);
+      }
+    };
   }, [user]);
 
   useEffect(() => {
@@ -399,11 +500,215 @@ SAFETY:
   };
 
   const initializeMap = (keyword?: string) => {
-    // Map initialization code remains the same
-    // (keeping your existing implementation)
+    if (!mapRef.current || !userLocation) {
+      console.warn('Cannot initialize map: missing location or map ref');
+      setIsSearchingRestaurants(false);
+      return;
+    }
+
+    const google = (window as any).google;
+    if (!google || !google.maps) {
+      console.error('Google Maps API not loaded yet');
+      setError("Google Maps is still loading. Please wait a moment.");
+      setIsSearchingRestaurants(false);
+      return;
+    }
+
+    try {
+      // Initialize map
+      const map = new google.maps.Map(mapRef.current, {
+      center: { lat: userLocation.latitude, lng: userLocation.longitude },
+      zoom: 14,
+      styles: [
+        {
+          featureType: "poi",
+          elementType: "labels",
+          stylers: [{ visibility: "off" }]
+        }
+      ],
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+    });
+
+    googleMapRef.current = map;
+
+    // Add user location marker
+    new google.maps.Marker({
+      position: { lat: userLocation.latitude, lng: userLocation.longitude },
+      map: map,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: '#3b82f6',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3,
+      },
+      title: 'Your Location',
+      zIndex: 1000,
+    });
+
+    // Search for restaurants
+    const service = new google.maps.places.PlacesService(map);
+    const request: any = {
+      location: { lat: userLocation.latitude, lng: userLocation.longitude },
+      radius: 5000,
+      type: ['restaurant', 'food'],
+      keyword: keyword || 'healthy restaurant',
+    };
+
+    service.nearbySearch(request, (results: any[], status: string) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+        // Calculate distances and filter results
+        const resultsWithDistance = results
+          .filter((place: any) => place.business_status === 'OPERATIONAL')
+          .map((place: any) => {
+            let calculatedDistance = 0;
+            if (place.geometry?.location && userLocation) {
+              calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(
+                new google.maps.LatLng(userLocation.latitude, userLocation.longitude),
+                place.geometry.location
+              ) / 1000;
+            }
+            return { ...place, calculatedDistance };
+          })
+          .sort((a: any, b: any) => {
+            // Sort by rating (descending), then by distance
+            if (b.rating && a.rating) {
+              return b.rating - a.rating;
+            }
+            return a.calculatedDistance - b.calculatedDistance;
+          })
+          .slice(0, 20); // Limit to top 20
+
+        setMapRestaurants(resultsWithDistance);
+        setAllMapRestaurants(resultsWithDistance); // Store all results for filtering
+
+        // Clear existing markers
+        markersRef.current.forEach((marker: any) => marker.setMap(null));
+        markersRef.current = [];
+
+        // Add markers for each restaurant
+        resultsWithDistance.forEach((place: any, index: number) => {
+          if (place.geometry?.location) {
+            const marker = new google.maps.Marker({
+              position: place.geometry.location,
+              map: map,
+              title: place.name,
+              icon: {
+                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="18" fill="${place.rating >= 4 ? '#10b981' : place.rating >= 3.5 ? '#f59e0b' : '#ef4444'}" stroke="white" stroke-width="2"/><text x="20" y="26" font-size="14" font-weight="bold" fill="white" text-anchor="middle">${index + 1}</text></svg>`)}`,
+                scaledSize: new google.maps.Size(40, 40),
+                anchor: new google.maps.Point(20, 20),
+              },
+              animation: google.maps.Animation.DROP,
+            });
+
+            // Add info window
+            const infoWindow = new google.maps.InfoWindow({
+              content: `
+                <div style="padding: 8px; min-width: 200px;">
+                  <h3 style="margin: 0 0 8px 0; font-weight: 600; font-size: 16px;">${place.name}</h3>
+                  ${place.rating ? `<div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                    <span style="color: #f59e0b;">⭐</span>
+                    <span style="font-weight: 500;">${place.rating}</span>
+                    ${place.user_ratings_total ? `<span style="color: #6b7280; font-size: 12px;">(${place.user_ratings_total})</span>` : ''}
+                  </div>` : ''}
+                  ${place.vicinity ? `<p style="margin: 4px 0; color: #6b7280; font-size: 12px;">${place.vicinity}</p>` : ''}
+                  ${place.price_level ? `<p style="margin: 4px 0; color: #6b7280; font-size: 12px;">${'$'.repeat(place.price_level)}</p>` : ''}
+                </div>
+              `,
+            });
+
+            marker.addListener('click', () => {
+              // Close all info windows
+              markersRef.current.forEach((m: any) => {
+                if (m.infoWindow) {
+                  m.infoWindow.close();
+                }
+              });
+              infoWindow.open(map, marker);
+              
+              // Pan to marker
+              map.panTo(place.geometry.location);
+              map.setZoom(17);
+            });
+
+            marker.infoWindow = infoWindow;
+            markersRef.current.push(marker);
+
+            // Get place details for more info
+            if (place.place_id) {
+              try {
+                service.getDetails(
+                  { placeId: place.place_id, fields: ['opening_hours', 'website', 'formatted_phone_number', 'photos'] },
+                  (placeDetails: any, detailsStatus: string) => {
+                    if (detailsStatus === google.maps.places.PlacesServiceStatus.OK && placeDetails) {
+                      // Update the restaurant data with additional details using functional updates
+                      setMapRestaurants((prev: any[]) => {
+                        const updated = [...prev];
+                        const index = updated.findIndex((r: any) => r.place_id === place.place_id);
+                        if (index !== -1) {
+                          updated[index] = {
+                            ...updated[index],
+                            opening_hours: placeDetails.opening_hours,
+                            website: placeDetails.website,
+                            formatted_phone_number: placeDetails.formatted_phone_number,
+                            photos: placeDetails.photos,
+                          };
+                        }
+                        return updated;
+                      });
+                      setAllMapRestaurants((prev: any[]) => {
+                        const updated = [...prev];
+                        const index = updated.findIndex((r: any) => r.place_id === place.place_id);
+                        if (index !== -1) {
+                          updated[index] = {
+                            ...updated[index],
+                            opening_hours: placeDetails.opening_hours,
+                            website: placeDetails.website,
+                            formatted_phone_number: placeDetails.formatted_phone_number,
+                            photos: placeDetails.photos,
+                          };
+                        }
+                        return updated;
+                      });
+                    }
+                  }
+                );
+              } catch (error) {
+                console.warn('Error fetching place details:', error);
+              }
+            }
+          }
+        });
+
+        // Fit bounds to show all markers
+        if (resultsWithDistance.length > 0) {
+          const bounds = new google.maps.LatLngBounds();
+          resultsWithDistance.forEach((place: any) => {
+            if (place.geometry?.location) {
+              bounds.extend(place.geometry.location);
+            }
+          });
+          bounds.extend({ lat: userLocation.latitude, lng: userLocation.longitude });
+          map.fitBounds(bounds);
+        }
+      } else {
+          console.error('Places search failed:', status);
+          setMapRestaurants([]);
+          setError(`Unable to find restaurants: ${status}`);
+        }
+        setIsSearchingRestaurants(false);
+      });
+    } catch (error: any) {
+      console.error('Error initializing map:', error);
+      setError('Failed to initialize map. Please refresh and try again.');
+      setIsSearchingRestaurants(false);
+    }
   };
 
-  const handleFindRestaurants = () => {
+  const handleFindRestaurants = (searchKeyword?: string) => {
     if (!userLocation) {
       setError("Please enable location access to find nearby restaurants");
       return;
@@ -414,9 +719,82 @@ SAFETY:
       return;
     }
     
+    setMapKeyword(searchKeyword || null);
+    setMapFilters({ minRating: 0, maxDistance: 10, priceLevel: 0 }); // Reset filters
+    setMapSortBy('rating'); // Reset sort
     setShowMapDialog(true);
     setError(null);
-    setTimeout(() => initializeMap(), 300);
+    setIsSearchingRestaurants(true);
+    
+    // Wait for dialog to open, then initialize map
+    setTimeout(() => {
+      initializeMap(searchKeyword || 'healthy restaurant');
+      setIsSearchingRestaurants(false);
+    }, 300);
+  };
+
+  const handleFilterRestaurants = () => {
+    if (!userLocation || !allMapRestaurants.length) return;
+    
+    const google = (window as any).google;
+    if (!google) return;
+
+    const filtered = allMapRestaurants
+      .map((place: any) => {
+        let distance = 0;
+        if (place.geometry?.location && google.maps?.geometry) {
+          distance = google.maps.geometry.spherical.computeDistanceBetween(
+            new google.maps.LatLng(userLocation.latitude, userLocation.longitude),
+            place.geometry.location
+          ) / 1000;
+        }
+        return { ...place, calculatedDistance: distance };
+      })
+      .filter((place: any) => {
+        if (mapFilters.minRating > 0 && (!place.rating || place.rating < mapFilters.minRating)) {
+          return false;
+        }
+        if (mapFilters.maxDistance < 10 && place.calculatedDistance > mapFilters.maxDistance) {
+          return false;
+        }
+        if (mapFilters.priceLevel > 0 && (!place.price_level || place.price_level !== mapFilters.priceLevel)) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a: any, b: any) => {
+        if (mapSortBy === 'rating') {
+          const ratingA = a.rating || 0;
+          const ratingB = b.rating || 0;
+          return ratingB - ratingA;
+        } else {
+          return a.calculatedDistance - b.calculatedDistance;
+        }
+      });
+
+    setMapRestaurants(filtered);
+
+    // Update map markers
+    if (googleMapRef.current) {
+      markersRef.current.forEach((marker: any) => marker.setMap(null));
+      markersRef.current = [];
+
+      filtered.forEach((place: any, index: number) => {
+        if (place.geometry?.location) {
+          const marker = new google.maps.Marker({
+            position: place.geometry.location,
+            map: googleMapRef.current,
+            title: place.name,
+            icon: {
+              url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="18" fill="${place.rating >= 4 ? '#10b981' : place.rating >= 3.5 ? '#f59e0b' : '#ef4444'}" stroke="white" stroke-width="2"/><text x="20" y="26" font-size="14" font-weight="bold" fill="white" text-anchor="middle">${index + 1}</text></svg>`)}`,
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 20),
+            },
+          });
+          markersRef.current.push(marker);
+        }
+      });
+    }
   };
 
   const extractFoodKeyword = (text: string): string | null => {
@@ -568,11 +946,16 @@ SAFETY:
         setMapKeyword(null);
       }
 
-      const wantsLocations = /\b(show|suggest|nearby|where)\b.*\b(location|place|restaurant|spot)s?/i.test(text);
-      if (keyword && wantsLocations && userLocation && (window as any).google) {
-        setMapKeyword(keyword);
+      const wantsLocations = /\b(show|suggest|nearby|where|find)\b.*\b(location|place|restaurant|spot|restaurants)s?/i.test(text);
+      if (wantsLocations && userLocation && (window as any).google) {
+        const searchKeyword = keyword || 'healthy restaurant';
+        setMapKeyword(searchKeyword);
         setShowMapDialog(true);
-        setTimeout(() => initializeMap(keyword), 400);
+        setIsSearchingRestaurants(true);
+        setTimeout(() => {
+          initializeMap(searchKeyword);
+          setIsSearchingRestaurants(false);
+        }, 400);
       }
     } catch (error: any) {
       setError(error.message || "Sorry, I'm having trouble connecting right now.");
@@ -818,7 +1201,7 @@ SAFETY:
                     size="sm" 
                     variant="outline" 
                     className="text-xs hover:scale-105 transition-all duration-200"
-                    onClick={() => handleFindRestaurants()}
+                    onClick={() => handleFindRestaurants(decidedFood)}
                     disabled={thinking}
                   >
                     <MapPin className="h-3 w-3 mr-1" />
@@ -834,30 +1217,141 @@ SAFETY:
 
       {/* Map Dialog */}
       <Dialog open={showMapDialog} onOpenChange={setShowMapDialog}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 gap-0 animate-in fade-in-0 zoom-in-95 duration-300">
-          <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b bg-card/50 backdrop-blur-sm">
+        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 gap-0 animate-in fade-in-0 zoom-in-95 duration-300">
+          <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-primary/5 to-primary/10">
             <DialogTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
               Nearby Restaurants
+              {mapKeyword && (
+                <Badge variant="secondary" className="ml-2">
+                  {mapKeyword}
+                </Badge>
+              )}
+              {mapRestaurants.length > 0 && (
+                <Badge variant="outline" className="ml-2">
+                  {mapRestaurants.length} found
+                </Badge>
+              )}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Interactive map showing nearby restaurants with filters for rating, distance, and price. Click on restaurant cards to see details and get directions.
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col md:flex-row h-[calc(100%-60px)] overflow-hidden">
-            <div className="flex-1 relative">
+          
+          {/* Filters and Search */}
+          <div className="px-4 sm:px-6 py-3 border-b border-border bg-card/50 backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <div className="flex flex-wrap gap-2 flex-1">
+                <div className="flex items-center gap-2 px-2 py-1 bg-muted/50 rounded-lg">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">Filters:</span>
+                </div>
+                <select
+                  value={mapFilters.minRating}
+                  onChange={(e) => {
+                    setMapFilters({ ...mapFilters, minRating: Number(e.target.value) });
+                    setTimeout(handleFilterRestaurants, 100);
+                  }}
+                  className="px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-border bg-background hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                >
+                  <option value={0}>All Ratings</option>
+                  <option value={4}>4.0+ ⭐</option>
+                  <option value={4.5}>4.5+ ⭐</option>
+                </select>
+                
+                <select
+                  value={mapFilters.maxDistance}
+                  onChange={(e) => {
+                    setMapFilters({ ...mapFilters, maxDistance: Number(e.target.value) });
+                    setTimeout(handleFilterRestaurants, 100);
+                  }}
+                  className="px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-border bg-background hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                >
+                  <option value={10}>All Distances</option>
+                  <option value={1}>Within 1 km</option>
+                  <option value={2}>Within 2 km</option>
+                  <option value={5}>Within 5 km</option>
+                </select>
+                
+                <select
+                  value={mapFilters.priceLevel}
+                  onChange={(e) => {
+                    setMapFilters({ ...mapFilters, priceLevel: Number(e.target.value) });
+                    setTimeout(handleFilterRestaurants, 100);
+                  }}
+                  className="px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-border bg-background hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                >
+                  <option value={0}>All Prices</option>
+                  <option value={1}>$ Budget</option>
+                  <option value={2}>$$ Moderate</option>
+                  <option value={3}>$$$ Expensive</option>
+                  <option value={4}>$$$$ Very Expensive</option>
+                </select>
+                
+                <Button
+                  variant={mapSortBy === 'rating' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    setMapSortBy('rating');
+                    setTimeout(handleFilterRestaurants, 100);
+                  }}
+                  className="text-xs h-8"
+                >
+                  ⭐ Top Rated
+                </Button>
+                
+                <Button
+                  variant={mapSortBy === 'distance' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    setMapSortBy('distance');
+                    setTimeout(handleFilterRestaurants, 100);
+                  }}
+                  className="text-xs h-8"
+                >
+                  📍 Nearest
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row h-[calc(100%-140px)] overflow-hidden">
+            <div className="flex-1 relative min-h-[300px] md:min-h-0">
               <div ref={mapRef} className="w-full h-full" />
+              {isSearchingRestaurants && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Finding restaurants...</p>
+                  </div>
+                </div>
+              )}
             </div>
             
-            <div className="w-full md:w-96 border-l bg-card">
+            <div className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-card overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-3 sm:p-4 space-y-3">
                   {mapRestaurants.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <MapPin className="h-12 w-12 mx-auto mb-2 opacity-50 animate-pulse" />
-                      <p className="text-sm">Searching for restaurants...</p>
+                    <div className="text-center py-12 text-muted-foreground">
+                      {isSearchingRestaurants ? (
+                        <>
+                          <Loader2 className="h-12 w-12 mx-auto mb-3 opacity-50 animate-spin text-primary" />
+                          <p className="text-sm font-medium">Searching for restaurants...</p>
+                          <p className="text-xs mt-1">This may take a few seconds</p>
+                        </>
+                      ) : (
+                        <>
+                          <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p className="text-sm font-medium">No restaurants found</p>
+                          <p className="text-xs mt-1">Try adjusting your filters</p>
+                        </>
+                      )}
                     </div>
                   ) : (
                     mapRestaurants.map((place, index) => {
-                      let distance = 0;
-                      if (userLocation && place.geometry?.location && (window as any).google?.maps?.geometry) {
+                      // Use calculated distance if available (from filtering), otherwise calculate it
+                      let distance = place.calculatedDistance || 0;
+                      if (distance === 0 && userLocation && place.geometry?.location && (window as any).google?.maps?.geometry) {
                         const google = (window as any).google;
                         distance = google.maps.geometry.spherical.computeDistanceBetween(
                           new google.maps.LatLng(userLocation.latitude, userLocation.longitude),
@@ -870,74 +1364,113 @@ SAFETY:
                         ? `https://www.google.com/maps/dir/?api=1&origin=${userLocation?.latitude},${userLocation?.longitude}&destination=${placeLatLng.lat()},${placeLatLng.lng()}&travelmode=driving`
                         : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.vicinity)}`;
                       
+                      const isOpen = place.opening_hours?.isOpen() ?? true;
+                      
                       return (
                         <div 
-                          key={index} 
-                          className="group p-3 sm:p-4 border-2 border-border rounded-xl hover:shadow-lg hover:border-primary/50 cursor-pointer transition-all duration-300 bg-card hover:-translate-y-1"
+                          key={`${place.place_id || index}`}
+                          className="group p-4 border-2 border-border rounded-xl hover:shadow-xl hover:border-primary/50 cursor-pointer transition-all duration-300 bg-gradient-to-br from-card to-card/50 hover:-translate-y-1"
                           onClick={() => {
                             if (place.geometry?.location && googleMapRef.current) {
                               googleMapRef.current.panTo(place.geometry.location);
                               googleMapRef.current.setZoom(17);
+                              // Open info window
+                              const marker = markersRef.current[index];
+                              if (marker && marker.infoWindow) {
+                                marker.infoWindow.open(googleMapRef.current, marker);
+                              }
                             }
                           }}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={`w-8 h-8 rounded-full text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-md transition-transform duration-300 group-hover:scale-110 ${
-                              place.rating && place.rating >= 4 ? 'bg-gradient-to-br from-green-500 to-green-600' : 'bg-gradient-to-br from-amber-500 to-amber-600'
+                            <div className={`w-10 h-10 rounded-full text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl ${
+                              place.rating >= 4 ? 'bg-gradient-to-br from-green-500 to-green-600' : 
+                              place.rating >= 3.5 ? 'bg-gradient-to-br from-amber-500 to-amber-600' : 
+                              'bg-gradient-to-br from-red-500 to-red-600'
                             }`}>
                               {index + 1}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold mb-1 text-sm sm:text-base truncate group-hover:text-primary transition-colors">{place.name}</div>
-                              <div className="text-xs text-muted-foreground mb-2 line-clamp-1">{place.vicinity}</div>
-                              <div className="flex items-center gap-2 sm:gap-3 text-xs mb-2 flex-wrap">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <div className="font-semibold text-base truncate group-hover:text-primary transition-colors">{place.name}</div>
+                                {!isOpen && (
+                                  <Badge variant="outline" className="text-xs shrink-0">
+                                    Closed
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground mb-3 line-clamp-2">{place.vicinity}</div>
+                              <div className="flex items-center gap-3 text-xs mb-3 flex-wrap">
                                 {distance > 0 && (
-                                  <div className="flex items-center gap-1 text-primary font-medium">
+                                  <div className="flex items-center gap-1 text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-md">
                                     <MapPin className="h-3 w-3" />
                                     {distance.toFixed(1)} km
                                   </div>
                                 )}
                                 {place.rating && (
-                                  <div className="flex items-center gap-1 text-amber-600">
+                                  <div className="flex items-center gap-1 text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-md">
                                     <span>⭐</span>
-                                    <span className="font-medium">{place.rating}</span>
+                                    <span>{place.rating.toFixed(1)}</span>
                                     {place.user_ratings_total && (
                                       <span className="text-muted-foreground">({place.user_ratings_total})</span>
                                     )}
                                   </div>
                                 )}
                                 {place.price_level && (
-                                  <div className="text-muted-foreground font-medium">
+                                  <div className="text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-md">
                                     {Array(place.price_level).fill('$').join('')}
                                   </div>
                                 )}
                               </div>
                               {place.types && place.types.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {place.types.slice(0, 2).map((type: string, typeIndex: number) => (
-                                    <span 
+                                <div className="flex flex-wrap gap-1.5 mb-3">
+                                  {place.types.slice(0, 3).map((type: string, typeIndex: number) => (
+                                    <Badge 
                                       key={typeIndex}
-                                      className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full"
+                                      variant="secondary"
+                                      className="text-xs px-2 py-0.5"
                                     >
-                                      {type.replace(/_/g, ' ')}
-                                    </span>
+                                      {type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                                    </Badge>
                                   ))}
+                                </div>
+                              )}
+                              {place.opening_hours && (
+                                <div className="text-xs text-muted-foreground mb-3">
+                                  {place.opening_hours.weekday_text && (
+                                    <span>{place.opening_hours.weekday_text[new Date().getDay()]}</span>
+                                  )}
                                 </div>
                               )}
                             </div>
                           </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full mt-3 text-xs hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(googleMapsUrl, '_blank');
-                            }}
-                          >
-                            <MapPin className="h-3 w-3 mr-1" />
-                            Get Directions
-                          </Button>
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="flex-1 text-xs hover:scale-105 transition-transform"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(googleMapsUrl, '_blank');
+                              }}
+                            >
+                              <MapPin className="h-3 w-3 mr-1" />
+                              Directions
+                            </Button>
+                            {place.website && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs hover:scale-105 transition-transform"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(place.website, '_blank');
+                                }}
+                              >
+                                Visit Site
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       );
                     })

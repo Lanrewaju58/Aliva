@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { profileService } from "@/services/profileService";
@@ -257,9 +257,9 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
               </div>
               Pro Feature Required
             </DialogTitle>
-            <CardDescription>
+            <DialogDescription>
               Photo scanning is available for Pro users only
-            </CardDescription>
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
@@ -337,9 +337,9 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
               </div>
               AI Food Scanner
             </DialogTitle>
-            <CardDescription>
+            <DialogDescription>
               Upload a photo or take a picture of your meal for instant nutrition info
-            </CardDescription>
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 mt-2">
