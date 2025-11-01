@@ -499,6 +499,143 @@ SAFETY:
     return parts.join('\n');
   };
 
+  // Helper function to process results and add markers
+  const processRestaurantResults = (results: any[], map: any, locationLatLng: any, google: any) => {
+    const resultsWithDistance = results
+      .filter((place: any) => place.business_status === 'OPERATIONAL')
+      .map((place: any) => {
+        let calculatedDistance = 0;
+        if (place.geometry?.location && userLocation) {
+          calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(
+            locationLatLng,
+            place.geometry.location
+          ) / 1000;
+        }
+        return { ...place, calculatedDistance };
+      })
+      .sort((a: any, b: any) => {
+        if (b.rating && a.rating) {
+          return b.rating - a.rating;
+        }
+        return a.calculatedDistance - b.calculatedDistance;
+      })
+      .slice(0, 20);
+
+    setMapRestaurants(resultsWithDistance);
+    setAllMapRestaurants(resultsWithDistance);
+
+    // Clear existing markers
+    markersRef.current.forEach((marker: any) => marker.setMap(null));
+    markersRef.current = [];
+
+    // Add markers for each restaurant
+    resultsWithDistance.forEach((place: any, index: number) => {
+      if (place.geometry?.location) {
+        const marker = new google.maps.Marker({
+          position: place.geometry.location,
+          map: map,
+          title: place.name,
+          icon: {
+            url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="18" fill="${place.rating >= 4 ? '#10b981' : place.rating >= 3.5 ? '#f59e0b' : '#ef4444'}" stroke="white" stroke-width="2"/><text x="20" y="26" font-size="14" font-weight="bold" fill="white" text-anchor="middle">${index + 1}</text></svg>`)}`,
+            scaledSize: new google.maps.Size(40, 40),
+            anchor: new google.maps.Point(20, 20),
+          },
+          animation: google.maps.Animation.DROP,
+        });
+
+        // Add info window
+        const infoWindow = new google.maps.InfoWindow({
+          content: `
+            <div style="padding: 8px; min-width: 200px;">
+              <h3 style="margin: 0 0 8px 0; font-weight: 600; font-size: 16px;">${place.name}</h3>
+              ${place.rating ? `<div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                <span style="color: #f59e0b;">⭐</span>
+                <span style="font-weight: 500;">${place.rating}</span>
+                ${place.user_ratings_total ? `<span style="color: #6b7280; font-size: 12px;">(${place.user_ratings_total})</span>` : ''}
+              </div>` : ''}
+              ${place.vicinity ? `<p style="margin: 4px 0; color: #6b7280; font-size: 12px;">${place.vicinity}</p>` : ''}
+              ${place.price_level ? `<p style="margin: 4px 0; color: #6b7280; font-size: 12px;">${'$'.repeat(place.price_level)}</p>` : ''}
+            </div>
+          `,
+        });
+
+        marker.addListener('click', () => {
+          // Close all info windows
+          markersRef.current.forEach((m: any) => {
+            if (m.infoWindow) {
+              m.infoWindow.close();
+            }
+          });
+          infoWindow.open(map, marker);
+          
+          // Pan to marker
+          map.panTo(place.geometry.location);
+          map.setZoom(17);
+        });
+
+        marker.infoWindow = infoWindow;
+        markersRef.current.push(marker);
+
+        // Get place details for more info
+        if (place.place_id) {
+          try {
+            const service = new google.maps.places.PlacesService(map);
+            service.getDetails(
+              { placeId: place.place_id, fields: ['opening_hours', 'website', 'formatted_phone_number', 'photos'] },
+              (placeDetails: any, detailsStatus: string) => {
+                if (detailsStatus === google.maps.places.PlacesServiceStatus.OK && placeDetails) {
+                  // Update the restaurant data with additional details using functional updates
+                  setMapRestaurants((prev: any[]) => {
+                    const updated = [...prev];
+                    const index = updated.findIndex((r: any) => r.place_id === place.place_id);
+                    if (index !== -1) {
+                      updated[index] = {
+                        ...updated[index],
+                        opening_hours: placeDetails.opening_hours,
+                        website: placeDetails.website,
+                        formatted_phone_number: placeDetails.formatted_phone_number,
+                        photos: placeDetails.photos,
+                      };
+                    }
+                    return updated;
+                  });
+                  setAllMapRestaurants((prev: any[]) => {
+                    const updated = [...prev];
+                    const index = updated.findIndex((r: any) => r.place_id === place.place_id);
+                    if (index !== -1) {
+                      updated[index] = {
+                        ...updated[index],
+                        opening_hours: placeDetails.opening_hours,
+                        website: placeDetails.website,
+                        formatted_phone_number: placeDetails.formatted_phone_number,
+                        photos: placeDetails.photos,
+                      };
+                    }
+                    return updated;
+                  });
+                }
+              }
+            );
+          } catch (error) {
+            console.warn('Error fetching place details:', error);
+          }
+        }
+      }
+    });
+
+    // Fit bounds to show all markers
+    if (resultsWithDistance.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      resultsWithDistance.forEach((place: any) => {
+        if (place.geometry?.location) {
+          bounds.extend(place.geometry.location);
+        }
+      });
+      bounds.extend({ lat: userLocation.latitude, lng: userLocation.longitude });
+      map.fitBounds(bounds);
+    }
+  };
+
   const initializeMap = (keyword?: string) => {
     if (!mapRef.current || !userLocation) {
       console.warn('Cannot initialize map: missing location or map ref');
@@ -551,156 +688,73 @@ SAFETY:
 
     // Search for restaurants
     const service = new google.maps.places.PlacesService(map);
+    
+    // Convert location to LatLng object
+    const locationLatLng = new google.maps.LatLng(userLocation.latitude, userLocation.longitude);
+    
     const request: any = {
-      location: { lat: userLocation.latitude, lng: userLocation.longitude },
+      location: locationLatLng,
       radius: 5000,
-      type: ['restaurant', 'food'],
-      keyword: keyword || 'healthy restaurant',
+      type: 'restaurant', // Use single type instead of array
+      keyword: keyword || undefined, // Only add keyword if provided
     };
 
+    console.log('🔍 Searching restaurants with request:', {
+      location: { lat: userLocation.latitude, lng: userLocation.longitude },
+      radius: request.radius,
+      type: request.type,
+      keyword: request.keyword,
+    });
+
     service.nearbySearch(request, (results: any[], status: string) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-        // Calculate distances and filter results
-        const resultsWithDistance = results
-          .filter((place: any) => place.business_status === 'OPERATIONAL')
-          .map((place: any) => {
-            let calculatedDistance = 0;
-            if (place.geometry?.location && userLocation) {
-              calculatedDistance = google.maps.geometry.spherical.computeDistanceBetween(
-                new google.maps.LatLng(userLocation.latitude, userLocation.longitude),
-                place.geometry.location
-              ) / 1000;
-            }
-            return { ...place, calculatedDistance };
-          })
-          .sort((a: any, b: any) => {
-            // Sort by rating (descending), then by distance
-            if (b.rating && a.rating) {
-              return b.rating - a.rating;
-            }
-            return a.calculatedDistance - b.calculatedDistance;
-          })
-          .slice(0, 20); // Limit to top 20
-
-        setMapRestaurants(resultsWithDistance);
-        setAllMapRestaurants(resultsWithDistance); // Store all results for filtering
-
-        // Clear existing markers
-        markersRef.current.forEach((marker: any) => marker.setMap(null));
-        markersRef.current = [];
-
-        // Add markers for each restaurant
-        resultsWithDistance.forEach((place: any, index: number) => {
-          if (place.geometry?.location) {
-            const marker = new google.maps.Marker({
-              position: place.geometry.location,
-              map: map,
-              title: place.name,
-              icon: {
-                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="18" fill="${place.rating >= 4 ? '#10b981' : place.rating >= 3.5 ? '#f59e0b' : '#ef4444'}" stroke="white" stroke-width="2"/><text x="20" y="26" font-size="14" font-weight="bold" fill="white" text-anchor="middle">${index + 1}</text></svg>`)}`,
-                scaledSize: new google.maps.Size(40, 40),
-                anchor: new google.maps.Point(20, 20),
-              },
-              animation: google.maps.Animation.DROP,
-            });
-
-            // Add info window
-            const infoWindow = new google.maps.InfoWindow({
-              content: `
-                <div style="padding: 8px; min-width: 200px;">
-                  <h3 style="margin: 0 0 8px 0; font-weight: 600; font-size: 16px;">${place.name}</h3>
-                  ${place.rating ? `<div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
-                    <span style="color: #f59e0b;">⭐</span>
-                    <span style="font-weight: 500;">${place.rating}</span>
-                    ${place.user_ratings_total ? `<span style="color: #6b7280; font-size: 12px;">(${place.user_ratings_total})</span>` : ''}
-                  </div>` : ''}
-                  ${place.vicinity ? `<p style="margin: 4px 0; color: #6b7280; font-size: 12px;">${place.vicinity}</p>` : ''}
-                  ${place.price_level ? `<p style="margin: 4px 0; color: #6b7280; font-size: 12px;">${'$'.repeat(place.price_level)}</p>` : ''}
-                </div>
-              `,
-            });
-
-            marker.addListener('click', () => {
-              // Close all info windows
-              markersRef.current.forEach((m: any) => {
-                if (m.infoWindow) {
-                  m.infoWindow.close();
-                }
-              });
-              infoWindow.open(map, marker);
-              
-              // Pan to marker
-              map.panTo(place.geometry.location);
-              map.setZoom(17);
-            });
-
-            marker.infoWindow = infoWindow;
-            markersRef.current.push(marker);
-
-            // Get place details for more info
-            if (place.place_id) {
-              try {
-                service.getDetails(
-                  { placeId: place.place_id, fields: ['opening_hours', 'website', 'formatted_phone_number', 'photos'] },
-                  (placeDetails: any, detailsStatus: string) => {
-                    if (detailsStatus === google.maps.places.PlacesServiceStatus.OK && placeDetails) {
-                      // Update the restaurant data with additional details using functional updates
-                      setMapRestaurants((prev: any[]) => {
-                        const updated = [...prev];
-                        const index = updated.findIndex((r: any) => r.place_id === place.place_id);
-                        if (index !== -1) {
-                          updated[index] = {
-                            ...updated[index],
-                            opening_hours: placeDetails.opening_hours,
-                            website: placeDetails.website,
-                            formatted_phone_number: placeDetails.formatted_phone_number,
-                            photos: placeDetails.photos,
-                          };
-                        }
-                        return updated;
-                      });
-                      setAllMapRestaurants((prev: any[]) => {
-                        const updated = [...prev];
-                        const index = updated.findIndex((r: any) => r.place_id === place.place_id);
-                        if (index !== -1) {
-                          updated[index] = {
-                            ...updated[index],
-                            opening_hours: placeDetails.opening_hours,
-                            website: placeDetails.website,
-                            formatted_phone_number: placeDetails.formatted_phone_number,
-                            photos: placeDetails.photos,
-                          };
-                        }
-                        return updated;
-                      });
-                    }
-                  }
-                );
-              } catch (error) {
-                console.warn('Error fetching place details:', error);
-              }
-            }
-          }
+      console.log('📍 Places search result:', { status, resultCount: results?.length || 0 });
+      
+      if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+        processRestaurantResults(results, map, locationLatLng, google);
+        setIsSearchingRestaurants(false);
+      } else {
+        console.error('Places search failed:', status, {
+          statusCode: status,
+          statusText: status,
+          location: userLocation,
         });
-
-        // Fit bounds to show all markers
-        if (resultsWithDistance.length > 0) {
-          const bounds = new google.maps.LatLngBounds();
-          resultsWithDistance.forEach((place: any) => {
-            if (place.geometry?.location) {
-              bounds.extend(place.geometry.location);
+        
+        // Try a fallback search with simpler parameters
+        if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+          console.log('🔄 Trying fallback search without keyword...');
+          const fallbackRequest: any = {
+            location: locationLatLng,
+            radius: 10000, // Increase radius
+            type: 'restaurant',
+            // Remove keyword for broader search
+          };
+          
+          service.nearbySearch(fallbackRequest, (fallbackResults: any[], fallbackStatus: string) => {
+            console.log('📍 Fallback search result:', { status: fallbackStatus, resultCount: fallbackResults?.length || 0 });
+            
+            if (fallbackStatus === google.maps.places.PlacesServiceStatus.OK && fallbackResults && fallbackResults.length > 0) {
+              processRestaurantResults(fallbackResults, map, locationLatLng, google);
+              setIsSearchingRestaurants(false);
+            } else {
+              setMapRestaurants([]);
+              setError(`No restaurants found nearby. Status: ${fallbackStatus}`);
+              setIsSearchingRestaurants(false);
             }
           });
-          bounds.extend({ lat: userLocation.latitude, lng: userLocation.longitude });
-          map.fitBounds(bounds);
-        }
-      } else {
-          console.error('Places search failed:', status);
+        } else {
           setMapRestaurants([]);
-          setError(`Unable to find restaurants: ${status}`);
+          const errorMessages: Record<string, string> = {
+            [google.maps.places.PlacesServiceStatus.ZERO_RESULTS]: 'No restaurants found nearby',
+            [google.maps.places.PlacesServiceStatus.INVALID_REQUEST]: 'Invalid search request. Please try again.',
+            [google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT]: 'Too many requests. Please try again later.',
+            [google.maps.places.PlacesServiceStatus.REQUEST_DENIED]: 'Request denied. Please check API key.',
+            [google.maps.places.PlacesServiceStatus.UNKNOWN_ERROR]: 'An unknown error occurred. Please try again.',
+          };
+          setError(errorMessages[status] || `Unable to find restaurants: ${status}`);
+          setIsSearchingRestaurants(false);
         }
-        setIsSearchingRestaurants(false);
-      });
+      }
+    });
     } catch (error: any) {
       console.error('Error initializing map:', error);
       setError('Failed to initialize map. Please refresh and try again.');
