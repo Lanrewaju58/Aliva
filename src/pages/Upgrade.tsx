@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, Sparkles, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,12 +11,11 @@ import { useAuth } from "@/contexts/AuthContext";
 const Upgrade = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
   const { user } = useAuth();
 
   const handleUpgrade = async (planType: string) => {
     try {
-      const interval = selectedPlan === 'monthly' ? 'monthly' : 'yearly';
+      const interval = 'yearly'; // Single pricing option
       if (!user?.email) {
         toast({
           title: 'Sign in required',
@@ -72,7 +70,7 @@ const Upgrade = () => {
   const plans = [
     {
       name: "Free",
-      price: selectedPlan === 'monthly' ? "$0" : "$0",
+      price: "$0",
       period: "forever",
       description: "Perfect for getting started",
       features: [
@@ -87,8 +85,8 @@ const Upgrade = () => {
     },
     {
       name: "Premium",
-      price: selectedPlan === 'monthly' ? "₦19,990" : "₦99,999",
-      period: selectedPlan === 'monthly' ? "/month" : "/year",
+      price: "₦99,999",
+      period: "yearly",
       description: "Unlock all premium features",
       popular: true,
       features: [
@@ -106,7 +104,6 @@ const Upgrade = () => {
       buttonText: "Upgrade to Premium",
       buttonVariant: "default" as const,
       icon: Crown,
-      savings: selectedPlan === 'yearly' ? null : null,
     },
   ];
 
@@ -126,30 +123,6 @@ const Upgrade = () => {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             Unlock premium features and take your nutrition journey to the next level
           </p>
-
-          <div className="inline-flex items-center justify-center rounded-full bg-card border border-border p-1 shadow-lg">
-            <button
-              onClick={() => setSelectedPlan('monthly')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedPlan === 'monthly'
-                  ? 'bg-primary text-primary-foreground shadow-md'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setSelectedPlan('yearly')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedPlan === 'yearly'
-                  ? 'bg-primary text-primary-foreground shadow-md'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Yearly
-              <span className="ml-1 text-xs">(Save 17%)</span>
-            </button>
-          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
@@ -173,15 +146,10 @@ const Upgrade = () => {
                 )}
 
                 <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                       <Icon className="w-6 h-6 text-primary" />
                     </div>
-                    {plan.savings && (
-                      <Badge variant="outline" className="text-xs">
-                        {plan.savings}
-                      </Badge>
-                    )}
                   </div>
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
