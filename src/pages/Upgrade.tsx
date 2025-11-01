@@ -37,7 +37,7 @@ const Upgrade = () => {
 
   const handleUpgrade = async (planType: string) => {
     try {
-      const interval = 'yearly'; // Single pricing option
+      const interval = 'monthly'; // Monthly billing
       if (!user?.email) {
         toast({
           title: 'Sign in required',
@@ -124,7 +124,7 @@ const Upgrade = () => {
     {
       name: "Pro",
       price: "₦6,500",
-      period: "yearly",
+      period: "monthly",
       description: "Unlock all premium features",
       popular: true,
       features: [

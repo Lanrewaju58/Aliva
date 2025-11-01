@@ -379,7 +379,7 @@ app.post('/api/payments/init', async (req, res) => {
     // Determine amount (kobo) - set your pricing here
     // kobo = NGN * 100
     const amountByPlan = {
-      PRO: { monthly: 999000, yearly: 650000 }, // ₦9,990.00 and ₦6,500.00
+      PRO: { monthly: 650000, yearly: 650000 }, // ₦6,500.00 monthly and yearly
       PREMIUM: { monthly: 1999000, yearly: 9999900 } // ₦19,990.00 and ₦99,999.00 (legacy)
     };
 

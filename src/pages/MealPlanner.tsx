@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
-import MobileNav from "@/components/MobileNav";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -405,7 +404,7 @@ const MealPlanner = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background pb-20 md:pb-0">
         <Navigation />
-        <main className="pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <main className="pt-16 md:pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <Card className="max-w-2xl mx-auto mt-12">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
@@ -463,7 +462,6 @@ const MealPlanner = () => {
             </CardContent>
           </Card>
         </main>
-        <MobileNav />
       </div>
     );
   }
@@ -471,7 +469,7 @@ const MealPlanner = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background pb-20 md:pb-0">
       <Navigation />
-      <main className="pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <main className="pt-16 md:pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Meal Planner</h1>
           <p className="text-muted-foreground">Plan your meals for the week ahead</p>
@@ -718,8 +716,6 @@ const MealPlanner = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      <MobileNav />
     </div>
   );
 };
