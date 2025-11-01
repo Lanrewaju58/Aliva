@@ -52,8 +52,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const amountByPlan: Record<string, Record<string, number>> = {
-      PRO: { monthly: 999000, yearly: 9900000 },
-      PREMIUM: { monthly: 1999000, yearly: 9999900 } // ₦19,990.00 and ₦99,999.00
+      PRO: { monthly: 999000, yearly: 650000 }, // ₦9,990.00 and ₦6,500.00
+      PREMIUM: { monthly: 1999000, yearly: 9999900 } // ₦19,990.00 and ₦99,999.00 (legacy)
     };
     const amount = amountByPlan[normalizedPlan]?.[normalizedInterval];
     if (!amount) {

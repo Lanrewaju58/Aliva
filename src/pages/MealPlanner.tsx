@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, ChevronLeft, ChevronRight, Plus, ShoppingCart, Trash2, Copy } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Plus, Trash2, Copy, Download } from "lucide-react";
 
 interface PlannedMeal {
   id: string;
@@ -223,6 +223,126 @@ const MealPlanner = () => {
     });
   };
 
+  const formatMealCalendar = (format: 'text' | 'csv' = 'text') => {
+    let output = '';
+    
+    if (format === 'csv') {
+      // CSV format
+      output = 'Date,Day,Meal Type,Meal Name,Calories,Protein (g),Carbs (g),Fat (g)\n';
+      
+      weekDates.forEach((date) => {
+        const dateStr = date.toISOString().split('T')[0];
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const dayMeals = mealPlan[dateStr];
+        
+        if (dayMeals) {
+          MEAL_TYPES.forEach((mealType) => {
+            const meal = dayMeals[mealType];
+            if (meal) {
+              output += `"${formattedDate}","${dayName}","${mealType}","${meal.name}",${meal.calories},${meal.protein},${meal.carbs},${meal.fat}\n`;
+            }
+          });
+        }
+      });
+    } else {
+      // Text format
+      output = 'MEAL CALENDAR\n';
+      output += `${weekDates[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - ${weekDates[6].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}\n`;
+      output += '='.repeat(50) + '\n\n';
+      
+      weekDates.forEach((date) => {
+        const dateStr = date.toISOString().split('T')[0];
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+        const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const dayMeals = mealPlan[dateStr];
+        const dayNutrition = getTotalNutrition(dateStr);
+        
+        if (dayMeals && Object.values(dayMeals).some(meal => meal !== null)) {
+          output += `${dayName}, ${formattedDate}\n`;
+          output += '-'.repeat(40) + '\n';
+          
+          MEAL_TYPES.forEach((mealType) => {
+            const meal = dayMeals[mealType];
+            if (meal) {
+              output += `  ${mealType}: ${meal.name}\n`;
+              output += `    ${meal.calories} cal | P: ${meal.protein}g | C: ${meal.carbs}g | F: ${meal.fat}g\n`;
+            }
+          });
+          
+          if (dayNutrition.calories > 0) {
+            output += `\n  Daily Total: ${dayNutrition.calories} cal | P: ${dayNutrition.protein}g | C: ${dayNutrition.carbs}g | F: ${dayNutrition.fat}g\n`;
+          }
+          
+          output += '\n';
+        }
+      });
+    }
+    
+    return output;
+  };
+
+  const handleCopyMealCalendar = () => {
+    const calendarText = formatMealCalendar('text');
+    
+    if (!calendarText || calendarText.length < 50) {
+      toast({
+        title: 'No meals planned',
+        description: 'Add meals to your calendar before copying',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    navigator.clipboard.writeText(calendarText);
+    
+    toast({
+      title: 'Meal calendar copied',
+      description: 'Calendar copied to clipboard'
+    });
+  };
+
+  const handleDownloadMealCalendar = () => {
+    const calendarText = formatMealCalendar('text');
+    const calendarCSV = formatMealCalendar('csv');
+    
+    if (!calendarText || calendarText.length < 50) {
+      toast({
+        title: 'No meals planned',
+        description: 'Add meals to your calendar before downloading',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Create and download text file
+    const textBlob = new Blob([calendarText], { type: 'text/plain' });
+    const textUrl = URL.createObjectURL(textBlob);
+    const textLink = document.createElement('a');
+    textLink.href = textUrl;
+    textLink.download = `meal-calendar-${weekDates[0].toISOString().split('T')[0]}-${weekDates[6].toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(textLink);
+    textLink.click();
+    document.body.removeChild(textLink);
+    URL.revokeObjectURL(textUrl);
+    
+    // Create and download CSV file
+    const csvBlob = new Blob([calendarCSV], { type: 'text/csv' });
+    const csvUrl = URL.createObjectURL(csvBlob);
+    const csvLink = document.createElement('a');
+    csvLink.href = csvUrl;
+    csvLink.download = `meal-calendar-${weekDates[0].toISOString().split('T')[0]}-${weekDates[6].toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(csvLink);
+    csvLink.click();
+    document.body.removeChild(csvLink);
+    URL.revokeObjectURL(csvUrl);
+    
+    toast({
+      title: 'Meal calendar downloaded',
+      description: 'Calendar downloaded as TXT and CSV files'
+    });
+  };
+
   const getTodayIndex = () => {
     const today = new Date().getDay();
     return today === 0 ? 6 : today - 1; // Adjust for Monday start
@@ -287,14 +407,18 @@ const MealPlanner = () => {
         </Card>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Button variant="outline" className="justify-start gap-2" onClick={handleAutoFill}>
             <Calendar className="h-4 w-4" />
             Auto-Fill Week
           </Button>
-          <Button variant="outline" className="justify-start gap-2" onClick={generateShoppingList}>
-            <ShoppingCart className="h-4 w-4" />
-            Generate Shopping List
+          <Button variant="outline" className="justify-start gap-2" onClick={handleCopyMealCalendar}>
+            <Copy className="h-4 w-4" />
+            Copy Calendar
+          </Button>
+          <Button variant="outline" className="justify-start gap-2" onClick={handleDownloadMealCalendar}>
+            <Download className="h-4 w-4" />
+            Download Calendar
           </Button>
         </div>
 

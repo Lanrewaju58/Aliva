@@ -102,7 +102,7 @@ const Upgrade = () => {
 
   // Determine current plan
   const currentPlan = profile?.plan || 'FREE';
-  const isPremium = currentPlan === 'PREMIUM' || currentPlan === 'PRO';
+  const isPro = currentPlan === 'PRO';
 
   const plans = [
     {
@@ -122,8 +122,8 @@ const Upgrade = () => {
       isCurrentPlan: currentPlan === 'FREE',
     },
     {
-      name: "Premium",
-      price: "₦99,999",
+      name: "Pro",
+      price: "₦6,500",
       period: "yearly",
       description: "Unlock all premium features",
       popular: true,
@@ -138,11 +138,12 @@ const Upgrade = () => {
         "Family accounts (up to 5 members)",
         "1-on-1 nutritionist consultations",
         "Custom diet plans",
+        "Meal calendar export & download",
       ],
-      buttonText: isPremium ? "Current Plan" : "Upgrade to Premium",
-      buttonVariant: isPremium ? "outline" as const : "default" as const,
+      buttonText: isPro ? "Current Plan" : "Upgrade to Pro",
+      buttonVariant: isPro ? "outline" as const : "default" as const,
       icon: Crown,
-      isCurrentPlan: isPremium,
+      isCurrentPlan: isPro,
     },
   ];
 
