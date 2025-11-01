@@ -1,0 +1,498 @@
+// src/pages/MealPlanner.tsx
+
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import Navigation from "@/components/Navigation";
+import MobileNav from "@/components/MobileNav";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Calendar, ChevronLeft, ChevronRight, Plus, ShoppingCart, Trash2, Copy } from "lucide-react";
+
+interface PlannedMeal {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+interface MealPlan {
+  [date: string]: {
+    [mealType: string]: PlannedMeal | null;
+  };
+}
+
+const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
+
+const MealPlanner = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [currentWeek, setCurrentWeek] = useState(0);
+  const [mealPlan, setMealPlan] = useState<MealPlan>({});
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<{ date: string; mealType: string } | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    calories: '',
+    protein: '',
+    carbs: '',
+    fat: ''
+  });
+
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  const getWeekDates = () => {
+    const today = new Date();
+    const firstDay = new Date(today);
+    firstDay.setDate(today.getDate() - today.getDay() + 1 + (currentWeek * 7));
+    
+    return days.map((_, index) => {
+      const date = new Date(firstDay);
+      date.setDate(firstDay.getDate() + index);
+      return date;
+    });
+  };
+
+  const weekDates = getWeekDates();
+
+  // Load meal plan from localStorage
+  useEffect(() => {
+    if (!user) return;
+    
+    const savedPlan = localStorage.getItem(`mealPlan_${user.uid}`);
+    if (savedPlan) {
+      setMealPlan(JSON.parse(savedPlan));
+    }
+  }, [user]);
+
+  // Save meal plan to localStorage
+  const saveMealPlan = (plan: MealPlan) => {
+    if (!user) return;
+    localStorage.setItem(`mealPlan_${user.uid}`, JSON.stringify(plan));
+    setMealPlan(plan);
+  };
+
+  const handleAddMeal = (date: Date, mealType: string) => {
+    const dateStr = date.toISOString().split('T')[0];
+    setSelectedSlot({ date: dateStr, mealType });
+    setFormData({ name: '', calories: '', protein: '', carbs: '', fat: '' });
+    setShowAddDialog(true);
+  };
+
+  const handleSubmitMeal = () => {
+    if (!selectedSlot || !formData.name.trim()) return;
+
+    const newMeal: PlannedMeal = {
+      id: Date.now().toString(),
+      name: formData.name.trim(),
+      calories: Number(formData.calories) || 0,
+      protein: Number(formData.protein) || 0,
+      carbs: Number(formData.carbs) || 0,
+      fat: Number(formData.fat) || 0,
+    };
+
+    const newPlan = { ...mealPlan };
+    if (!newPlan[selectedSlot.date]) {
+      newPlan[selectedSlot.date] = {};
+    }
+    newPlan[selectedSlot.date][selectedSlot.mealType] = newMeal;
+
+    saveMealPlan(newPlan);
+    setShowAddDialog(false);
+    
+    toast({
+      title: 'Meal added',
+      description: `${newMeal.name} added to ${selectedSlot.mealType}`
+    });
+  };
+
+  const handleDeleteMeal = (date: string, mealType: string) => {
+    const newPlan = { ...mealPlan };
+    if (newPlan[date] && newPlan[date][mealType]) {
+      const mealName = newPlan[date][mealType]?.name;
+      delete newPlan[date][mealType];
+      
+      // Clean up empty dates
+      if (Object.keys(newPlan[date]).length === 0) {
+        delete newPlan[date];
+      }
+      
+      saveMealPlan(newPlan);
+      toast({
+        title: 'Meal removed',
+        description: `${mealName} removed from plan`
+      });
+    }
+  };
+
+  const handleCopyDay = (sourceDate: Date) => {
+    const sourceDateStr = sourceDate.toISOString().split('T')[0];
+    const sourceMeals = mealPlan[sourceDateStr];
+    
+    if (!sourceMeals || Object.keys(sourceMeals).length === 0) {
+      toast({
+        title: 'No meals to copy',
+        description: 'This day has no planned meals',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Find next empty day in current week
+    const targetDate = weekDates.find(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      return !mealPlan[dateStr] || Object.keys(mealPlan[dateStr]).length === 0;
+    });
+
+    if (!targetDate) {
+      toast({
+        title: 'Week is full',
+        description: 'All days in this week have meals planned',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const targetDateStr = targetDate.toISOString().split('T')[0];
+    const newPlan = { ...mealPlan };
+    newPlan[targetDateStr] = { ...sourceMeals };
+
+    saveMealPlan(newPlan);
+    toast({
+      title: 'Day copied',
+      description: `Meals copied to ${targetDate.toLocaleDateString('en-US', { weekday: 'long' })}`
+    });
+  };
+
+  const handleAutoFill = () => {
+    const sampleMeals: { [key: string]: PlannedMeal } = {
+      Breakfast: { id: '1', name: 'Oatmeal with Berries', calories: 350, protein: 12, carbs: 55, fat: 8 },
+      Lunch: { id: '2', name: 'Grilled Chicken Salad', calories: 450, protein: 35, carbs: 25, fat: 18 },
+      Dinner: { id: '3', name: 'Salmon with Vegetables', calories: 520, protein: 42, carbs: 30, fat: 22 },
+      Snack: { id: '4', name: 'Greek Yogurt & Nuts', calories: 200, protein: 15, carbs: 12, fat: 10 }
+    };
+
+    const newPlan = { ...mealPlan };
+    weekDates.forEach(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      if (!newPlan[dateStr] || Object.keys(newPlan[dateStr]).length === 0) {
+        newPlan[dateStr] = { ...sampleMeals };
+      }
+    });
+
+    saveMealPlan(newPlan);
+    toast({
+      title: 'Week auto-filled',
+      description: 'Sample meals added to empty days'
+    });
+  };
+
+  const generateShoppingList = () => {
+    const ingredients = new Set<string>();
+    weekDates.forEach(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      const dayMeals = mealPlan[dateStr];
+      if (dayMeals) {
+        Object.values(dayMeals).forEach(meal => {
+          if (meal) ingredients.add(meal.name);
+        });
+      }
+    });
+
+    if (ingredients.size === 0) {
+      toast({
+        title: 'No meals planned',
+        description: 'Add meals to generate a shopping list',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const list = Array.from(ingredients).join('\n');
+    navigator.clipboard.writeText(list);
+    
+    toast({
+      title: 'Shopping list copied',
+      description: `${ingredients.size} items copied to clipboard`
+    });
+  };
+
+  const getTodayIndex = () => {
+    const today = new Date().getDay();
+    return today === 0 ? 6 : today - 1; // Adjust for Monday start
+  };
+
+  const getTotalNutrition = (dateStr: string) => {
+    const dayMeals = mealPlan[dateStr];
+    if (!dayMeals) return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+
+    return Object.values(dayMeals).reduce((total, meal) => {
+      if (!meal) return total;
+      return {
+        calories: total.calories + meal.calories,
+        protein: total.protein + meal.protein,
+        carbs: total.carbs + meal.carbs,
+        fat: total.fat + meal.fat
+      };
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background pb-20 md:pb-0">
+      <Navigation />
+      <main className="pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">Meal Planner</h1>
+          <p className="text-muted-foreground">Plan your meals for the week ahead</p>
+        </div>
+
+        {/* Week Navigator */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentWeek(currentWeek - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <div className="text-center">
+                <h2 className="font-semibold">
+                  {weekDates[0].toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                  {' - '}
+                  {weekDates[6].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </h2>
+                {currentWeek === 0 && (
+                  <Badge variant="secondary" className="mt-1">This Week</Badge>
+                )}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentWeek(currentWeek + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Button variant="outline" className="justify-start gap-2" onClick={handleAutoFill}>
+            <Calendar className="h-4 w-4" />
+            Auto-Fill Week
+          </Button>
+          <Button variant="outline" className="justify-start gap-2" onClick={generateShoppingList}>
+            <ShoppingCart className="h-4 w-4" />
+            Generate Shopping List
+          </Button>
+        </div>
+
+        {/* Meal Grid */}
+        <div className="space-y-4">
+          {days.map((day, dayIndex) => {
+            const date = weekDates[dayIndex];
+            const dateStr = date.toISOString().split('T')[0];
+            const isToday = currentWeek === 0 && dayIndex === getTodayIndex();
+            const dayNutrition = getTotalNutrition(dateStr);
+            const hasMeals = dayNutrition.calories > 0;
+
+            return (
+              <Card key={day}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg">{day}</CardTitle>
+                        {isToday && <Badge>Today</Badge>}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {hasMeals && ` • ${dayNutrition.calories} cal`}
+                      </p>
+                    </div>
+                    {hasMeals && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCopyDay(date)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {MEAL_TYPES.map((mealType) => {
+                      const meal = mealPlan[dateStr]?.[mealType];
+                      
+                      return (
+                        <div key={mealType}>
+                          {meal ? (
+                            <div className="p-4 rounded-lg border-2 border-border bg-card group relative">
+                              <div className="flex items-start justify-between mb-2">
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {mealType}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleDeleteMeal(dateStr, mealType)}
+                                >
+                                  <Trash2 className="h-3 w-3 text-destructive" />
+                                </Button>
+                              </div>
+                              <p className="font-medium text-sm mb-1">{meal.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {meal.calories} cal • P: {meal.protein}g
+                              </p>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleAddMeal(date, mealType)}
+                              className="p-4 rounded-lg border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 transition-all text-left group w-full"
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {mealType}
+                                </span>
+                                <Plus className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Click to add meal
+                              </p>
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {hasMeals && (
+                    <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Protein:</span>
+                        <span className="font-medium ml-2">{dayNutrition.protein}g</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Carbs:</span>
+                        <span className="font-medium ml-2">{dayNutrition.carbs}g</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Fat:</span>
+                        <span className="font-medium ml-2">{dayNutrition.fat}g</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </main>
+
+      {/* Add Meal Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Meal</DialogTitle>
+            <DialogDescription>
+              Plan a meal for {selectedSlot?.mealType}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="meal-name">Meal Name</Label>
+              <Input
+                id="meal-name"
+                placeholder="e.g., Grilled Chicken Salad"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                autoFocus
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="calories">Calories</Label>
+                <Input
+                  id="calories"
+                  type="number"
+                  placeholder="450"
+                  value={formData.calories}
+                  onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="protein">Protein (g)</Label>
+                <Input
+                  id="protein"
+                  type="number"
+                  placeholder="35"
+                  value={formData.protein}
+                  onChange={(e) => setFormData({ ...formData, protein: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="carbs">Carbs (g)</Label>
+                <Input
+                  id="carbs"
+                  type="number"
+                  placeholder="25"
+                  value={formData.carbs}
+                  onChange={(e) => setFormData({ ...formData, carbs: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fat">Fat (g)</Label>
+                <Input
+                  id="fat"
+                  type="number"
+                  placeholder="18"
+                  value={formData.fat}
+                  onChange={(e) => setFormData({ ...formData, fat: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                onClick={handleSubmitMeal} 
+                className="flex-1"
+                disabled={!formData.name.trim()}
+              >
+                Add Meal
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAddDialog(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <MobileNav />
+    </div>
+  );
+};
+
+export default MealPlanner;

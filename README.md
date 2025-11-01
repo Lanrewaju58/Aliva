@@ -84,7 +84,56 @@ Aliva revolutionises personal nutrition by combining the intelligence of Gemini 
 - **Restaurant Data:** Google Places API, Yelp Fusion API
 - **Nutrition Database:** USDA Food Data Central, Edamam API
 - **Maps:** Google Maps JavaScript API
-- **Payments:** Stripe for subscription management
+- **Payments:** Paystack for payments
+
+---
+
+## 💳 Payments (Paystack)
+
+### Required environment variables
+
+Create or update your `.env` with:
+
+```bash
+# Backend / server
+PAYSTACK_SECRET_KEY=sk_live_or_test_...
+PAYSTACK_CURRENCY=NGN
+FRONTEND_URL=http://localhost:5173
+```
+
+### Local testing
+
+1. No SDK required; the server calls Paystack REST API.
+```bash
+npm install
+```
+2. Start the server and frontend together:
+```bash
+npm run start:all
+```
+3. Navigate to `Upgrade` page and select a plan; you should be redirected to Paystack Checkout.
+
+> Callback URL: `${FRONTEND_URL}/dashboard?upgrade=success`
+
+Use Paystack test cards from their docs during testing.
+
+### Deploying on Vercel
+
+1. Add Environment Variables in Vercel Project Settings → Environment Variables:
+   - `PAYSTACK_SECRET_KEY`
+   - `PAYSTACK_CURRENCY` (e.g., `NGN`)
+   - `FRONTEND_URL` (e.g., `https://your-app.vercel.app`)
+
+2. Serverless endpoint
+   - The app exposes a serverless function at `/api/payments/init` (`src/pages/api/payments/init.ts`).
+   - On Vercel, the frontend can call this same-origin path without CORS.
+
+3. Frontend config
+   - Ensure frontend calls `/api/payments/init` without hardcoding a localhost base URL in production.
+   - If you use `VITE_API_BASE_URL`, leave it empty in production so requests go same-origin.
+
+4. Test in production
+   - Open your deployed `/upgrade` page and try Pro/Premium. You should be redirected to Paystack.
 - **Email:** SendGrid for transactional emails
 
 ### DevOps & Deployment
