@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Check, Sparkles, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +8,32 @@ import Navigation from "@/components/Navigation";
 import FooterSection from "@/components/FooterSection";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { profileService } from "@/services/profileService";
+import { UserProfile } from "@/types/profile";
 
 const Upgrade = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  // Load user profile to check current plan
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.uid) {
+        setProfile(null);
+        return;
+      }
+      try {
+        const userProfile = await profileService.getProfile(user.uid);
+        setProfile(userProfile);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        setProfile(null);
+      }
+    };
+    loadProfile();
+  }, [user]);
 
   const handleUpgrade = async (planType: string) => {
     try {
@@ -26,6 +48,9 @@ const Upgrade = () => {
         return;
       }
 
+      // Normalize plan name: "Premium" -> "PREMIUM"
+      const normalizedPlan = planType.toUpperCase() === 'PREMIUM' ? 'PREMIUM' : planType.toUpperCase();
+
       const apiBase = import.meta.env.VITE_API_BASE_URL || '';
       const response = await fetch(`${apiBase}/api/payments/init`, {
         method: 'POST',
@@ -33,7 +58,7 @@ const Upgrade = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          plan: planType,
+          plan: normalizedPlan,
           interval,
           customerEmail: user.email,
           userId: user.uid
@@ -47,8 +72,13 @@ const Upgrade = () => {
 
       const data = await response.json();
       if (data?.authorizationUrl) {
-        // Mark intent so we can activate plan on return
-        localStorage.setItem('upgrade_plan_intent', JSON.stringify({ plan: planType, interval, ts: Date.now() }));
+        // Mark intent with reference so we can verify and activate plan on return
+        localStorage.setItem('upgrade_plan_intent', JSON.stringify({ 
+          plan: planType, 
+          interval, 
+          reference: data.reference,
+          ts: Date.now() 
+        }));
         window.location.assign(data.authorizationUrl);
         return;
       }
@@ -67,6 +97,10 @@ const Upgrade = () => {
     }
   };
 
+  // Determine current plan
+  const currentPlan = profile?.plan || 'FREE';
+  const isPremium = currentPlan === 'PREMIUM' || currentPlan === 'PRO';
+
   const plans = [
     {
       name: "Free",
@@ -79,9 +113,10 @@ const Upgrade = () => {
         "Community support",
         "Basic meal planning",
       ],
-      buttonText: "Current Plan",
+      buttonText: currentPlan === 'FREE' ? "Current Plan" : "Downgrade to Free",
       buttonVariant: "outline" as const,
       icon: Sparkles,
+      isCurrentPlan: currentPlan === 'FREE',
     },
     {
       name: "Premium",
@@ -101,9 +136,10 @@ const Upgrade = () => {
         "1-on-1 nutritionist consultations",
         "Custom diet plans",
       ],
-      buttonText: "Upgrade to Premium",
-      buttonVariant: "default" as const,
+      buttonText: isPremium ? "Current Plan" : "Upgrade to Premium",
+      buttonVariant: isPremium ? "outline" as const : "default" as const,
       icon: Crown,
+      isCurrentPlan: isPremium,
     },
   ];
 
@@ -174,8 +210,8 @@ const Upgrade = () => {
                   <Button
                     variant={plan.buttonVariant}
                     className="w-full"
-                    onClick={() => handleUpgrade(plan.name)}
-                    disabled={plan.name === "Free"}
+                    onClick={() => plan.isCurrentPlan ? undefined : handleUpgrade(plan.name)}
+                    disabled={plan.isCurrentPlan || plan.name === "Free"}
                   >
                     {plan.buttonText}
                   </Button>

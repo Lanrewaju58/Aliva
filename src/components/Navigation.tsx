@@ -26,37 +26,95 @@ const Navigation = () => {
   const location = useLocation();
   const [accountPlan, setAccountPlan] = useState<string>('');
 
-  // Handle post-payment activation
+  // Handle post-payment activation with verification
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const upgradeOk = params.get('upgrade');
+    const trxRef = params.get('trxref'); // Paystack transaction reference
+    
     if (upgradeOk === 'success' && user?.uid) {
       const raw = localStorage.getItem('upgrade_plan_intent');
       if (raw) {
         try {
           const intent = JSON.parse(raw);
-          const plan = (intent.plan || 'PRO').toString().toUpperCase();
-          const interval = (intent.interval || 'monthly').toString().toLowerCase();
-          const now = new Date();
-          const expires = new Date(now);
-          if (interval === 'yearly') {
-            expires.setFullYear(expires.getFullYear() + 1);
-          } else {
-            expires.setMonth(expires.getMonth() + 1);
+          const reference = trxRef || intent.reference;
+          
+          if (!reference) {
+            console.error('No transaction reference found');
+            toast({ 
+              title: 'Payment verification failed', 
+              description: 'Transaction reference not found. Please contact support.', 
+              variant: 'destructive' 
+            });
+            localStorage.removeItem('upgrade_plan_intent');
+            return;
           }
+
           (async () => {
             try {
-              await profileService.upsertProfile(user.uid, { plan, planExpiresAt: expires });
-              toast({ title: 'Upgrade successful', description: `${plan} activated. Expires on ${expires.toLocaleDateString()}` });
+              // Verify payment with Paystack before activating
+              const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+              const verifyResponse = await fetch(`${apiBase}/api/payments/verify`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  reference,
+                  userId: user.uid
+                })
+              });
+
+              if (!verifyResponse.ok) {
+                const error = await verifyResponse.json().catch(() => ({}));
+                throw new Error(error.error || 'Payment verification failed');
+              }
+
+              const verifyData = await verifyResponse.json();
+              
+              if (!verifyData.verified || !verifyData.plan) {
+                throw new Error('Payment verification unsuccessful');
+              }
+
+              // Payment verified - activate the plan
+              const plan = verifyData.plan;
+              const planExpiresAt = new Date(verifyData.planExpiresAt);
+              
+              await profileService.upsertProfile(user.uid, { 
+                plan, 
+                planExpiresAt 
+              });
+              
+              toast({ 
+                title: 'Upgrade successful!', 
+                description: `${plan} plan activated. Expires on ${planExpiresAt.toLocaleDateString()}` 
+              });
+              
               localStorage.removeItem('upgrade_plan_intent');
+              
+              // Clean up URL
               const url = new URL(window.location.href);
               url.searchParams.delete('upgrade');
+              url.searchParams.delete('trxref');
               window.history.replaceState({}, '', url.toString());
-            } catch (e) {
-              toast({ title: 'Activation failed', description: 'Please contact support.', variant: 'destructive' });
+              
+              // Reload to show updated plan status
+              window.location.reload();
+              
+            } catch (e: any) {
+              console.error('Payment verification/activation error:', e);
+              toast({ 
+                title: 'Activation failed', 
+                description: e.message || 'Please contact support if payment was completed.', 
+                variant: 'destructive' 
+              });
+              localStorage.removeItem('upgrade_plan_intent');
             }
           })();
-        } catch {}
+        } catch (e) {
+          console.error('Error parsing upgrade intent:', e);
+          localStorage.removeItem('upgrade_plan_intent');
+        }
       }
     }
   }, [location.search, user, toast]);
