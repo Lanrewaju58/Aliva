@@ -1,6 +1,7 @@
 // src/pages/MealPlanner.tsx
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import MobileNav from "@/components/MobileNav";
@@ -11,7 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, ChevronLeft, ChevronRight, Plus, Trash2, Copy, Download } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Plus, Trash2, Copy, Download, Crown, Lock } from "lucide-react";
+import { profileService } from "@/services/profileService";
+import { UserProfile } from "@/types/profile";
 
 interface PlannedMeal {
   id: string;
@@ -33,10 +36,12 @@ const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 const MealPlanner = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useState(0);
   const [mealPlan, setMealPlan] = useState<MealPlan>({});
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; mealType: string } | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     calories: '',
@@ -60,6 +65,38 @@ const MealPlanner = () => {
   };
 
   const weekDates = getWeekDates();
+
+  // Load user profile to check plan
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.uid) {
+        setProfile(null);
+        return;
+      }
+      try {
+        const userProfile = await profileService.getProfile(user.uid);
+        setProfile(userProfile);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        setProfile(null);
+      }
+    };
+    loadProfile();
+  }, [user]);
+
+  // Check if user has active Pro plan
+  const isPro = useMemo(() => {
+    if (!profile?.plan || profile.plan === 'FREE') return false;
+    if (profile.plan === 'PRO') {
+      const expires = (profile as any).planExpiresAt;
+      if (!expires) return true; // No expiry = lifetime
+      const expDate = (typeof expires?.toDate === 'function')
+        ? expires.toDate()
+        : (expires instanceof Date ? expires : new Date(expires));
+      return expDate > new Date();
+    }
+    return false;
+  }, [profile]);
 
   // Load meal plan from localStorage
   useEffect(() => {
@@ -362,6 +399,74 @@ const MealPlanner = () => {
       };
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   };
+
+  // Show upgrade prompt if not Pro user
+  if (!isPro) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background pb-20 md:pb-0">
+        <Navigation />
+        <main className="pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <Card className="max-w-2xl mx-auto mt-12">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Lock className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl mb-2">Meal Planner - Pro Feature</CardTitle>
+              <CardDescription className="text-base">
+                Upgrade to Pro to unlock the Meal Planner and start planning your weekly meals
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-primary" />
+                  Pro Plan Benefits
+                </h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>Plan meals for the entire week</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>Track nutrition and calories</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>Export and download meal calendars</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>Copy meal plans to clipboard</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
+                    <span>All Pro features for just ₦6,500/year</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="flex gap-3">
+                <Button 
+                  className="flex-1" 
+                  onClick={() => navigate('/upgrade')}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade to Pro
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Go to Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+        <MobileNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background pb-20 md:pb-0">

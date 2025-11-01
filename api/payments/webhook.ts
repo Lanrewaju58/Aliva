@@ -66,6 +66,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const plan = (planRaw as string).toUpperCase();
       const interval = (intervalRaw as string)?.toLowerCase() || 'monthly';
 
+      // Validate plan type
+      if (!['PRO', 'PREMIUM'].includes(plan)) {
+        console.warn(`⚠️ Invalid plan type: ${plan}`);
+        return res.status(200).json({ received: true, updated: false, reason: 'Invalid plan type' });
+      }
+
       // Compute expiry
       let planExpiresAt: Date | null = null;
       if (interval === 'monthly') {
@@ -83,15 +89,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const db = admin.firestore();
-      await db.collection('profiles').doc(userId).set({
+      // Convert Date to Firestore Timestamp
+      const planExpiresAtTimestamp = planExpiresAt 
+        ? admin.firestore.Timestamp.fromDate(planExpiresAt)
+        : null;
+
+      // Update 'users' collection (not 'profiles') to match profileService
+      await db.collection('users').doc(userId).set({
         userId,
         plan,
-        planExpiresAt: planExpiresAt,
+        planExpiresAt: planExpiresAtTimestamp,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
 
-      console.log(`✅ Updated plan for ${userId} → ${plan} (${interval})`);
-      return res.status(200).json({ received: true, updated: true });
+      console.log(`✅ Updated plan for ${userId} → ${plan} (${interval}), expires: ${planExpiresAt?.toISOString()}`);
+      return res.status(200).json({ received: true, updated: true, plan, interval });
     }
 
     return res.status(200).json({ received: true, ignored: true });
