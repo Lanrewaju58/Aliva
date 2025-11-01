@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/profile";
-import { Camera, Upload, X, Loader2, Sparkles, Image as ImageIcon, Check, Crown } from "lucide-react";
+import { Camera, Upload, X, Loader2, Sparkles, Image as ImageIcon, Check, Crown, Lock } from "lucide-react";
 
 interface NutritionData {
   name: string;
@@ -46,11 +46,10 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [dailyScanCount, setDailyScanCount] = useState(0);
 
-  // Check if user has active premium plan
-  const isPremium = useMemo(() => {
-    if (!userProfile?.plan || userProfile.plan === 'FREE') return false;
+  // Check if user has active Pro plan (only PRO, not PREMIUM)
+  const isPro = useMemo(() => {
+    if (!userProfile?.plan || userProfile.plan !== 'PRO') return false;
     const expires = (userProfile as any).planExpiresAt;
     if (!expires) return true; // No expiry = lifetime
     const expDate = (typeof expires?.toDate === 'function')
@@ -77,19 +76,7 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
     loadProfile();
   }, [user]);
 
-  // Track daily scan count
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const storageKey = `foodScanCount_${user?.uid || 'anonymous'}_${today}`;
-    const stored = localStorage.getItem(storageKey);
-    const count = stored ? parseInt(stored, 10) : 0;
-    setDailyScanCount(count);
-  }, [user, isOpen]);
-
-  // Free plan limit: 2 scans per day
-  const FREE_SCAN_LIMIT = 2;
-  const canScan = isPremium || dailyScanCount < FREE_SCAN_LIMIT;
-  const scansRemaining = isPremium ? Infinity : Math.max(0, FREE_SCAN_LIMIT - dailyScanCount);
+  // Pro plan only - no free scans
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -115,13 +102,15 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
   const analyzeFoodImage = async () => {
     if (!image) return;
 
-    // Check scan limit for free users
-    if (!canScan) {
+    // Check if user has Pro access
+    if (!isPro) {
       toast({
-        title: 'Daily scan limit reached',
-        description: `Free users can scan up to ${FREE_SCAN_LIMIT} times per day. Upgrade to Premium for unlimited scans.`,
+        title: 'Pro feature required',
+        description: 'Photo scanning is available for Pro users only. Upgrade to unlock this feature.',
         variant: 'destructive'
       });
+      setIsOpen(false);
+      navigate('/upgrade');
       return;
     }
 
@@ -196,15 +185,6 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
       
       setResult(nutritionData);
       
-      // Increment scan count for free users
-      if (!isPremium && user?.uid) {
-        const today = new Date().toISOString().split('T')[0];
-        const storageKey = `foodScanCount_${user.uid}_${today}`;
-        const newCount = dailyScanCount + 1;
-        localStorage.setItem(storageKey, newCount.toString());
-        setDailyScanCount(newCount);
-      }
-      
       toast({
         title: 'Analysis complete!',
         description: `Found: ${nutritionData.name}`
@@ -265,10 +245,82 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
     }, 200);
   };
 
+  // Show upgrade prompt if not Pro user
+  if (!isPro && isOpen) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Lock className="h-4 w-4 text-primary" />
+              </div>
+              Pro Feature Required
+            </DialogTitle>
+            <CardDescription>
+              Photo scanning is available for Pro users only
+            </CardDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Crown className="h-5 w-5 text-primary" />
+                Pro Plan Benefits
+              </h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>AI-powered food photo scanning</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Instant nutrition analysis</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>All Pro features for just ₦6,500/year</span>
+                </li>
+              </ul>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                className="flex-1" 
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/upgrade');
+                }}
+              >
+                <Crown className="h-4 w-4 mr-2" />
+                Upgrade to Pro
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsOpen(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <>
       <Button 
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          if (!isPro) {
+            toast({
+              title: 'Pro feature required',
+              description: 'Photo scanning is available for Pro users only.',
+              variant: 'destructive'
+            });
+            navigate('/upgrade');
+            return;
+          }
+          setIsOpen(true);
+        }}
         className="gap-2 group hover:scale-105 transition-transform"
         size="lg"
       >
@@ -289,35 +341,6 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
               Upload a photo or take a picture of your meal for instant nutrition info
             </CardDescription>
           </DialogHeader>
-
-          {/* Scan Limit Info */}
-          {!isPremium && (
-            <div className="bg-muted/50 border border-border rounded-lg p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm text-muted-foreground">
-                  Scans today: {dailyScanCount}/{FREE_SCAN_LIMIT}
-                </span>
-              </div>
-              {scansRemaining === 0 ? (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setIsOpen(false);
-                    navigate('/upgrade');
-                  }}
-                  className="gap-2"
-                >
-                  <Crown className="h-3 w-3" />
-                  Upgrade
-                </Button>
-              ) : (
-                <span className="text-xs text-muted-foreground">
-                  {scansRemaining} remaining
-                </span>
-              )}
-            </div>
-          )}
 
           <div className="space-y-4 mt-2">
             {/* Upload Area */}

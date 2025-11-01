@@ -42,7 +42,28 @@ const API_URL = import.meta.env.DEV
 
 const FALLBACK_API_URL = 'https://your-vercel-app.vercel.app/api/chat';
 
-const LoginChat = () => {
+interface DashboardData {
+  totals: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  targets: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    water: number;
+  };
+  waterIntake: number;
+}
+
+interface LoginChatProps {
+  dashboardData?: DashboardData;
+}
+
+const LoginChat = ({ dashboardData }: LoginChatProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -341,6 +362,42 @@ SAFETY:
       : '';
   };
 
+  const buildDashboardContext = (): string => {
+    if (!dashboardData) return '';
+    
+    const { totals, targets, waterIntake } = dashboardData;
+    const caloriesRemaining = targets.calories - totals.calories;
+    const proteinRemaining = targets.protein - totals.protein;
+    const carbsRemaining = targets.carbs - totals.carbs;
+    const fatRemaining = targets.fat - totals.fat;
+    const waterRemaining = targets.water - waterIntake;
+    
+    const parts: string[] = [];
+    parts.push(`\n[Today's Nutrition Overview - Use this real-time data to provide personalized advice]:`);
+    parts.push(`Calories: ${totals.calories}/${targets.calories} kcal (${caloriesRemaining > 0 ? `${caloriesRemaining} remaining` : `${Math.abs(caloriesRemaining)} over target`})`);
+    parts.push(`Protein: ${totals.protein}/${targets.protein}g (${proteinRemaining > 0 ? `${proteinRemaining}g remaining` : `${Math.abs(proteinRemaining)}g over target`})`);
+    parts.push(`Carbs: ${totals.carbs}/${targets.carbs}g (${carbsRemaining > 0 ? `${carbsRemaining}g remaining` : `${Math.abs(carbsRemaining)}g over target`})`);
+    parts.push(`Fat: ${totals.fat}/${targets.fat}g (${fatRemaining > 0 ? `${fatRemaining}g remaining` : `${Math.abs(fatRemaining)}g over target`})`);
+    parts.push(`Water: ${waterIntake}/${targets.water} glasses (${waterRemaining > 0 ? `${waterRemaining} glasses remaining` : 'target met'})`);
+    
+    // Add recommendations based on progress
+    if (caloriesRemaining < 0) {
+      parts.push(`Note: User has exceeded their calorie target today.`);
+    } else if (caloriesRemaining < 200) {
+      parts.push(`Note: User is close to their calorie target.`);
+    }
+    
+    if (proteinRemaining > 30) {
+      parts.push(`Note: User needs more protein today.`);
+    }
+    
+    if (waterRemaining > 2) {
+      parts.push(`Note: User should drink more water today.`);
+    }
+    
+    return parts.join('\n');
+  };
+
   const initializeMap = (keyword?: string) => {
     // Map initialization code remains the same
     // (keeping your existing implementation)
@@ -369,7 +426,8 @@ SAFETY:
 
   const callOpenAI = async (userMessage: string, chatHistory: ChatMessage[], useFallback = false) => {
     const profileContext = buildProfileContext();
-    const enhancedMessage = `${AI_PERSONA_HEADER}\n\n[User message]: ${userMessage}${profileContext}`;
+    const dashboardContext = buildDashboardContext();
+    const enhancedMessage = `${AI_PERSONA_HEADER}\n\n[User message]: ${userMessage}${profileContext}${dashboardContext}`;
 
     let isActivePaid = false;
     if (userProfile?.plan && userProfile.plan !== 'FREE') {

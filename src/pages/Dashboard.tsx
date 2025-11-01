@@ -678,7 +678,13 @@ const Dashboard = () => {
           {/* Chat Tab */}
           <TabsContent value="chat">
             <Card className="p-4 bg-card shadow-xl border border-border rounded-[20px]">
-              <LoginChat />
+              <LoginChat 
+                dashboardData={{
+                  totals,
+                  targets: dailyTargets,
+                  waterIntake
+                }}
+              />
             </Card>
           </TabsContent>
         </Tabs>
