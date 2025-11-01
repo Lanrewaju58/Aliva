@@ -306,7 +306,7 @@ app.post('/api/payments/init', async (req, res) => {
     // kobo = NGN * 100
     const amountByPlan = {
       PRO: { monthly: 999000, yearly: 9900000 }, // ₦9,990.00 and ₦99,000.00
-      PREMIUM: { monthly: 1999000, yearly: 19900000 } // ₦19,990.00 and ₦199,000.00
+      PREMIUM: { monthly: 1999000, yearly: 9999000 } // ₦19,990.00 and ₦99,999.00
     };
 
     const amount = amountByPlan[normalizedPlan]?.[normalizedInterval];

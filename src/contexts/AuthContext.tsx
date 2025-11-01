@@ -64,11 +64,60 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      // Trim whitespace from email and log for debugging
+      const trimmedEmail = email.trim().toLowerCase();
+      
+      console.log('Attempting sign in...', {
+        email: trimmedEmail,
+        emailLength: trimmedEmail.length,
+        passwordLength: password.length,
+        hasWhitespace: email !== trimmedEmail
+      });
+      
+      const result = await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      
+      console.log('Sign in successful!', {
+        uid: result.user.uid,
+        email: result.user.email
+      });
+      
       return { user: result.user, error: null };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign in error:', error);
-      return { user: null, error };
+      console.error('Error code:', error?.code);
+      console.error('Error message:', error?.message);
+      
+      // Provide user-friendly error messages
+      let friendlyError = error;
+      
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+        friendlyError = { 
+          ...error,
+          message: 'Invalid email or password. Please check your credentials and try again.' 
+        };
+      } else if (error.code === 'auth/user-not-found') {
+        friendlyError = { 
+          ...error,
+          message: 'No account found with this email address.' 
+        };
+      } else if (error.code === 'auth/invalid-email') {
+        friendlyError = { 
+          ...error,
+          message: 'Invalid email format.' 
+        };
+      } else if (error.code === 'auth/user-disabled') {
+        friendlyError = { 
+          ...error,
+          message: 'This account has been disabled.' 
+        };
+      } else if (error.code === 'auth/too-many-requests') {
+        friendlyError = { 
+          ...error,
+          message: 'Too many failed attempts. Please try again later or reset your password.' 
+        };
+      }
+      
+      return { user: null, error: friendlyError };
     }
   };
 
@@ -136,7 +185,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const resetPassword = async (email: string) => {
     try {
-      await sendPasswordResetEmail(auth, email);
+      const trimmedEmail = email.trim().toLowerCase();
+      await sendPasswordResetEmail(auth, trimmedEmail);
       return { error: null };
     } catch (error: any) {
       console.error('Password reset error:', error);

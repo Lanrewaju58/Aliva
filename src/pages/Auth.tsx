@@ -25,7 +25,6 @@ const MESSAGES = {
   SIGN_IN_SUCCESS: 'Welcome back!',
   SIGN_IN_SUCCESS_DESC: 'Successfully signed in to Aliva.',
   SIGN_IN_ERROR: 'Sign in failed',
-  SIGN_IN_ERROR_DESC: 'Wrong credentials',
   SIGN_UP_SUCCESS: 'Welcome to Aliva!',
   SIGN_UP_SUCCESS_DESC: 'Your account has been created successfully.',
   SIGN_UP_ERROR: 'Sign up failed',
@@ -184,9 +183,10 @@ const Auth = () => {
       const { error } = await signIn(formData.email, formData.password);
 
       if (error) {
+        // Use the error message from AuthContext (now includes user-friendly messages)
         toast({
           title: MESSAGES.SIGN_IN_ERROR,
-          description: MESSAGES.SIGN_IN_ERROR_DESC,
+          description: error.message || 'Please check your credentials and try again.',
           variant: 'destructive',
         });
       } else {
@@ -366,7 +366,7 @@ const Auth = () => {
             {/* Mobile header */}
             <div className="lg:hidden text-center mb-8">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <img src="/logo.svg" alt=" Logo" className="h-10 w-auto" />
+                <img src="/logo.svg" alt="Aliva Logo" className="h-10 w-auto" />
               </div>
               <p className="text-muted-foreground">Your AI-powered nutrition companion</p>
             </div>

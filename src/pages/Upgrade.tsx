@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Sparkles, Zap, Crown } from "lucide-react";
+import { Check, Sparkles, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,10 +86,10 @@ const Upgrade = () => {
       icon: Sparkles,
     },
     {
-      name: "Pro",
-      price: selectedPlan === 'monthly' ? "₦9,990" : "₦99,000",
+      name: "Premium",
+      price: selectedPlan === 'monthly' ? "₦19,990" : "₦99,999",
       period: selectedPlan === 'monthly' ? "/month" : "/year",
-      description: "For dedicated health enthusiasts",
+      description: "Unlock all premium features",
       popular: true,
       features: [
         "Unlimited AI consultations",
@@ -99,30 +99,14 @@ const Upgrade = () => {
         "Advanced nutrition tracking",
         "Restaurant recommendations",
         "Progress analytics",
-      ],
-      buttonText: "Upgrade to Pro",
-      buttonVariant: "default" as const,
-      icon: Zap,
-      savings: selectedPlan === 'yearly' ? "Save ₦20,880/year" : null,
-    },
-    {
-      name: "Premium",
-      price: selectedPlan === 'monthly' ? "₦19,990" : "₦199,000",
-      period: selectedPlan === 'monthly' ? "/month" : "/year",
-      description: "For professionals and families",
-      features: [
-        "Everything in Pro",
         "Family accounts (up to 5 members)",
         "1-on-1 nutritionist consultations",
         "Custom diet plans",
-        "API access",
-        "White-label option",
-        "Dedicated account manager",
       ],
       buttonText: "Upgrade to Premium",
       buttonVariant: "default" as const,
       icon: Crown,
-      savings: selectedPlan === 'yearly' ? "Save ₦40,880/year" : null,
+      savings: selectedPlan === 'yearly' ? null : null,
     },
   ];
 
@@ -168,7 +152,7 @@ const Upgrade = () => {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {plans.map((plan) => {
             const Icon = plan.icon;
             return (
@@ -176,7 +160,7 @@ const Upgrade = () => {
                 key={plan.name}
                 className={`relative transition-all hover:shadow-xl ${
                   plan.popular
-                    ? 'border-primary shadow-lg scale-105 md:scale-110'
+                    ? 'border-primary shadow-lg scale-105'
                     : 'border-black/5'
                 }`}
               >
