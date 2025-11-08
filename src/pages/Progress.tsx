@@ -36,6 +36,7 @@ const Progress = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('30days');
   const [pageLoading, setPageLoading] = useState(true);
   const [currentWeek, setCurrentWeek] = useState(0);
+  const [dailyStreak, setDailyStreak] = useState<number>(0);
 
   useEffect(() => {
     if (!user) return;
@@ -88,6 +89,10 @@ const Progress = () => {
         }
 
         setCalorieData(filledData);
+
+        // Load daily streak
+        const streak = await mealService.getDailyStreak(user.uid);
+        setDailyStreak(streak);
       } catch (error) {
         console.error('Error loading progress data:', error);
         toast({
@@ -440,7 +445,7 @@ const Progress = () => {
                   </div>
                   <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
                     <span className="text-sm font-medium">Current Streak</span>
-                    <span className="text-lg font-bold">7 days 🔥</span>
+                    <span className="text-lg font-bold">{dailyStreak} {dailyStreak > 0 ? 'days 🔥' : 'days'}</span>
                   </div>
                 </CardContent>
               </Card>

@@ -273,6 +273,64 @@ import {
         throw error;
       }
     }
+
+    // Calculate daily streak - consecutive days with at least one meal logged
+    async getDailyStreak(userId: string): Promise<number> {
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Calculate date range (365 days back)
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 365);
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = today.toISOString().split('T')[0];
+        
+        // Fetch all meals in the date range
+        const meals = await this.getMealsByDateRange(userId, startDateStr, endDateStr);
+        
+        // Group meals by date
+        const mealsByDate = new Set<string>();
+        meals.forEach(meal => {
+          mealsByDate.add(meal.date);
+        });
+        
+        // Calculate streak going backwards from today
+        let streak = 0;
+        let currentDate = new Date(today);
+        let foundFirstDayWithMeals = false;
+        
+        for (let i = 0; i < 365; i++) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          const hasMeals = mealsByDate.has(dateStr);
+          
+          if (hasMeals) {
+            // Found meals on this day - increment streak
+            streak++;
+            foundFirstDayWithMeals = true;
+          } else {
+            // No meals on this day
+            if (i === 0) {
+              // Today has no meals yet - continue to check yesterday
+              // Don't break the streak yet, they might log later today
+            } else if (foundFirstDayWithMeals) {
+              // We've already found days with meals, and now we hit a day without
+              // This breaks the streak
+              break;
+            }
+            // If we haven't found any days with meals yet, keep going back
+          }
+          
+          // Move to previous day
+          currentDate.setDate(currentDate.getDate() - 1);
+        }
+        
+        return streak;
+      } catch (error) {
+        console.error('Error calculating daily streak:', error);
+        return 0;
+      }
+    }
   }
   
   export const mealService = new MealService();

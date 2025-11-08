@@ -372,10 +372,29 @@ const Dashboard = () => {
   const { toast } = useToast();
   
   const [showAddMeal, setShowAddMeal] = useState<string | null>(null);
+  const [dailyStreak, setDailyStreak] = useState<number>(0);
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   const { profile, meals, setMeals, waterIntake, setWaterIntake, isLoading, error } = 
     useDashboardData(user?.uid || '', today);
+
+  // Load daily streak
+  useEffect(() => {
+    const loadStreak = async () => {
+      if (!user?.uid) {
+        setDailyStreak(0);
+        return;
+      }
+      try {
+        const streak = await mealService.getDailyStreak(user.uid);
+        setDailyStreak(streak);
+      } catch (error) {
+        console.error('Error loading daily streak:', error);
+        setDailyStreak(0);
+      }
+    };
+    loadStreak();
+  }, [user?.uid, meals]); // Recalculate when meals change
 
   // Calculate daily targets
   const dailyTargets: DailyTargets = useMemo(() => ({
@@ -572,7 +591,7 @@ const Dashboard = () => {
                       <Award className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-3xl font-bold">7</p>
+                      <p className="text-3xl font-bold">{dailyStreak}</p>
                       <p className="text-sm text-muted-foreground">days in a row</p>
                     </div>
                   </div>
