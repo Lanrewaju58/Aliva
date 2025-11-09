@@ -76,7 +76,8 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
     loadProfile();
   }, [user]);
 
-  // Pro plan only - no free scans
+  // Check if user can scan (Pro users have unlimited scans)
+  const canScan = isPro;
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -457,7 +458,7 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
                             Daily scan limit reached
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Free users can scan up to {FREE_SCAN_LIMIT} times per day. Upgrade to Pro for unlimited scans.
+                            Photo calorie scanning is available for Pro users. Upgrade to Pro for unlimited scans.
                           </p>
                           <Button
                             onClick={() => {

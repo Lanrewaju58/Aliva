@@ -143,7 +143,7 @@ import {
           mealsCol,
           where('date', '>=', startDate),
           where('date', '<=', endDate),
-          orderBy('date', 'desc'),
+          orderBy('date', 'asc'),
           orderBy('time', 'desc')
         );
         
@@ -168,7 +168,8 @@ import {
           });
         });
         
-        return meals;
+        // Reverse to get descending order by date (newest first)
+        return meals.reverse();
       } catch (error) {
         console.error('Error getting meals by date range:', error);
         throw error;
