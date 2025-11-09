@@ -201,7 +201,7 @@ const Navigation = () => {
     }
   };
 
-  const isPremiumUser = accountPlan === 'PRO' || accountPlan === 'PREMIUM';
+  const isPremiumUser = accountPlan === 'PRO';
 
   return (
     <>

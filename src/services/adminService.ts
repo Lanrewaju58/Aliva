@@ -85,7 +85,7 @@ export class AdminService {
   /**
    * Get user count by plan
    */
-  async getUserStats(): Promise<{ total: number; free: number; pro: number; premium: number }> {
+  async getUserStats(): Promise<{ total: number; free: number; pro: number }> {
     try {
       const users = await this.getAllUsers();
       
@@ -93,7 +93,6 @@ export class AdminService {
         total: users.length,
         free: users.filter(u => u.plan === 'FREE').length,
         pro: users.filter(u => u.plan === 'PRO').length,
-        premium: users.filter(u => u.plan === 'PREMIUM').length,
       };
     } catch (error) {
       console.error('Error fetching user stats:', error);

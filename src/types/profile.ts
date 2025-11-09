@@ -16,7 +16,7 @@ export type SmokingStatus = 'never' | 'former' | 'current';
 
 export type AlcoholFrequency = 'never' | 'occasional' | 'regular';
 
-export type Plan = 'FREE' | 'PREMIUM' | 'PRO';
+export type Plan = 'FREE' | 'PRO';
 
 export interface WeightEntry {
   date: Date | string;

@@ -52,7 +52,6 @@ const AdminDashboard = () => {
     total: 0,
     free: 0,
     pro: 0,
-    premium: 0,
   });
 
   // Check if user is admin
@@ -138,8 +137,6 @@ const AdminDashboard = () => {
     switch (plan) {
       case "PRO":
         return "default";
-      case "PREMIUM":
-        return "secondary";
       default:
         return "outline";
     }
@@ -204,7 +201,7 @@ const AdminDashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card className="border-border/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
@@ -244,18 +241,6 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Premium Plan</CardTitle>
-              <div className="h-8 w-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-500" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.premium}</div>
-              <p className="text-xs text-muted-foreground mt-1">Premium subscribers</p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Filters and Search */}
@@ -292,7 +277,6 @@ const AdminDashboard = () => {
                   <SelectItem value="all">All Plans</SelectItem>
                   <SelectItem value="FREE">Free</SelectItem>
                   <SelectItem value="PRO">Pro</SelectItem>
-                  <SelectItem value="PREMIUM">Premium</SelectItem>
                 </SelectContent>
               </Select>
               <Button
@@ -398,7 +382,6 @@ const AdminDashboard = () => {
                             variant={getPlanBadgeVariant(user.plan)}
                             className={
                               user.plan === 'PRO' ? 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20' :
-                              user.plan === 'PREMIUM' ? 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20' :
                               ''
                             }
                           >

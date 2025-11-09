@@ -48,7 +48,7 @@ const Upgrade = () => {
         return;
       }
 
-      // Normalize plan name: "Premium" -> "PREMIUM"
+      // Normalize plan name to uppercase
       const normalizedPlan = planType.toUpperCase();
       
       // Debug logging

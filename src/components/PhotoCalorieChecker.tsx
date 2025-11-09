@@ -47,7 +47,7 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
-  // Check if user has active Pro plan (only PRO, not PREMIUM)
+  // Check if user has active Pro plan
   const isPro = useMemo(() => {
     if (!userProfile?.plan || userProfile.plan !== 'PRO') return false;
     const expires = (userProfile as any).planExpiresAt;
@@ -457,7 +457,7 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
                             Daily scan limit reached
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Free users can scan up to {FREE_SCAN_LIMIT} times per day. Upgrade to Premium for unlimited scans.
+                            Free users can scan up to {FREE_SCAN_LIMIT} times per day. Upgrade to Pro for unlimited scans.
                           </p>
                           <Button
                             onClick={() => {
@@ -468,7 +468,7 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
                             variant="default"
                           >
                             <Crown className="h-4 w-4" />
-                            Upgrade to Premium
+                            Upgrade to Pro
                           </Button>
                         </CardContent>
                       </Card>
