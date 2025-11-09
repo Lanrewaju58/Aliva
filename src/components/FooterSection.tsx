@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail } from "lucide-react";
 
 const FooterSection = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -24,9 +24,7 @@ const FooterSection = () => {
   }, []);
 
   const socialButtons = [
-    { icon: Mail, label: "Email" },
-    { icon: Phone, label: "Phone" },
-    { icon: MapPin, label: "Location" }
+    { icon: Mail, label: "Email" }
   ];
 
   const companyLinks = [

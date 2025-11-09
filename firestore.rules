@@ -28,20 +28,25 @@ service cloud.firestore {
       allow read: if request.auth != null;
     }
     
-    // Meals collection - users can only access their own meals
-    match /meals/{mealId} {
-      allow read, write: if request.auth != null && 
-                         resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && 
-                    request.resource.data.userId == request.auth.uid;
+    // Meals subcollection - users can only access their own meals
+    match /users/{userId}/meals/{mealId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Daily logs collection
-    match /dailyLogs/{logId} {
-      allow read, write: if request.auth != null && 
-                         resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && 
-                    request.resource.data.userId == request.auth.uid;
+    // Daily logs subcollection - users can only access their own logs
+    match /users/{userId}/dailyLogs/{logId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow listing meals and dailyLogs subcollections
+    match /users/{userId}/meals {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/dailyLogs {
+      allow list: if request.auth != null && request.auth.uid == userId;
     }
     
     // Default: deny all other access
