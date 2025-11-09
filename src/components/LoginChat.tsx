@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, Salad, Sparkles, User, AlertCircle, MapPin, RotateCcw, ChefHat, Settings, MessageSquare, Clock, Trash2, X, Menu, Loader2, Filter } from "lucide-react";
+import { Bot, Send, Salad, Sparkles, User, AlertCircle, MapPin, RotateCcw, ChefHat, Settings, MessageSquare, Clock, Trash2, X, Menu, Loader2, Filter, Apple, Target, Heart, Utensils } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
@@ -376,12 +376,12 @@ SAFETY:
 
   const quickPrompts = useMemo(
     () => [
-      { text: "Suggest healthy meals for me", icon: "🥗" },
-      { text: "I'm feeling stressed and anxious", icon: "😌" },
-      { text: "Help me with my health goals", icon: "🎯" },
-      { text: "Find healthy restaurants near me", icon: "📍" },
-      { text: "I need nutrition advice", icon: "🍎" },
-      { text: "Help me with my mental health", icon: "💚" },
+      { text: "Suggest healthy meals for me", icon: Utensils },
+      { text: "I'm feeling stressed and anxious", icon: Heart },
+      { text: "Help me with my health goals", icon: Target },
+      { text: "Find healthy restaurants near me", icon: MapPin },
+      { text: "I need nutrition advice", icon: Apple },
+      { text: "Help me with my mental health", icon: Heart },
     ],
     []
   );
@@ -1195,7 +1195,7 @@ SAFETY:
                   onMouseLeave={() => setHoveredPrompt(null)}
                   disabled={thinking}
                 >
-                  <span className="mr-1.5">{q.icon}</span>
+                  <q.icon className="h-3.5 w-3.5 mr-1.5" />
                   <span className="hidden sm:inline">{q.text}</span>
                   <span className="sm:hidden">{q.text.split(' ').slice(0, 2).join(' ')}</span>
                 </Button>

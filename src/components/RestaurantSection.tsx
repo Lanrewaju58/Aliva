@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Star, Clock, DollarSign, Sparkles, TrendingUp, Award } from "lucide-react";
+import { MapPin, Search, Star, Clock, DollarSign, Sparkles, TrendingUp, Award, Utensils } from "lucide-react";
 
 const RestaurantSection = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -38,7 +38,7 @@ const RestaurantSection = () => {
       time: "25 min",
       price: "$$",
       healthyOptions: 12,
-      image: "🥗",
+      image: null,
       badge: "Top Rated",
       color: "from-emerald-400 to-green-500"
     },
@@ -49,7 +49,7 @@ const RestaurantSection = () => {
       time: "18 min",
       price: "$",
       healthyOptions: 8,
-      image: "🥙",
+      image: null,
       badge: "Fast Delivery",
       color: "from-blue-400 to-cyan-500"
     },
@@ -60,7 +60,7 @@ const RestaurantSection = () => {
       time: "30 min",
       price: "$$",
       healthyOptions: 15,
-      image: "🍜",
+      image: null,
       badge: "Most Popular",
       color: "from-purple-400 to-pink-500"
     }
@@ -151,10 +151,12 @@ const RestaurantSection = () => {
                 </div>
 
                 {/* Restaurant Image */}
-                <div className={`text-5xl sm:text-6xl md:text-7xl mb-4 text-center transition-all duration-500 ${
-                  hoveredCard === index ? 'scale-110 rotate-6' : ''
+                <div className={`h-20 sm:h-24 mb-4 flex items-center justify-center transition-all duration-500 ${
+                  hoveredCard === index ? 'scale-110' : ''
                 }`}>
-                  {restaurant.image}
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                    <Utensils className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                  </div>
                 </div>
                 
                 {/* Restaurant Info */}

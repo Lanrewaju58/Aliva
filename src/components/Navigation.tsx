@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, Settings, LogOut, Crown, Sun, Moon, Sparkles, ChevronDown } from "lucide-react";
+import { Menu, X, User, Settings, LogOut, Crown, Sun, Moon, Sparkles, ChevronDown, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -167,12 +167,9 @@ const Navigation = () => {
   const userInitials = getUserInitials(user?.displayName, user?.email);
 
   const quotes = [
-    { t: "Eat well, live well.", g: "from-emerald-400 via-green-500 to-teal-500" },
-    { t: "Small choices, big changes.", g: "from-blue-400 via-cyan-500 to-sky-500" },
-    { t: "Food is fuel. Choose quality.", g: "from-purple-400 via-violet-500 to-pink-500" },
-    { t: "Healthy today, stronger tomorrow.", g: "from-orange-400 via-red-500 to-rose-500" },
-    { t: "Good food, good mood.", g: "from-teal-400 via-emerald-500 to-green-500" },
-    { t: "Nourish to flourish.", g: "from-rose-400 via-pink-500 to-fuchsia-500" },
+    { t: "Nutrition guidance tailored to your goals", g: "from-emerald-400 via-green-500 to-teal-500" },
+    { t: "Track meals and discover healthy recipes", g: "from-blue-400 via-cyan-500 to-sky-500" },
+    { t: "Personalized dietary recommendations", g: "from-purple-400 via-violet-500 to-pink-500" },
   ];
 
   const [quoteIdx, setQuoteIdx] = useState(0);

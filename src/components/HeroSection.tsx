@@ -33,31 +33,14 @@ const HeroSection = () => {
 
   return (
     <section id="home" className="relative min-h-[84vh] md:min-h-[92vh] flex items-center justify-center overflow-hidden bg-primary bg-gradient-to-b from-primary/95 via-primary/90 to-primary pb-28 md:pb-40">
-      {/* Animated background elements */}
+      {/* Subtle background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Grid overlay */}
-        <div className="absolute inset-0 grid-overlay opacity-30" />
+        <div className="absolute inset-0 grid-overlay opacity-20" />
         
-        {/* Floating orbs */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-1000" />
-        
-        {/* Floating nutrition icons */}
-        <div className="absolute top-32 right-1/4 animate-float">
-          <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl shadow-lg">
-            <div className="text-white text-2xl">🥗</div>
-          </div>
-        </div>
-        <div className="absolute bottom-40 left-1/4 animate-float-delayed">
-          <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl shadow-lg">
-            <div className="text-white text-2xl">🍎</div>
-          </div>
-        </div>
-        <div className="absolute top-1/2 right-12 animate-float-slow">
-          <div className="bg-white/10 backdrop-blur-sm p-3 rounded-2xl shadow-lg">
-            <div className="text-white text-xl">💪</div>
-          </div>
-        </div>
+        {/* Subtle gradient orbs */}
+        <div className="absolute top-20 left-10 w-96 h-96 bg-white/3 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-white/3 rounded-full blur-3xl" />
       </div>
 
       {/* Content */}
@@ -69,7 +52,7 @@ const HeroSection = () => {
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          <span>AI-Powered Nutrition Coaching</span>
+          <span>Professional Nutrition Platform</span>
         </div>
 
         {/* Main heading with rotating word */}
@@ -96,7 +79,7 @@ const HeroSection = () => {
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          Chat with an AI nutritionist, track your meals, and discover personalized recipes that fit your goals perfectly.
+          Personalized nutrition guidance, meal tracking, and recipe discovery tailored to your health goals.
         </p>
 
         {/* CTA Buttons */}
@@ -165,21 +148,6 @@ const HeroSection = () => {
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 md:h-40 bg-gradient-to-b from-transparent to-background" />
 
       <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        
-        @keyframes float-delayed {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-25px); }
-        }
-        
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
-        }
-
         @keyframes fade-in-up {
           from {
             opacity: 0;
@@ -190,27 +158,9 @@ const HeroSection = () => {
             transform: translateY(0);
           }
         }
-        
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        
-        .animate-float-delayed {
-          animation: float-delayed 7s ease-in-out infinite;
-          animation-delay: 1s;
-        }
-        
-        .animate-float-slow {
-          animation: float-slow 8s ease-in-out infinite;
-          animation-delay: 2s;
-        }
 
         .animate-fade-in-up {
           animation: fade-in-up 0.8s ease-out forwards;
-        }
-
-        .delay-1000 {
-          animation-delay: 1s;
         }
       `}</style>
     </section>

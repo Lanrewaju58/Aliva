@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin, Heart } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 const FooterSection = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -184,9 +184,7 @@ const FooterSection = () => {
         }`}>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-muted-foreground flex items-center gap-2">
-              © 2025 Aliva. All rights reserved. Made with 
-              <Heart className="w-4 h-4 text-red-500 animate-pulse inline" /> 
-              for healthier living.
+              © 2025 Aliva. All rights reserved.
             </p>
           </div>
         </div>

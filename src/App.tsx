@@ -25,6 +25,7 @@ import Security from "./pages/Security";
 import MealPlanner from "./pages/MealPlanner";
 import Upgrade from "./pages/Upgrade";
 import Onboarding from "./pages/Onboarding";
+import AdminDashboard from "./pages/AdminDashboard";
 
 // Create QueryClient with optimized settings
 const queryClient = new QueryClient({
@@ -113,6 +114,14 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <Upgrade />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute requireAdmin={true}>
+                      <AdminDashboard />
                     </ProtectedRoute>
                   } 
                 />

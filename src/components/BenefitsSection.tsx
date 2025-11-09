@@ -125,7 +125,7 @@ const BenefitsSection = () => {
                   </div>
                   <div>
                     <div className="text-xs text-muted-foreground">7-Day Streak</div>
-                    <div className="text-sm font-bold text-foreground">Keep it up! 🔥</div>
+                    <div className="text-sm font-bold text-foreground">Keep it up!</div>
                   </div>
                 </div>
               </div>

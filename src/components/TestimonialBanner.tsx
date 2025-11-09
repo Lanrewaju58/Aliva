@@ -134,7 +134,7 @@ const TestimonialBanner = () => {
                   <p className={`text-white text-2xl md:text-3xl leading-snug max-w-2xl transition-all duration-500 ${
                     hoveredCard === 1 ? 'translate-x-2' : ''
                   }`}>
-                    Aliva boosts my productivity, sparks creativity, and effortlessly simplifies every meal decision I make.
+                    Aliva has transformed how I approach nutrition. The personalized recommendations and meal tracking make healthy eating effortless.
                   </p>
 
                   {/* Author info with animation */}
