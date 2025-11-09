@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, MapPin, Clock, MessageCircle, Send, CheckCircle, Users, HelpCircle, Lightbulb } from "lucide-react";
+import { Mail, Clock, MessageCircle, Send, CheckCircle, Users, HelpCircle, Lightbulb } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -62,13 +62,6 @@ const Contact = () => {
       description: "Send us a detailed message",
       contact: "hello@aliva.com",
       response: "Within 24 hours"
-    },
-    {
-      icon: MapPin,
-      title: "Visit Us",
-      description: "Come say hello in person",
-      contact: "123 Health Street, Ikoyi, LA",
-      response: "By appointment only"
     }
   ];
 
