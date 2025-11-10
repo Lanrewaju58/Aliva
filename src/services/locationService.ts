@@ -47,7 +47,7 @@ export class LocationService {
     try {
       // Use Google Maps Geocoding API for reverse geocoding
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates.lat},${coordinates.lng}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyD5SzaJLsPAqsE1t_e_6c8A0vHbxb2fcBo'}`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates.lat},${coordinates.lng}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyDYMC8L1uH_YnM9etK-eBh_IK8IUn0PBJ4'}`
       );
       
       const data = await response.json();

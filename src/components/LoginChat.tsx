@@ -333,7 +333,7 @@ SAFETY:
 
     if (!document.querySelector('script[src*="maps.googleapis.com"]')) {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyD5SzaJLsPAqsE1t_e_6c8A0vHbxb2fcBo&libraries=places,geometry&loading=async`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDYMC8L1uH_YnM9etK-eBh_IK8IUn0PBJ4&libraries=places,geometry&loading=async`;
       script.async = true;
       script.defer = true;
       script.setAttribute('loading', 'async');
