@@ -72,11 +72,10 @@ const FooterSection = () => {
             </p>
             <div className="flex space-x-4">
               {socialButtons.map((social, index) => (
-                <Button 
+                <a 
                   key={index}
-                  variant="ghost" 
-                  size="sm" 
-                  className={`transition-all duration-300 ${
+                  href="mailto:foodaliva@gmail.com"
+                  className={`inline-flex items-center justify-center rounded-md px-3 py-2 transition-all duration-300 ${
                     hoveredSocial === index 
                       ? 'text-primary scale-110 -translate-y-1 shadow-lg' 
                       : 'text-muted-foreground hover:text-primary'
@@ -86,7 +85,7 @@ const FooterSection = () => {
                   aria-label={social.label}
                 >
                   <social.icon className="w-4 h-4" />
-                </Button>
+                </a>
               ))}
             </div>
           </div>

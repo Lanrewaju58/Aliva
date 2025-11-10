@@ -60,7 +60,7 @@ const Contact = () => {
       icon: Mail,
       title: "Email Us",
       description: "Send us a detailed message",
-      contact: "hello@aliva.com",
+      contact: "foodaliva@gmail.com",
       response: "Within 24 hours"
     }
   ];

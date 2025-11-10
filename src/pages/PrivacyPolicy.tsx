@@ -288,7 +288,7 @@ const PrivacyPolicy = () => {
                         <div className="grid md:grid-cols-2 gap-6">
                           <div className="p-4 bg-primary/5 rounded-lg">
                             <h4 className="font-semibold mb-2">Email Us</h4>
-                            <p className="text-sm text-muted-foreground mb-2">privacy@aliva.com</p>
+                            <p className="text-sm text-muted-foreground mb-2">foodaliva@gmail.com</p>
                             <p className="text-xs text-muted-foreground">We respond within 24 hours</p>
                           </div>
                           <div className="p-4 bg-primary/5 rounded-lg">

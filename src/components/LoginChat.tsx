@@ -747,7 +747,7 @@ SAFETY:
             [google.maps.places.PlacesServiceStatus.ZERO_RESULTS]: 'No restaurants found nearby',
             [google.maps.places.PlacesServiceStatus.INVALID_REQUEST]: 'Invalid search request. Please try again.',
             [google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT]: 'Too many requests. Please try again later.',
-            [google.maps.places.PlacesServiceStatus.REQUEST_DENIED]: 'Map Access currently unavailable. Please try again later.',
+            [google.maps.places.PlacesServiceStatus.REQUEST_DENIED]: 'Request denied. Please check API key.',
             [google.maps.places.PlacesServiceStatus.UNKNOWN_ERROR]: 'An unknown error occurred. Please try again.',
           };
           setError(errorMessages[status] || `Unable to find restaurants: ${status}`);

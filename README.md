@@ -441,7 +441,7 @@ npm run lint         # Run linter
 
 ## 📞 Support
 
-For support, email support@aliva.com or visit our [Help Center](/help).
+For support, email foodaliva@gmail.com or visit our [Help Center](/help).
 
 ---
 
