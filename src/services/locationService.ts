@@ -46,16 +46,23 @@ export class LocationService {
 
     try {
       // Use Google Maps Geocoding API for reverse geocoding
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+      if (!apiKey) {
+        console.error('Google Maps API key not configured');
+        throw new Error('VITE_GOOGLE_MAPS_API_KEY is required');
+      }
+
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates.lat},${coordinates.lng}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyDYMC8L1uH_YnM9etK-eBh_IK8IUn0PBJ4'}`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coordinates.lat},${coordinates.lng}&key=${apiKey}`
       );
-      
+
       const data = await response.json();
-      
+
       if (data.results && data.results.length > 0) {
         const result = data.results[0];
         const addressComponents = result.address_components;
-        
+
         let country = '';
         let countryCode = '';
         let city = '';

@@ -7,7 +7,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), '');
-  
+
   return {
     server: {
       host: "::",
@@ -22,10 +22,6 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
-    },
-    define: {
-      // Expose OPENAI_API_KEY to the client
-      'process.env.OPENAI_API_KEY': JSON.stringify(env.OPENAI_API_KEY)
     },
   };
 });
