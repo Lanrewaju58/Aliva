@@ -639,7 +639,9 @@ const Profile: React.FC = () => {
                   <h3 className="text-lg font-semibold text-foreground">Weight Journey</h3>
                   <p className="text-sm text-muted-foreground mt-0.5">Track your progress over time</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={addWeightEntry}>Add Entry</Button>
+                <Button variant="default" size="sm" onClick={addWeightEntry} className="shadow-sm">
+                  Add Entry
+                </Button>
               </div>
               <div className="p-6 space-y-4">
                 {/* Chart */}
@@ -653,7 +655,7 @@ const Profile: React.FC = () => {
                         <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />
                         <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={11} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey="kg" stroke="var(--color-kg)" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="kg" stroke="var(--color-kg)" strokeWidth={2} dot={{ r: 4, fill: 'var(--color-kg)' }} />
                       </LineChart>
                     </ChartContainer>
                   </div>
@@ -721,6 +723,63 @@ const Profile: React.FC = () => {
             </Card>
           </div>
         </div>
+        {/* Add Weight Entry Dialog */}
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">Add Weight Entry</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-5 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="weight" className="text-sm font-medium">
+                  Weight (kg)
+                </Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  step="0.1"
+                  value={newWeightKg}
+                  onChange={(e) => setNewWeightKg(e.target.value)}
+                  className="h-11"
+                  placeholder="Enter your weight"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date" className="text-sm font-medium">
+                  Date
+                </Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={newWeightDate}
+                  onChange={(e) => setNewWeightDate(e.target.value)}
+                  className="h-11"
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => {
+                if (!newWeightKg || !newWeightDate) return;
+                const val = parseFloat(newWeightKg);
+                if (isNaN(val)) return;
+
+                setProfile(prev => {
+                  if (!prev) return prev;
+                  const newEntry = { date: new Date(newWeightDate).toISOString(), weightKg: val };
+                  const nextHistory = [...(prev.weightHistory || []), newEntry];
+                  saveWeightHistoryDebounced(nextHistory);
+                  return { ...prev, weightHistory: nextHistory };
+                });
+                setAddDialogOpen(false);
+              }}>
+                Save Entry
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

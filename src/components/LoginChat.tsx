@@ -36,8 +36,8 @@ type ChatSession = {
   updatedAt: Date;
 };
 
-const API_URL = import.meta.env.DEV 
-  ? 'http://localhost:5000/api/chat' 
+const API_URL = import.meta.env.DEV
+  ? 'http://localhost:5000/api/chat'
   : '/api/chat';
 
 const FALLBACK_API_URL = 'https://your-vercel-app.vercel.app/api/chat';
@@ -71,7 +71,7 @@ const LoginChat = ({ dashboardData }: LoginChatProps) => {
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
-  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [userLocation, setUserLocation] = useState<{ latitude: number, longitude: number } | null>(null);
   const [showMapDialog, setShowMapDialog] = useState(false);
   const [mapRestaurants, setMapRestaurants] = useState<any[]>([]);
   const [allMapRestaurants, setAllMapRestaurants] = useState<any[]>([]); // Store all results for filtering
@@ -170,7 +170,7 @@ SAFETY:
 
   const saveCurrentChat = () => {
     if (!currentChatId || messages.length <= 1) return;
-    
+
     const firstUserMessage = messages.find(m => m.role === 'user');
     if (!firstUserMessage) return;
 
@@ -201,7 +201,7 @@ SAFETY:
     const updatedChats = recentChats.filter(chat => chat.id !== chatId);
     setRecentChats(updatedChats);
     saveRecentChats(updatedChats);
-    
+
     if (currentChatId === chatId) {
       handleStartNewConsultation();
     }
@@ -210,12 +210,12 @@ SAFETY:
   useEffect(() => {
     const loadProfile = async () => {
       if (!user?.uid) return;
-      
+
       try {
         const profile = await profileService.getProfile(user.uid);
         if (profile) {
           setUserProfile(profile);
-          const todayKey = `chat_count_${new Date().toISOString().slice(0,10)}`;
+          const todayKey = `chat_count_${new Date().toISOString().slice(0, 10)}`;
           const count = parseInt(localStorage.getItem(todayKey) || '0', 10);
           setDailyCount(Number.isFinite(count) ? count : 0);
         }
@@ -226,7 +226,7 @@ SAFETY:
 
     loadProfile();
     loadRecentChats();
-    
+
     setTimeout(() => setIsAnimating(true), 100);
 
     setMessages([
@@ -252,7 +252,7 @@ SAFETY:
           setUserLocation(coords);
           const initialAccuracy = position.coords.accuracy || Infinity;
           bestAccuracyRef.current = initialAccuracy;
-          
+
           console.log('📍 Precise location obtained:', {
             lat: coords.latitude,
             lng: coords.longitude,
@@ -265,12 +265,12 @@ SAFETY:
           if (locationWatchIdRef.current !== null) {
             navigator.geolocation.clearWatch(locationWatchIdRef.current);
           }
-          
+
           const watchId = navigator.geolocation.watchPosition(
             (updatedPosition) => {
               // Only update if accuracy improved or we get very accurate reading (<50m)
               const newAccuracy = updatedPosition.coords.accuracy || Infinity;
-              
+
               if (newAccuracy < bestAccuracyRef.current || newAccuracy < 50) {
                 bestAccuracyRef.current = newAccuracy;
                 setUserLocation({
@@ -354,7 +354,7 @@ SAFETY:
         if (listRef.current) {
           const container = listRef.current;
           container.scrollTop = container.scrollHeight;
-          
+
           const scrollArea = container.closest('[data-radix-scroll-area-viewport]');
           if (scrollArea) {
             scrollArea.scrollTop = scrollArea.scrollHeight;
@@ -413,66 +413,66 @@ SAFETY:
 
   const buildProfileContext = (): string => {
     if (!userProfile) return '';
-    
+
     const parts: string[] = [];
-    
+
     if (userProfile.age) parts.push(`Age: ${userProfile.age} years`);
     if (userProfile.gender) parts.push(`Gender: ${userProfile.gender}`);
-    
+
     if (userProfile.heightCm && userProfile.currentWeightKg) {
       parts.push(`Height: ${userProfile.heightCm}cm, Current Weight: ${userProfile.currentWeightKg}kg`);
     }
     if (userProfile.targetWeightKg) {
       parts.push(`Target Weight: ${userProfile.targetWeightKg}kg`);
     }
-    
+
     if (userProfile.activityLevel) {
       const activityFormatted = userProfile.activityLevel.replace('_', ' ');
       parts.push(`Activity Level: ${activityFormatted}`);
     }
-    
+
     if (userProfile.healthGoals && userProfile.healthGoals.length > 0) {
       parts.push(`Health Goals: ${userProfile.healthGoals.join(', ')}`);
     }
-    
+
     if (userProfile.dietaryPreferences && userProfile.dietaryPreferences.length > 0) {
       parts.push(`Dietary Preferences: ${userProfile.dietaryPreferences.join(', ')}`);
     }
-    
+
     if (userProfile.allergies && userProfile.allergies.length > 0) {
       parts.push(`IMPORTANT - Allergies: ${userProfile.allergies.join(', ')} (MUST AVOID)`);
     }
-    
+
     if (userProfile.medicalConditions && userProfile.medicalConditions.length > 0) {
       parts.push(`Medical Conditions: ${userProfile.medicalConditions.join(', ')}`);
     }
-    
+
     if (userProfile.smokingStatus) {
       parts.push(`Smoking Status: ${userProfile.smokingStatus}`);
     }
     if (userProfile.alcoholFrequency) {
       parts.push(`Alcohol Consumption: ${userProfile.alcoholFrequency}`);
     }
-    
+
     if (userProfile.preferredCalorieTarget) {
       parts.push(`Daily Calorie Target: ${userProfile.preferredCalorieTarget} kcal`);
     }
-    
-    return parts.length > 0 
-      ? `\n\n[User's Health Profile - Use this to personalize all recommendations]:\n${parts.join('\n')}\n[CRITICAL: Avoid all foods listed in allergies. Consider medical conditions when recommending foods.]` 
+
+    return parts.length > 0
+      ? `\n\n[User's Health Profile - Use this to personalize all recommendations]:\n${parts.join('\n')}\n[CRITICAL: Avoid all foods listed in allergies. Consider medical conditions when recommending foods.]`
       : '';
   };
 
   const buildDashboardContext = (): string => {
     if (!dashboardData) return '';
-    
+
     const { totals, targets, waterIntake } = dashboardData;
     const caloriesRemaining = targets.calories - totals.calories;
     const proteinRemaining = targets.protein - totals.protein;
     const carbsRemaining = targets.carbs - totals.carbs;
     const fatRemaining = targets.fat - totals.fat;
     const waterRemaining = targets.water - waterIntake;
-    
+
     const parts: string[] = [];
     parts.push(`\n[Today's Nutrition Overview - Use this real-time data to provide personalized advice]:`);
     parts.push(`Calories: ${totals.calories}/${targets.calories} kcal (${caloriesRemaining > 0 ? `${caloriesRemaining} remaining` : `${Math.abs(caloriesRemaining)} over target`})`);
@@ -480,22 +480,22 @@ SAFETY:
     parts.push(`Carbs: ${totals.carbs}/${targets.carbs}g (${carbsRemaining > 0 ? `${carbsRemaining}g remaining` : `${Math.abs(carbsRemaining)}g over target`})`);
     parts.push(`Fat: ${totals.fat}/${targets.fat}g (${fatRemaining > 0 ? `${fatRemaining}g remaining` : `${Math.abs(fatRemaining)}g over target`})`);
     parts.push(`Water: ${waterIntake}/${targets.water} glasses (${waterRemaining > 0 ? `${waterRemaining} glasses remaining` : 'target met'})`);
-    
+
     // Add recommendations based on progress
     if (caloriesRemaining < 0) {
       parts.push(`Note: User has exceeded their calorie target today.`);
     } else if (caloriesRemaining < 200) {
       parts.push(`Note: User is close to their calorie target.`);
     }
-    
+
     if (proteinRemaining > 30) {
       parts.push(`Note: User needs more protein today.`);
     }
-    
+
     if (waterRemaining > 2) {
       parts.push(`Note: User should drink more water today.`);
     }
-    
+
     return parts.join('\n');
   };
 
@@ -567,7 +567,7 @@ SAFETY:
             }
           });
           infoWindow.open(map, marker);
-          
+
           // Pan to marker
           map.panTo(place.geometry.location);
           map.setZoom(17);
@@ -654,107 +654,107 @@ SAFETY:
     try {
       // Initialize map
       const map = new google.maps.Map(mapRef.current, {
-      center: { lat: userLocation.latitude, lng: userLocation.longitude },
-      zoom: 14,
-      styles: [
-        {
-          featureType: "poi",
-          elementType: "labels",
-          stylers: [{ visibility: "off" }]
-        }
-      ],
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: true,
-    });
+        center: { lat: userLocation.latitude, lng: userLocation.longitude },
+        zoom: 14,
+        styles: [
+          {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+          }
+        ],
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
 
-    googleMapRef.current = map;
+      googleMapRef.current = map;
 
-    // Add user location marker
-    new google.maps.Marker({
-      position: { lat: userLocation.latitude, lng: userLocation.longitude },
-      map: map,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: '#3b82f6',
-        fillOpacity: 1,
-        strokeColor: '#ffffff',
-        strokeWeight: 3,
-      },
-      title: 'Your Location',
-      zIndex: 1000,
-    });
+      // Add user location marker
+      new google.maps.Marker({
+        position: { lat: userLocation.latitude, lng: userLocation.longitude },
+        map: map,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#3b82f6',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 3,
+        },
+        title: 'Your Location',
+        zIndex: 1000,
+      });
 
-    // Search for restaurants
-    const service = new google.maps.places.PlacesService(map);
-    
-    // Convert location to LatLng object
-    const locationLatLng = new google.maps.LatLng(userLocation.latitude, userLocation.longitude);
-    
-    const request: any = {
-      location: locationLatLng,
-      radius: 5000,
-      type: 'restaurant', // Use single type instead of array
-      keyword: keyword || undefined, // Only add keyword if provided
-    };
+      // Search for restaurants
+      const service = new google.maps.places.PlacesService(map);
 
-    console.log('🔍 Searching restaurants with request:', {
-      location: { lat: userLocation.latitude, lng: userLocation.longitude },
-      radius: request.radius,
-      type: request.type,
-      keyword: request.keyword,
-    });
+      // Convert location to LatLng object
+      const locationLatLng = new google.maps.LatLng(userLocation.latitude, userLocation.longitude);
 
-    service.nearbySearch(request, (results: any[], status: string) => {
-      console.log('📍 Places search result:', { status, resultCount: results?.length || 0 });
-      
-      if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-        processRestaurantResults(results, map, locationLatLng, google);
-        setIsSearchingRestaurants(false);
-      } else {
-        console.error('Places search failed:', status, {
-          statusCode: status,
-          statusText: status,
-          location: userLocation,
-        });
-        
-        // Try a fallback search with simpler parameters
-        if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-          console.log('🔄 Trying fallback search without keyword...');
-          const fallbackRequest: any = {
-            location: locationLatLng,
-            radius: 10000, // Increase radius
-            type: 'restaurant',
-            // Remove keyword for broader search
-          };
-          
-          service.nearbySearch(fallbackRequest, (fallbackResults: any[], fallbackStatus: string) => {
-            console.log('📍 Fallback search result:', { status: fallbackStatus, resultCount: fallbackResults?.length || 0 });
-            
-            if (fallbackStatus === google.maps.places.PlacesServiceStatus.OK && fallbackResults && fallbackResults.length > 0) {
-              processRestaurantResults(fallbackResults, map, locationLatLng, google);
-              setIsSearchingRestaurants(false);
-            } else {
-              setMapRestaurants([]);
-              setError(`No restaurants found nearby. Status: ${fallbackStatus}`);
-              setIsSearchingRestaurants(false);
-            }
-          });
-        } else {
-          setMapRestaurants([]);
-          const errorMessages: Record<string, string> = {
-            [google.maps.places.PlacesServiceStatus.ZERO_RESULTS]: 'No restaurants found nearby',
-            [google.maps.places.PlacesServiceStatus.INVALID_REQUEST]: 'Invalid search request. Please try again.',
-            [google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT]: 'Too many requests. Please try again later.',
-            [google.maps.places.PlacesServiceStatus.REQUEST_DENIED]: 'Request denied. Please check API key.',
-            [google.maps.places.PlacesServiceStatus.UNKNOWN_ERROR]: 'An unknown error occurred. Please try again.',
-          };
-          setError(errorMessages[status] || `Unable to find restaurants: ${status}`);
+      const request: any = {
+        location: locationLatLng,
+        radius: 5000,
+        type: 'restaurant', // Use single type instead of array
+        keyword: keyword || undefined, // Only add keyword if provided
+      };
+
+      console.log('🔍 Searching restaurants with request:', {
+        location: { lat: userLocation.latitude, lng: userLocation.longitude },
+        radius: request.radius,
+        type: request.type,
+        keyword: request.keyword,
+      });
+
+      service.nearbySearch(request, (results: any[], status: string) => {
+        console.log('📍 Places search result:', { status, resultCount: results?.length || 0 });
+
+        if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+          processRestaurantResults(results, map, locationLatLng, google);
           setIsSearchingRestaurants(false);
+        } else {
+          console.error('Places search failed:', status, {
+            statusCode: status,
+            statusText: status,
+            location: userLocation,
+          });
+
+          // Try a fallback search with simpler parameters
+          if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+            console.log('🔄 Trying fallback search without keyword...');
+            const fallbackRequest: any = {
+              location: locationLatLng,
+              radius: 10000, // Increase radius
+              type: 'restaurant',
+              // Remove keyword for broader search
+            };
+
+            service.nearbySearch(fallbackRequest, (fallbackResults: any[], fallbackStatus: string) => {
+              console.log('📍 Fallback search result:', { status: fallbackStatus, resultCount: fallbackResults?.length || 0 });
+
+              if (fallbackStatus === google.maps.places.PlacesServiceStatus.OK && fallbackResults && fallbackResults.length > 0) {
+                processRestaurantResults(fallbackResults, map, locationLatLng, google);
+                setIsSearchingRestaurants(false);
+              } else {
+                setMapRestaurants([]);
+                setError(`No restaurants found nearby. Status: ${fallbackStatus}`);
+                setIsSearchingRestaurants(false);
+              }
+            });
+          } else {
+            setMapRestaurants([]);
+            const errorMessages: Record<string, string> = {
+              [google.maps.places.PlacesServiceStatus.ZERO_RESULTS]: 'No restaurants found nearby',
+              [google.maps.places.PlacesServiceStatus.INVALID_REQUEST]: 'Invalid search request. Please try again.',
+              [google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT]: 'Too many requests. Please try again later.',
+              [google.maps.places.PlacesServiceStatus.REQUEST_DENIED]: 'Request denied. Please check API key.',
+              [google.maps.places.PlacesServiceStatus.UNKNOWN_ERROR]: 'An unknown error occurred. Please try again.',
+            };
+            setError(errorMessages[status] || `Unable to find restaurants: ${status}`);
+            setIsSearchingRestaurants(false);
+          }
         }
-      }
-    });
+      });
     } catch (error: any) {
       console.error('Error initializing map:', error);
       setError('Failed to initialize map. Please refresh and try again.');
@@ -767,19 +767,19 @@ SAFETY:
       setError("Please enable location access to find nearby restaurants");
       return;
     }
-    
+
     if (!(window as any).google) {
       setError("Google Maps is still loading. Please wait a moment.");
       return;
     }
-    
+
     setMapKeyword(searchKeyword || null);
     setMapFilters({ minRating: 0, maxDistance: 10, priceLevel: 0 }); // Reset filters
     setMapSortBy('rating'); // Reset sort
     setShowMapDialog(true);
     setError(null);
     setIsSearchingRestaurants(true);
-    
+
     // Wait for dialog to open, then initialize map
     setTimeout(() => {
       initializeMap(searchKeyword || 'healthy restaurant');
@@ -789,7 +789,7 @@ SAFETY:
 
   const handleFilterRestaurants = () => {
     if (!userLocation || !allMapRestaurants.length) return;
-    
+
     const google = (window as any).google;
     if (!google) return;
 
@@ -909,7 +909,7 @@ SAFETY:
 
       const data = await response.json();
       if (!isActivePaid) {
-        const todayKey = `chat_count_${new Date().toISOString().slice(0,10)}`;
+        const todayKey = `chat_count_${new Date().toISOString().slice(0, 10)}`;
         const next = dailyCount + 1;
         localStorage.setItem(todayKey, String(next));
         setDailyCount(next);
@@ -935,7 +935,7 @@ SAFETY:
 
     const step = 2;
     const baseDelay = 20;
-    
+
     for (let i = 0; i < fullText.length; i += step) {
       const slice = fullText.slice(0, i + step);
       setMessages(prev => {
@@ -945,10 +945,10 @@ SAFETY:
         }
         return next;
       });
-      
+
       const char = fullText[i];
       let delay = baseDelay;
-      
+
       if (char === '.' || char === '!' || char === '?') {
         delay = baseDelay * 3;
       } else if (char === ',' || char === ';' || char === ':') {
@@ -956,7 +956,7 @@ SAFETY:
       } else if (char === ' ') {
         delay = baseDelay * 1.5;
       }
-      
+
       await new Promise(r => setTimeout(r, delay));
     }
   };
@@ -1030,47 +1030,45 @@ SAFETY:
 
         <div className="w-full max-w-4xl mx-auto flex flex-col h-full py-3 sm:py-4 px-3 sm:px-4 relative">
           {/* Header */}
-          <div className={`flex items-center justify-between mb-3 sm:mb-4 p-3 sm:p-4 bg-card/50 backdrop-blur-sm rounded-2xl border-2 border-border shadow-sm transition-all duration-700 ${
-            isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-          }`}>
-            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shrink-0 animate-pulse">
-                <Salad className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+          <div className={`flex items-center justify-between mb-4 sm:mb-5 p-4 sm:p-5 bg-card border border-border rounded-xl shadow-sm transition-all duration-500 ${isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+            }`}>
+            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+              <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-primary flex items-center justify-center shadow-md shrink-0">
+                <Salad className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm sm:text-base truncate">Chat with Aliva</div>
-                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mt-0.5">
+                <div className="font-semibold text-base sm:text-lg truncate text-foreground">Chat with Aliva</div>
+                <div className="flex items-center gap-2 flex-wrap mt-1">
                   {userProfile && (
-                    <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50 text-xs px-1.5 py-0">
+                    <Badge variant="outline" className="border-green-500/30 text-green-700 bg-green-50 dark:bg-green-950 dark:text-green-300 text-xs px-2 py-0.5">
                       Profile Active
                     </Badge>
                   )}
                   {userLocation && (
-                    <Badge variant="outline" className="border-blue-300 text-blue-700 bg-blue-50 text-xs px-1.5 py-0">
-                      <MapPin className="h-2.5 w-2.5 mr-0.5" />
+                    <Badge variant="outline" className="border-blue-500/30 text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 text-xs px-2 py-0.5">
+                      <MapPin className="h-3 w-3 mr-1" />
                       <span className="hidden sm:inline">Location</span>
                     </Badge>
                   )}
                 </div>
               </div>
             </div>
-            
+
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowRecentChats(true)}
-              className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all duration-300 hover:scale-105 shrink-0 h-8 sm:h-9"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0 h-9 sm:h-10"
             >
-              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline text-xs sm:text-sm">History</span>
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">History</span>
             </Button>
           </div>
 
           {/* Profile Alert */}
           {!userProfile && (
-            <div className={`mb-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-sm transition-all duration-700 delay-200 ${
-              isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-            }`}>
+            <div className={`mb-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-sm transition-all duration-700 delay-200 ${isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}>
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                 <div className="flex-1 text-sm text-blue-700">
@@ -1100,14 +1098,13 @@ SAFETY:
           )}
 
           {/* Messages Area */}
-          <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-700 delay-300 ${
-            isAnimating ? 'opacity-100' : 'opacity-0'
-          }`}>
+          <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-700 delay-300 ${isAnimating ? 'opacity-100' : 'opacity-0'
+            }`}>
             <ScrollArea className="flex-1 w-full">
               <div ref={listRef} className="p-2 sm:p-4 space-y-3 sm:space-y-4 min-h-full flex flex-col justify-end">
                 {messages.map((m, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} ${idx === 0 ? 'items-center min-h-[40vh] sm:min-h-[50vh]' : ''} animate-in fade-in-0 slide-in-from-bottom-2 duration-300`}
                   >
                     {m.role !== "user" && idx !== 0 && (
@@ -1127,15 +1124,14 @@ SAFETY:
                         <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">I'm here to help with nutrition, fitness, mental health, and wellness. What would you like to discuss?</p>
                       </div>
                     ) : (
-                      <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 transition-all duration-200 shadow-sm hover:shadow-md ${
-                        m.role === "user" 
-                          ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground" 
-                          : "bg-card border-2 border-border"
-                      }`}>
-                        <div className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                      <div className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 sm:px-5 py-3 sm:py-3.5 transition-all duration-200 ${m.role === "user"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-card border border-border shadow-sm"
+                        }`}>
+                        <div className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap" style={{ lineHeight: '1.6', letterSpacing: '0.01em' }}>
                           {m.content}
                           {m.role === "assistant" && thinking && idx === messages.length - 1 && (
-                            <span className="inline-block w-1.5 h-3.5 bg-primary ml-1 animate-pulse"></span>
+                            <span className="inline-block w-1.5 h-4 bg-primary ml-1 animate-pulse"></span>
                           )}
                         </div>
                       </div>
@@ -1156,9 +1152,9 @@ SAFETY:
                         <Bot className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       </AvatarFallback>
                     </Avatar>
-                    <div className="max-w-[85%] sm:max-w-[75%] rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 bg-card border-2 border-border shadow-sm">
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="flex space-x-1">
+                    <div className="max-w-[85%] sm:max-w-[75%] rounded-xl px-4 sm:px-5 py-3 sm:py-3.5 bg-card border border-border shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="flex space-x-1.5">
                           <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                           <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                           <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
@@ -1173,17 +1169,15 @@ SAFETY:
 
           {/* Quick Prompts */}
           {messages.length === 1 && (
-            <div className={`flex flex-wrap gap-2 justify-center mb-3 sm:mb-4 transition-all duration-700 delay-400 ${
-              isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-            }`}>
+            <div className={`flex flex-wrap gap-2 justify-center mb-4 sm:mb-5 transition-all duration-500 delay-300 ${isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}>
               {quickPrompts.map((q, i) => (
                 <Button
                   key={i}
                   size="sm"
                   variant="outline"
-                  className={`rounded-full text-xs border-2 border-border hover:border-primary/50 px-3 py-2 transition-all duration-300 hover:shadow-md hover:-translate-y-1 ${
-                    hoveredPrompt === i ? 'bg-primary/5 border-primary/50 scale-105' : 'bg-card/50'
-                  }`}
+                  className={`rounded-full text-xs border border-border hover:border-primary hover:bg-primary/5 px-3 py-2 transition-all duration-200 ${hoveredPrompt === i ? 'bg-primary/5 border-primary' : 'bg-card'
+                    }`}
                   onClick={() => {
                     if (q.text === "Find healthy restaurants near me") {
                       handleFindRestaurants();
@@ -1204,10 +1198,9 @@ SAFETY:
           )}
 
           {/* Input Area */}
-          <div className={`mt-auto pt-3 sm:pt-4 pb-2 transition-all duration-700 delay-500 ${
-            isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-          }`}>
-            <div className="flex gap-2 items-center bg-card/80 backdrop-blur-sm rounded-full px-3 sm:px-4 py-2 sm:py-2.5 border-2 border-border hover:border-primary/50 transition-all duration-300 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/20 shadow-lg hover:shadow-xl">
+          <div className={`mt-auto pt-4 sm:pt-5 pb-2 transition-all duration-500 delay-400 ${isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`}>
+            <div className="flex gap-2 items-center bg-card rounded-2xl px-4 sm:px-5 py-3 sm:py-3.5 border border-border hover:border-primary/50 transition-all duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm">
               <Input
                 placeholder="Ask about your health..."
                 value={input}
@@ -1216,25 +1209,25 @@ SAFETY:
                 className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground px-0 text-sm sm:text-base"
                 disabled={thinking}
               />
-              <Button 
-                onClick={handleSend} 
-                disabled={!input.trim() || thinking} 
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || thinking}
                 size="icon"
-                className="rounded-full h-8 w-8 sm:h-9 sm:w-9 bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg disabled:opacity-50"
+                className="rounded-full h-9 w-9 sm:h-10 sm:w-10 bg-primary hover:bg-primary/90 transition-all duration-200 shadow-sm disabled:opacity-50"
               >
-                <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <Send className="h-4 w-4" />
               </Button>
             </div>
-            
+
             {/* Action Buttons */}
             {messages.length > 1 && (
               <div className="flex flex-wrap gap-2 justify-center mt-3">
                 {actionButtons.map((btn, i) => (
-                  <Button 
-                    key={i} 
-                    size="sm" 
-                    variant="ghost" 
-                    className="text-xs text-primary hover:text-primary hover:bg-primary/10 hover:scale-105 transition-all duration-200 px-2 sm:px-3" 
+                  <Button
+                    key={i}
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs text-primary hover:text-primary hover:bg-primary/10 hover:scale-105 transition-all duration-200 px-2 sm:px-3"
                     onClick={() => {
                       if (btn.action === "new") {
                         handleStartNewConsultation();
@@ -1251,9 +1244,9 @@ SAFETY:
                   </Button>
                 ))}
                 {decidedFood && (
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     className="text-xs hover:scale-105 transition-all duration-200"
                     onClick={() => handleFindRestaurants(decidedFood)}
                     disabled={thinking}
@@ -1271,32 +1264,32 @@ SAFETY:
 
       {/* Map Dialog */}
       <Dialog open={showMapDialog} onOpenChange={setShowMapDialog}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 gap-0 animate-in fade-in-0 zoom-in-95 duration-300">
-          <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-primary/5 to-primary/10">
+        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 gap-0">
+          <DialogHeader className="px-5 sm:px-6 py-4 border-b bg-card">
             <DialogTitle className="text-lg sm:text-xl font-semibold flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
               Nearby Restaurants
               {mapKeyword && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="ml-2 text-xs">
                   {mapKeyword}
                 </Badge>
               )}
               {mapRestaurants.length > 0 && (
-                <Badge variant="outline" className="ml-2">
+                <Badge variant="outline" className="ml-2 text-xs">
                   {mapRestaurants.length} found
                 </Badge>
               )}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Interactive map showing nearby restaurants with filters for rating, distance, and price. Click on restaurant cards to see details and get directions.
+              Interactive map showing nearby restaurants with filters for rating, distance, and price.
             </DialogDescription>
           </DialogHeader>
-          
-          {/* Filters and Search */}
-          <div className="px-4 sm:px-6 py-3 border-b border-border bg-card/50 backdrop-blur-sm">
+
+          {/* Filters */}
+          <div className="px-5 sm:px-6 py-3 border-b bg-muted/30">
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
               <div className="flex flex-wrap gap-2 flex-1">
-                <div className="flex items-center gap-2 px-2 py-1 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <span className="text-xs font-medium text-muted-foreground">Filters:</span>
                 </div>
@@ -1306,34 +1299,34 @@ SAFETY:
                     setMapFilters({ ...mapFilters, minRating: Number(e.target.value) });
                     setTimeout(handleFilterRestaurants, 100);
                   }}
-                  className="px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-border bg-background hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                  className="px-3 py-1.5 text-sm rounded-lg border bg-background hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
                 >
                   <option value={0}>All Ratings</option>
                   <option value={4}>4.0+ ⭐</option>
                   <option value={4.5}>4.5+ ⭐</option>
                 </select>
-                
+
                 <select
                   value={mapFilters.maxDistance}
                   onChange={(e) => {
                     setMapFilters({ ...mapFilters, maxDistance: Number(e.target.value) });
                     setTimeout(handleFilterRestaurants, 100);
                   }}
-                  className="px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-border bg-background hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                  className="px-3 py-1.5 text-sm rounded-lg border bg-background hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
                 >
                   <option value={10}>All Distances</option>
                   <option value={1}>Within 1 km</option>
                   <option value={2}>Within 2 km</option>
                   <option value={5}>Within 5 km</option>
                 </select>
-                
+
                 <select
                   value={mapFilters.priceLevel}
                   onChange={(e) => {
                     setMapFilters({ ...mapFilters, priceLevel: Number(e.target.value) });
                     setTimeout(handleFilterRestaurants, 100);
                   }}
-                  className="px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-border bg-background hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                  className="px-3 py-1.5 text-sm rounded-lg border bg-background hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
                 >
                   <option value={0}>All Prices</option>
                   <option value={1}>$ Budget</option>
@@ -1341,7 +1334,7 @@ SAFETY:
                   <option value={3}>$$$ Expensive</option>
                   <option value={4}>$$$$ Very Expensive</option>
                 </select>
-                
+
                 <Button
                   variant={mapSortBy === 'rating' ? 'default' : 'outline'}
                   size="sm"
@@ -1353,7 +1346,7 @@ SAFETY:
                 >
                   ⭐ Top Rated
                 </Button>
-                
+
                 <Button
                   variant={mapSortBy === 'distance' ? 'default' : 'outline'}
                   size="sm"
@@ -1381,7 +1374,7 @@ SAFETY:
                 </div>
               )}
             </div>
-            
+
             <div className="w-full md:w-96 border-t md:border-t-0 md:border-l bg-card overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-3 sm:p-4 space-y-3">
@@ -1403,7 +1396,6 @@ SAFETY:
                     </div>
                   ) : (
                     mapRestaurants.map((place, index) => {
-                      // Use calculated distance if available (from filtering), otherwise calculate it
                       let distance = place.calculatedDistance || 0;
                       if (distance === 0 && userLocation && place.geometry?.location && (window as any).google?.maps?.geometry) {
                         const google = (window as any).google;
@@ -1414,21 +1406,20 @@ SAFETY:
                       }
 
                       const placeLatLng = place.geometry?.location;
-                      const googleMapsUrl = placeLatLng 
+                      const googleMapsUrl = placeLatLng
                         ? `https://www.google.com/maps/dir/?api=1&origin=${userLocation?.latitude},${userLocation?.longitude}&destination=${placeLatLng.lat()},${placeLatLng.lng()}&travelmode=driving`
                         : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.vicinity)}`;
-                      
+
                       const isOpen = place.opening_hours?.isOpen() ?? true;
-                      
+
                       return (
-                        <div 
+                        <div
                           key={`${place.place_id || index}`}
-                          className="group p-4 border-2 border-border rounded-xl hover:shadow-xl hover:border-primary/50 cursor-pointer transition-all duration-300 bg-gradient-to-br from-card to-card/50 hover:-translate-y-1"
+                          className="group p-4 border border-border rounded-xl hover:shadow-lg hover:border-primary/30 cursor-pointer transition-all duration-200 bg-card"
                           onClick={() => {
                             if (place.geometry?.location && googleMapRef.current) {
                               googleMapRef.current.panTo(place.geometry.location);
                               googleMapRef.current.setZoom(17);
-                              // Open info window
                               const marker = markersRef.current[index];
                               if (marker && marker.infoWindow) {
                                 marker.infoWindow.open(googleMapRef.current, marker);
@@ -1437,11 +1428,10 @@ SAFETY:
                           }}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={`w-10 h-10 rounded-full text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl ${
-                              place.rating >= 4 ? 'bg-gradient-to-br from-green-500 to-green-600' : 
-                              place.rating >= 3.5 ? 'bg-gradient-to-br from-amber-500 to-amber-600' : 
-                              'bg-gradient-to-br from-red-500 to-red-600'
-                            }`}>
+                            <div className={`w-10 h-10 rounded-full text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-md transition-transform duration-200 group-hover:scale-105 ${place.rating >= 4 ? 'bg-green-500' :
+                                place.rating >= 3.5 ? 'bg-amber-500' :
+                                  'bg-red-500'
+                              }`}>
                               {index + 1}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -1479,7 +1469,7 @@ SAFETY:
                               {place.types && place.types.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 mb-3">
                                   {place.types.slice(0, 3).map((type: string, typeIndex: number) => (
-                                    <Badge 
+                                    <Badge
                                       key={typeIndex}
                                       variant="secondary"
                                       className="text-xs px-2 py-0.5"
@@ -1540,7 +1530,7 @@ SAFETY:
       <Sheet open={showRecentChats} onOpenChange={setShowRecentChats}>
         <SheetContent className="w-[300px] sm:w-[400px] p-0">
           <div className="flex flex-col h-full">
-            <div className="p-4 border-b border-border bg-card/50 backdrop-blur-sm">
+            <div className="p-5 border-b bg-card">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-primary" />
                 Chat History
@@ -1550,27 +1540,24 @@ SAFETY:
             <div className="flex-1 overflow-hidden">
               {recentChats.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <MessageSquare className="h-10 w-10 text-primary/50" />
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <MessageSquare className="h-10 w-10 text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground text-sm font-medium">No conversations yet</p>
                   <p className="text-xs text-muted-foreground mt-1">Start a new chat to see your history</p>
                 </div>
               ) : (
                 <ScrollArea className="h-full">
-                  <div className="p-2">
+                  <div className="p-3">
                     {recentChats.map((chat, index) => (
                       <div
                         key={chat.id}
-                        className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300 mb-1 hover:bg-muted/80 hover:shadow-md hover:-translate-y-0.5 ${
-                          currentChatId === chat.id ? 'bg-primary/10 border-2 border-primary/30' : 'border-2 border-transparent'
-                        }`}
+                        className={`group relative flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 mb-2 hover:bg-muted ${currentChatId === chat.id ? 'bg-primary/10 border border-primary/30' : 'border border-transparent'
+                          }`}
                         onClick={() => loadChat(chat.id)}
-                        style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
-                          currentChatId === chat.id ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
-                        }`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${currentChatId === chat.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-primary/20'
+                          }`}>
                           <MessageSquare className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1586,9 +1573,9 @@ SAFETY:
                             e.stopPropagation();
                             deleteChat(chat.id);
                           }}
-                          className="opacity-0 group-hover:opacity-100 transition-all duration-300 h-6 w-6 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:scale-110"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     ))}
@@ -1597,7 +1584,7 @@ SAFETY:
               )}
             </div>
 
-            <div className="p-4 border-t border-border bg-card/50 backdrop-blur-sm">
+            <div className="p-4 border-t bg-card">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
                 <span>Aliva is ready to help</span>
