@@ -5,10 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Heart, Target, Shield, Users, Lightbulb, Award, TrendingUp, Globe, Zap, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const About = () => {
   const navigate = useNavigate();
-  
+  const { user } = useAuth();
+
   const values = [
     {
       icon: Heart,
@@ -102,8 +104,8 @@ const About = () => {
                 About Aliva
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-                We believe better nutrition should be accessible, delightful, and deeply personal. 
-                Aliva blends AI with expert guidance to help you discover healthier choices, plan meals, 
+                We believe better nutrition should be accessible, delightful, and deeply personal.
+                Aliva blends AI with expert guidance to help you discover healthier choices, plan meals,
                 and build lasting habits—without friction.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
@@ -143,8 +145,8 @@ const About = () => {
               <div>
                 <h2 className="text-4xl font-bold mb-6">Our Mission</h2>
                 <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                  Empower every person to eat well with confidence and convenience. We're building the future 
-                  of personalized nutrition, where AI meets human expertise to create truly individualized 
+                  Empower every person to eat well with confidence and convenience. We're building the future
+                  of personalized nutrition, where AI meets human expertise to create truly individualized
                   health experiences.
                 </p>
                 <div className="space-y-4">
@@ -171,9 +173,9 @@ const About = () => {
                   </div>
                 </div>
                 <div className="mt-8">
-                  <Button 
+                  <Button
                     onClick={() => navigate('/privacy')}
-                    variant="outline" 
+                    variant="outline"
                     className="border-green-200 text-green-700 hover:bg-green-50"
                   >
                     Learn About Our Privacy Policy
@@ -188,7 +190,7 @@ const About = () => {
                     </div>
                     <h3 className="text-2xl font-bold text-foreground mb-4">Making Health Accessible</h3>
                     <p className="text-muted-foreground">
-                      We're democratizing access to expert nutrition guidance, making it available 
+                      We're democratizing access to expert nutrition guidance, making it available
                       to everyone, everywhere, at any time.
                     </p>
                   </div>
@@ -215,9 +217,9 @@ const About = () => {
                       <value.icon className="w-8 h-8 text-green-600" />
                     </div>
                     <h3 className="text-xl font-bold mb-4">{value.title}</h3>
-                        <p className="text-muted-foreground">{value.description}</p>
-            </CardContent>
-          </Card>
+                    <p className="text-muted-foreground">{value.description}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
@@ -245,12 +247,12 @@ const About = () => {
                         <p className="text-muted-foreground">{feature.description}</p>
                       </div>
                     </div>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
               ))}
             </div>
             <div className="text-center mt-12">
-              <Button 
+              <Button
                 onClick={() => navigate('/dashboard')}
                 size="lg"
                 className="bg-gradient-to-r from-green-600 to-purple-600 hover:from-green-700 hover:to-purple-700 text-white"
@@ -272,25 +274,25 @@ const About = () => {
                   Join thousands of users who are already making healthier choices with Aliva's AI-powered guidance.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button 
-                    size="lg" 
-                    variant="secondary" 
+                  <Button
+                    size="lg"
+                    variant="secondary"
                     className="bg-card text-green-600 hover:bg-muted"
-                    onClick={() => navigate('/auth')}
+                    onClick={() => navigate(user ? '/dashboard' : '/auth')}
                   >
-                    Get Started Free
+                    {user ? 'Dashboard' : 'Get Started Free'}
                   </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
+                  <Button
+                    size="lg"
+                    variant="outline"
                     className="border-primary text-primary-foreground hover:bg-card hover:text-green-600"
                     onClick={() => navigate('/contact')}
                   >
                     Learn More
                   </Button>
                 </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
           </div>
         </section>
       </main>
