@@ -50,7 +50,7 @@ export class LocationService {
 
       if (!apiKey) {
         console.error('Google Maps API key not configured');
-        throw new Error('VITE_GOOGLE_MAPS_API_KEY is required');
+        throw new Error('Map currently offline');
       }
 
       const response = await fetch(
