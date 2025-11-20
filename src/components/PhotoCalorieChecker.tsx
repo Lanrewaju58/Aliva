@@ -100,14 +100,13 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
     reader.readAsDataURL(file);
   };
 
-  const analyzeFoodImage = async () => {
+    const analyzeFoodImage = async () => {
     if (!image) return;
 
-    // Check if user has Pro access
     if (!isPro) {
       toast({
         title: 'Pro feature required',
-        description: 'Photo scanning is available for Pro users only. Upgrade to unlock this feature.',
+        description: 'Photo scanning is available for Pro users only.',
         variant: 'destructive'
       });
       setIsOpen(false);
@@ -118,72 +117,20 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
     setIsAnalyzing(true);
     
     try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '';
       
-      if (!apiKey) {
-        throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file.');
-      }
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch(`${apiBase}/api/analyze-food`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "user",
-              content: [
-                { 
-                  type: "text", 
-                  text: `Analyze this food image and provide nutritional information in the following JSON format only, no additional text:
-{
-  "name": "Name of the dish",
-  "calories": number,
-  "protein": number (in grams),
-  "carbs": number (in grams),
-  "fat": number (in grams),
-  "servingSize": "description of serving size",
-  "confidence": "High or Medium or Low"
-}
-
-Be as accurate as possible based on the visible portion size. If you're unsure, indicate "Medium" or "Low" confidence.`
-                },
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: image
-                  }
-                }
-              ]
-            }
-          ],
-          max_tokens: 500,
-          temperature: 0.3
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image })
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || 'API request failed');
+        throw new Error(error.error || 'API request failed');
       }
 
-      const data = await response.json();
-      const content = data.choices[0]?.message?.content;
-      
-      if (!content) {
-        throw new Error('No response from API');
-      }
-
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Invalid response format');
-      }
-
-      const nutritionData: NutritionData = JSON.parse(jsonMatch[0]);
-      
+      const nutritionData: NutritionData = await response.json();
       setResult(nutritionData);
       
       toast({
@@ -193,19 +140,11 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
     } catch (error: any) {
       console.error('Error analyzing image:', error);
       
-      let errorMessage = 'Please try again with a clearer image';
-      
-      if (error.message?.includes('API key')) {
-        errorMessage = 'OpenAI API key not configured. Please check your environment variables.';
-      } else if (error.message?.includes('rate limit')) {
-        errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
-      } else if (error.message?.includes('quota')) {
-        errorMessage = 'API quota exceeded. Please check your OpenAI account.';
-      }
-      
       toast({
         title: 'Analysis failed',
-        description: errorMessage,
+        description: error.message?.includes('Service') 
+          ? 'Service temporarily unavailable. Please try again later.'
+          : 'Please try again with a clearer image',
         variant: 'destructive'
       });
     } finally {

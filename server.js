@@ -277,6 +277,79 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// Food Image Analysis Endpoint
+app.post('/api/analyze-food', async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    const { image } = req.body;
+
+    if (!image || typeof image !== 'string') {
+      return res.status(400).json({
+        error: 'Invalid request',
+        message: 'Image data is required'
+      });
+    }
+
+    if (!openaiClient) {
+      return res.status(503).json({
+        error: 'Service unavailable',
+        message: 'AI service is temporarily unavailable'
+      });
+    }
+
+    console.log(`🍔 Processing food image analysis`);
+
+    const completion = await openaiClient.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{
+        role: "user",
+        content: [
+          { 
+            type: "text", 
+            text: `Analyze this food image and provide nutritional information in the following JSON format only, no additional text:
+{
+  "name": "Name of the dish",
+  "calories": number,
+  "protein": number (in grams),
+  "carbs": number (in grams),
+  "fat": number (in grams),
+  "servingSize": "description of serving size",
+  "confidence": "High or Medium or Low"
+}
+
+Be as accurate as possible based on the visible portion size. If you're unsure, indicate "Medium" or "Low" confidence.`
+          },
+          {
+            type: "image_url",
+            image_url: { url: image }
+          }
+        ]
+      }],
+      max_tokens: 500,
+      temperature: 0.3
+    });
+
+    const content = completion.choices[0]?.message?.content;
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    
+    if (!jsonMatch) throw new Error('Invalid response format');
+
+    const nutritionData = JSON.parse(jsonMatch[0]);
+    console.log(`✅ Food analysis completed in ${Date.now() - startTime}ms`);
+
+    res.status(200).json(nutritionData);
+
+  } catch (error) {
+    console.error('❌ Error in /api/analyze-food:', error);
+    res.status(500).json({
+      error: 'Failed to analyze image',
+      ...(CONFIG.NODE_ENV === 'development' && { details: error.message })
+    });
+  }
+});
+
+
 // Payments: Verify Paystack Transaction
 app.post('/api/payments/verify', async (req, res) => {
   try {
