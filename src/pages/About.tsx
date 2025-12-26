@@ -229,10 +229,10 @@ const About = () => {
         {/* CTA Section */}
         <section className="section-padding">
           <div className="container-tight text-center">
-            <Card className="border-0 bg-primary text-primary-foreground overflow-hidden">
+            <Card className="p-12 md:p-16 bg-muted/30 text-foreground border border-border shadow-xl relative overflow-hidden">
               <CardContent className="p-10 md:p-14">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Nutrition?</h2>
-                <p className="text-lg mb-8 text-primary-foreground/90 max-w-xl mx-auto">
+                <p className="text-lg mb-8 text-muted-foreground max-w-xl mx-auto">
                   Join thousands of users who are already making healthier choices with Aliva's AI-powered guidance.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -245,9 +245,8 @@ const About = () => {
                     {user ? 'Go to Dashboard' : 'Get Started Free'}
                   </Button>
                   <Button
-                    size="lg"
-                    variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10 rounded-full px-8"
+                    variant="default"
+                    className="h-12 px-8 rounded-lg transition-all duration-200"
                     onClick={() => navigate('/contact')}
                   >
                     Contact Us
