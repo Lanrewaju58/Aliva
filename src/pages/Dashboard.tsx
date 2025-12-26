@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { profileService } from "@/services/profileService";
 import { mealService, Meal, MealType } from "@/services/mealService";
+import { exerciseService, Exercise, ExerciseType } from "@/services/exerciseService";
 import { UserProfile } from "@/types/profile";
 
 import Navigation from "@/components/Navigation";
@@ -26,7 +27,11 @@ import {
   ChevronRight,
   Zap,
   Crown,
-  Star
+  Star,
+  Dumbbell,
+  Flame,
+  Clock,
+  X
 } from "lucide-react";
 
 // ==================== TYPES ====================
@@ -425,6 +430,7 @@ const AddMealForm = ({
 const useDashboardData = (userId: string, today: string) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [waterIntake, setWaterIntake] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -436,15 +442,17 @@ const useDashboardData = (userId: string, today: string) => {
       setError(null);
 
       try {
-        const [userProfile, todaysMeals, dailyLog] = await Promise.all([
+        const [userProfile, todaysMeals, dailyLog, todaysExercises] = await Promise.all([
           profileService.getProfile(userId),
           mealService.getMealsByDate(userId, today),
           mealService.getDailyLog(userId, today),
+          exerciseService.getExercisesByDate(userId, today),
         ]);
 
         setProfile(userProfile);
         setMeals(todaysMeals);
         setWaterIntake(dailyLog?.waterIntake || 0);
+        setExercises(todaysExercises);
       } catch (err) {
         console.error('Error loading data:', err);
         setError('Failed to load dashboard data');
@@ -461,7 +469,7 @@ const useDashboardData = (userId: string, today: string) => {
     loadData();
   }, [userId, today, toast]);
 
-  return { profile, meals, setMeals, waterIntake, setWaterIntake, isLoading, error };
+  return { profile, meals, setMeals, exercises, setExercises, waterIntake, setWaterIntake, isLoading, error };
 };
 
 // ==================== MAIN COMPONENT ====================
@@ -472,10 +480,11 @@ const Dashboard = () => {
   const { toast } = useToast();
 
   const [showAddMeal, setShowAddMeal] = useState<string | null>(null);
+  const [showAddExercise, setShowAddExercise] = useState(false);
   const [dailyStreak, setDailyStreak] = useState<number>(0);
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  const { profile, meals, setMeals, waterIntake, setWaterIntake, isLoading, error } =
+  const { profile, meals, setMeals, exercises, setExercises, waterIntake, setWaterIntake, isLoading, error } =
     useDashboardData(user?.uid || '', today);
 
   // Load daily streak
@@ -616,6 +625,65 @@ const Dashboard = () => {
       });
     }
   }, [user, waterIntake, dailyTargets.water, today, setWaterIntake, toast]);
+
+  const handleAddExercise = useCallback(async (
+    exerciseData: Omit<Exercise, 'id' | 'userId' | 'date' | 'time' | 'createdAt' | 'updatedAt'>
+  ) => {
+    if (!user) return;
+
+    try {
+      const newExercise: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'> = {
+        ...exerciseData,
+        userId: user.uid,
+        date: today,
+        time: new Date().toISOString(),
+      };
+
+      const exerciseId = await exerciseService.addExercise(newExercise);
+
+      setExercises(prev => [...prev, {
+        ...newExercise,
+        id: exerciseId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }] as Exercise[]);
+
+      setShowAddExercise(false);
+
+      toast({
+        title: 'Exercise logged',
+        description: `${exerciseData.name} - ${exerciseData.duration} mins`
+      });
+    } catch (err) {
+      console.error('Error adding exercise:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to log exercise.',
+        variant: 'destructive'
+      });
+    }
+  }, [user, today, setExercises, toast]);
+
+  const handleDeleteExercise = useCallback(async (exerciseId: string) => {
+    if (!user) return;
+
+    try {
+      await exerciseService.deleteExercise(user.uid, exerciseId);
+      setExercises(prev => prev.filter(e => e.id !== exerciseId));
+
+      toast({
+        title: 'Exercise deleted',
+        description: 'Exercise removed from log'
+      });
+    } catch (err) {
+      console.error('Error deleting exercise:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete exercise.',
+        variant: 'destructive'
+      });
+    }
+  }, [user, setExercises, toast]);
 
   // ==================== RENDER ====================
 
@@ -832,6 +900,161 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Exercise Log Section */}
+              <div className={`rounded-xl p-6 ${isPro
+                ? 'bg-gradient-to-br from-card to-primary/5 border-2 border-primary/10'
+                : 'bg-card border border-border'
+                }`}>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-lg ${isPro ? 'bg-orange-500/20' : 'bg-orange-500/10'}`}>
+                      <Dumbbell className="h-4 w-4 text-orange-500" />
+                    </div>
+                    <h3 className="font-semibold text-foreground">Today's Exercise</h3>
+                  </div>
+                  <Button size="sm" onClick={() => setShowAddExercise(true)}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
+
+                {/* Add Exercise Form */}
+                {showAddExercise && (
+                  <div className="mb-6 p-4 bg-muted/30 rounded-xl border border-border">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-medium text-foreground">Log Exercise</h4>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowAddExercise(false)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const form = e.target as HTMLFormElement;
+                        const formData = new FormData(form);
+                        handleAddExercise({
+                          name: formData.get('name') as string,
+                          exerciseType: formData.get('type') as ExerciseType,
+                          duration: Number(formData.get('duration')),
+                          caloriesBurned: Number(formData.get('calories')),
+                        });
+                        form.reset();
+                      }}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="ex-name">Exercise Name</Label>
+                          <Input id="ex-name" name="name" placeholder="Running, Yoga..." required className="h-10" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="ex-type">Type</Label>
+                          <select
+                            id="ex-type"
+                            name="type"
+                            required
+                            className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <option value="cardio">Cardio</option>
+                            <option value="strength">Strength</option>
+                            <option value="flexibility">Flexibility</option>
+                            <option value="sports">Sports</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="ex-duration">Duration (mins)</Label>
+                          <Input id="ex-duration" name="duration" type="number" min="1" placeholder="30" required className="h-10" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="ex-calories">Calories Burned</Label>
+                          <Input id="ex-calories" name="calories" type="number" min="0" placeholder="200" required className="h-10" />
+                        </div>
+                      </div>
+                      <Button type="submit" className="w-full h-10">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Log Exercise
+                      </Button>
+                    </form>
+                  </div>
+                )}
+
+                {/* Exercise List */}
+                {exercises.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">No exercises logged today</p>
+                    <p className="text-xs mt-1">Click "Add" to log your workout</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {exercises.map((exercise) => (
+                      <div
+                        key={exercise.id}
+                        className={`flex items-center justify-between p-3 rounded-lg group transition-colors ${isPro ? 'bg-primary/5 hover:bg-primary/10' : 'bg-muted/30 hover:bg-muted/50'
+                          }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${exercise.exerciseType === 'cardio' ? 'bg-red-500/10' :
+                            exercise.exerciseType === 'strength' ? 'bg-orange-500/10' :
+                              exercise.exerciseType === 'flexibility' ? 'bg-purple-500/10' :
+                                exercise.exerciseType === 'sports' ? 'bg-green-500/10' : 'bg-gray-500/10'
+                            }`}>
+                            {exercise.exerciseType === 'cardio' && <Flame className="h-4 w-4 text-red-500" />}
+                            {exercise.exerciseType === 'strength' && <Dumbbell className="h-4 w-4 text-orange-500" />}
+                            {exercise.exerciseType === 'flexibility' && <TrendingUp className="h-4 w-4 text-purple-500" />}
+                            {exercise.exerciseType === 'sports' && <Target className="h-4 w-4 text-green-500" />}
+                            {exercise.exerciseType === 'other' && <Zap className="h-4 w-4 text-gray-500" />}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm text-foreground">{exercise.name}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {exercise.duration} mins
+                              <span className="text-muted-foreground/50">•</span>
+                              <Flame className="h-3 w-3" />
+                              {exercise.caloriesBurned} cal
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="opacity-0 group-hover:opacity-100 h-7 w-7 p-0 transition-opacity"
+                          onClick={() => handleDeleteExercise(exercise.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+
+                    {/* Exercise Summary */}
+                    <div className={`mt-4 pt-4 border-t flex justify-around text-center ${isPro ? 'border-primary/10' : 'border-border'}`}>
+                      <div>
+                        <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>
+                          {exercises.reduce((sum, e) => sum + e.duration, 0)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Total mins</p>
+                      </div>
+                      <div>
+                        <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>
+                          {exercises.reduce((sum, e) => sum + e.caloriesBurned, 0)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Calories burned</p>
+                      </div>
+                      <div>
+                        <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>
+                          {exercises.length}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Workouts</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Recent Meals */}
               {meals.length > 0 && (
                 <div className="bg-card border border-border rounded-xl p-6">
@@ -893,12 +1116,12 @@ const Dashboard = () => {
             {/* Health Tab */}
             <TabsContent value="health" className="space-y-6">
               <div className={`flex flex-col items-center justify-center py-20 text-center rounded-2xl ${isPro
-                  ? 'bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/10'
-                  : ''
+                ? 'bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/10'
+                : ''
                 }`}>
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${isPro
-                    ? 'bg-gradient-to-br from-primary/20 to-primary/30'
-                    : 'bg-primary/10'
+                  ? 'bg-gradient-to-br from-primary/20 to-primary/30'
+                  : 'bg-primary/10'
                   }`}>
                   <TrendingUp className="w-8 h-8 text-primary" />
                 </div>
@@ -907,8 +1130,8 @@ const Dashboard = () => {
                   Connect your fitness devices to track steps, sleep, heart rate, and more.
                 </p>
                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${isPro
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                    : 'bg-primary/10 text-primary'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                  : 'bg-primary/10 text-primary'
                   }`}>
                   <span className={`w-2 h-2 rounded-full animate-pulse ${isPro ? 'bg-white' : 'bg-primary'}`} />
                   Coming Soon {isPro && '— Priority Access'}
@@ -919,8 +1142,8 @@ const Dashboard = () => {
             {/* Chat Tab */}
             <TabsContent value="chat">
               <div className={`rounded-xl p-6 ${isPro
-                  ? 'bg-gradient-to-br from-card to-primary/5 border-2 border-primary/10'
-                  : 'bg-card border border-border'
+                ? 'bg-gradient-to-br from-card to-primary/5 border-2 border-primary/10'
+                : 'bg-card border border-border'
                 }`}>
                 {isPro && (
                   <div className="flex items-center gap-2 mb-4 pb-4 border-b border-primary/10">

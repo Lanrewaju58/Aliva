@@ -49,10 +49,20 @@ service cloud.firestore {
       allow list: if request.auth != null && request.auth.uid == userId;
     }
     
+    // Exercises subcollection - users can only access their own exercises
+    match /users/{userId}/exercises/{exerciseId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow listing exercises subcollection
+    match /users/{userId}/exercises {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+    
     // Default: deny all other access
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
-
