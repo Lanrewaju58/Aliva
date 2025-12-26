@@ -175,191 +175,177 @@ const Navigation = () => {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-white/10 ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+        } ${isScrolled
+          ? 'bg-background/80 backdrop-blur-xl shadow-sm border-white/20'
+          : 'bg-background/0 backdrop-blur-none border-transparent'
         }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className={`rounded-2xl transition-all duration-300 ${isScrolled
-            ? 'bg-background/80 backdrop-blur-xl shadow-lg border border-border/50'
-            : isLandingPage
-              ? 'bg-primary/80 backdrop-blur-md'
-              : 'bg-background/60 backdrop-blur-md border border-border/30'
-            }`}>
-            <div className="h-16 flex items-center justify-between px-6">
-              {/* Logo */}
-              <button
-                onClick={() => {
-                  if (location.pathname !== '/') {
-                    navigate('/');
-                  } else {
-                    scrollToSection('home');
-                  }
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <button
+              onClick={() => {
+                if (location.pathname !== '/') {
+                  navigate('/');
+                } else {
+                  scrollToSection('home');
+                }
+              }}
+              className="flex items-center gap-2 group"
+            >
+              <img
+                src="/logo.svg"
+                alt="Aliva"
+                className="h-8 w-auto transition-transform group-hover:scale-105"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
                 }}
-                className="flex items-center gap-2 group"
-              >
-                <img
-                  src="/logo.svg"
-                  alt="Aliva"
-                  className="h-8 w-auto transition-transform group-hover:scale-105"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
+              />
 
-              </button>
+            </button>
 
-              {/* Center Navigation - Desktop */}
-              <div className="hidden lg:flex items-center gap-1">
-                {navLinks.map((link) => (
-                  <button
-                    key={link.label}
-                    onClick={() => {
-                      if (link.href.startsWith('#')) {
-                        if (location.pathname !== '/') {
-                          navigate('/' + link.href);
-                        } else {
-                          scrollToSection(link.href.slice(1));
-                        }
+            {/* Center Navigation - Desktop */}
+            <div className="hidden lg:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => {
+                    if (link.href.startsWith('#')) {
+                      if (location.pathname !== '/') {
+                        navigate('/' + link.href);
                       } else {
-                        navigate(link.href);
+                        scrollToSection(link.href.slice(1));
                       }
-                    }}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isScrolled || !isLandingPage
-                      ? 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
-                      }`}
-                  >
-                    {link.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Right Actions */}
-              <div className="flex items-center gap-2">
-                {/* Theme Toggle */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleTheme}
-                  className={`rounded-full h-9 w-9 p-0 transition-all duration-200 ${isScrolled || !isLandingPage
-                    ? 'hover:bg-muted text-foreground'
-                    : 'hover:bg-white/10 text-white'
-                    }`}
-                  title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                    } else {
+                      navigate(link.href);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-foreground/80 hover:text-foreground hover:bg-white/10 dark:hover:bg-white/5"
                 >
-                  {theme === 'light' ? (
-                    <Moon className="h-4 w-4" />
-                  ) : (
-                    <Sun className="h-4 w-4" />
-                  )}
-                </Button>
+                  {link.label}
+                </button>
+              ))}
+            </div>
 
-                {user ? (
-                  <>
+            {/* Right Actions */}
+            <div className="flex items-center gap-2">
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleTheme}
+                className="rounded-full h-9 w-9 p-0 transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 text-foreground"
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </Button>
 
-                    {/* User Menu */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex items-center gap-2 rounded-full p-1 pr-2 transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5">
-                          <div className="relative">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ring-2 transition-all ${isPremiumUser
-                              ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white ring-amber-300/50'
-                              : isScrolled || !isLandingPage
-                                ? 'bg-primary text-primary-foreground ring-primary/20'
-                                : 'bg-white text-primary ring-white/30'
-                              }`}>
-                              {userInitials}
-                            </div>
-                            {isPremiumUser && (
-                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center shadow-sm">
-                                <Crown className="w-2.5 h-2.5 text-white" />
-                              </div>
-                            )}
-                          </div>
-                          <ChevronDown className={`w-3.5 h-3.5 transition-colors ${isScrolled || !isLandingPage ? 'text-muted-foreground' : 'text-white/70'
-                            }`} />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 p-2">
-                        <div className="px-2 py-3 mb-2 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${isPremiumUser
-                              ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white'
-                              : 'bg-primary text-primary-foreground'
-                              }`}>
-                              {userInitials}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">
-                                {user.displayName || 'User'}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {user.email}
-                              </p>
-                            </div>
+              {user ? (
+                <>
+
+                  {/* User Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 rounded-full p-1 pr-2 transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5">
+                        <div className="relative">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ring-2 transition-all ${isPremiumUser
+                            ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white ring-amber-300/50'
+                            : isScrolled || !isLandingPage
+                              ? 'bg-primary text-primary-foreground ring-primary/20'
+                              : 'bg-white text-primary ring-white/30'
+                            }`}>
+                            {userInitials}
                           </div>
                           {isPremiumUser && (
-                            <div className="mt-3 flex items-center gap-2 px-2 py-1.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-md border border-amber-500/20">
-                              <Crown className="w-3.5 h-3.5 text-amber-500" />
-                              <span className="text-xs font-medium text-amber-600">Pro Member</span>
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center shadow-sm">
+                              <Crown className="w-2.5 h-2.5 text-white" />
                             </div>
                           )}
                         </div>
-
-                        <DropdownMenuItem
-                          onClick={() => navigate('/profile')}
-                          className="cursor-pointer rounded-lg h-10"
-                        >
-                          <Settings className="w-4 h-4 mr-3 text-muted-foreground" />
-                          Settings
-                        </DropdownMenuItem>
-
-                        {!isPremiumUser && (
-                          <>
-                            <DropdownMenuSeparator className="my-2" />
-                            <DropdownMenuItem
-                              onClick={() => navigate('/upgrade')}
-                              className="cursor-pointer rounded-lg h-10 bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20"
-                            >
-                              <Stethoscope className="w-4 h-4 mr-3 text-amber-500" />
-                              <span className="text-amber-600 font-medium">Upgrade to Pro</span>
-                            </DropdownMenuItem>
-                          </>
+                        <ChevronDown className="w-3.5 h-3.5 transition-colors text-foreground/70" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 p-2">
+                      <div className="px-2 py-3 mb-2 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${isPremiumUser
+                            ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white'
+                            : 'bg-primary text-primary-foreground'
+                            }`}>
+                            {userInitials}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {user.displayName || 'User'}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                        {isPremiumUser && (
+                          <div className="mt-3 flex items-center gap-2 px-2 py-1.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-md border border-amber-500/20">
+                            <Crown className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="text-xs font-medium text-amber-600">Pro Member</span>
+                          </div>
                         )}
+                      </div>
 
-                        <DropdownMenuSeparator className="my-2" />
-                        <DropdownMenuItem
-                          onClick={handleAuthAction}
-                          className="cursor-pointer rounded-lg h-10 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-                        >
-                          <LogOut className="w-4 h-4 mr-3" />
-                          Sign Out
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => navigate('/auth')}
-                      className={`rounded-lg h-9 px-4 font-medium shadow-lg transition-all duration-200 ${isScrolled || !isLandingPage
-                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
-                        : 'bg-white hover:bg-white/95 text-primary'
-                        }`}
-                    >
-                      Get Started
-                    </Button>
-                  </div>
-                )}
-              </div>
+                      <DropdownMenuItem
+                        onClick={() => navigate('/profile')}
+                        className="cursor-pointer rounded-lg h-10"
+                      >
+                        <Settings className="w-4 h-4 mr-3 text-muted-foreground" />
+                        Settings
+                      </DropdownMenuItem>
+
+                      {!isPremiumUser && (
+                        <>
+                          <DropdownMenuSeparator className="my-2" />
+                          <DropdownMenuItem
+                            onClick={() => navigate('/upgrade')}
+                            className="cursor-pointer rounded-lg h-10 bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20"
+                          >
+                            <Stethoscope className="w-4 h-4 mr-3 text-amber-500" />
+                            <span className="text-amber-600 font-medium">Upgrade to Pro</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      <DropdownMenuSeparator className="my-2" />
+                      <DropdownMenuItem
+                        onClick={handleAuthAction}
+                        className="cursor-pointer rounded-lg h-10 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => navigate('/auth')}
+                    className="rounded-lg h-9 px-4 font-medium shadow-lg transition-all duration-200 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    Get Started
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </nav >
 
       {/* Spacer */}
-      < div className="h-24" />
+      <div className="h-16" />
     </>
   );
 };
