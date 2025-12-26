@@ -54,88 +54,103 @@ const App: React.FC = () => {
         <ThemeProvider>
           <AuthProvider>
             <TooltipProvider>
-              <Toaster 
+              <Toaster
                 position="top-right"
-                richColors
                 closeButton
                 expand={false}
                 duration={4000}
+                toastOptions={{
+                  style: {
+                    background: 'hsl(var(--primary))',
+                    color: 'white',
+                    border: '1px solid hsl(var(--primary) / 0.3)',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 40px -10px hsl(var(--primary) / 0.3)',
+                  },
+                  classNames: {
+                    title: 'font-semibold text-white',
+                    description: 'text-white/80',
+                    closeButton: 'bg-white/10 hover:bg-white/20 text-white border-white/20',
+                    success: 'bg-primary border-primary/30',
+                    error: 'bg-destructive border-destructive/30',
+                  },
+                }}
               />
               <ScrollToTop />
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
-                
+
                 {/* Protected Routes */}
-                <Route 
-                  path="/dashboard" 
+                <Route
+                  path="/dashboard"
                   element={
                     <ProtectedRoute>
                       <Dashboard />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                <Route 
-                  path="/profile" 
+                <Route
+                  path="/profile"
                   element={
                     <ProtectedRoute>
                       <Profile />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                <Route 
-                  path="/progress" 
+                <Route
+                  path="/progress"
                   element={
                     <ProtectedRoute>
                       <Progress />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                <Route 
-                  path="/onboarding" 
+                <Route
+                  path="/onboarding"
                   element={
                     <ProtectedRoute>
                       <Onboarding />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                <Route 
-                  path="/meal-planner" 
+                <Route
+                  path="/meal-planner"
                   element={
                     <ProtectedRoute>
                       <MealPlanner />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-          
-                <Route 
-                  path="/upgrade" 
+
+                <Route
+                  path="/upgrade"
                   element={
                     <ProtectedRoute>
                       <Upgrade />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                <Route 
-                  path="/admin" 
+                <Route
+                  path="/admin"
                   element={
                     <ProtectedRoute requireAdmin={true}>
                       <AdminDashboard />
                     </ProtectedRoute>
-                  } 
+                  }
                 />
-                
+
                 {/* Company Pages */}
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
-                
+
                 {/* Support Pages */}
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/security" element={<Security />} />
-                
+
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

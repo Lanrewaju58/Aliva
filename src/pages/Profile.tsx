@@ -290,7 +290,7 @@ const Profile: React.FC = () => {
                     )}
                   </>
                 ) : (
-                  'Ads shown and daily chat limit applies'
+                  'daily chat limit applies'
                 )}
               </div>
             </div>

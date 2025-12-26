@@ -24,7 +24,9 @@ import {
   Settings,
   Trash2,
   ChevronRight,
-  Zap
+  Zap,
+  Crown,
+  Star
 } from "lucide-react";
 
 // ==================== TYPES ====================
@@ -136,7 +138,8 @@ const StatCard = ({
   target,
   unit = "",
   color = "text-primary",
-  bgColor = "bg-primary/10"
+  bgColor = "bg-primary/10",
+  isPro = false
 }: {
   icon: any;
   label: string;
@@ -145,23 +148,27 @@ const StatCard = ({
   unit?: string;
   color?: string;
   bgColor?: string;
+  isPro?: boolean;
 }) => {
   const percentage = target > 0 ? Math.min((value / target) * 100, 100) : 0;
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 hover:border-border/80 transition-colors">
+    <div className={`rounded-xl p-5 transition-all duration-300 ${isPro
+      ? 'bg-gradient-to-br from-card to-primary/5 border-2 border-primary/10 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5'
+      : 'bg-card border border-border hover:border-border/80'
+      }`}>
       <div className="flex items-center gap-3 mb-4">
-        <div className={`p-2.5 rounded-lg ${bgColor}`}>
+        <div className={`p-2.5 rounded-lg ${isPro ? bgColor.replace('/10', '/20') : bgColor}`}>
           <Icon className={`h-4 w-4 ${color}`} />
         </div>
         <span className="text-sm font-medium text-muted-foreground">{label}</span>
       </div>
       <div className="space-y-3">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-2xl font-semibold text-foreground">{value.toLocaleString()}</span>
+          <span className={`text-2xl font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{value.toLocaleString()}</span>
           <span className="text-sm text-muted-foreground">/ {target.toLocaleString()}{unit}</span>
         </div>
-        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div className={`h-2 rounded-full overflow-hidden ${isPro ? 'bg-primary/10' : 'bg-muted'}`}>
           <div
             className={`h-full rounded-full transition-all duration-500 ${bgColor.replace('/10', '')}`}
             style={{ width: `${percentage}%` }}
@@ -177,12 +184,14 @@ const MealCard = ({
   mealType,
   meals,
   onAddMeal,
-  onDeleteMeal
+  onDeleteMeal,
+  isPro = false
 }: {
   mealType: string;
   meals: Meal[];
   onAddMeal: (type: string) => void;
   onDeleteMeal: (id: string) => void;
+  isPro?: boolean;
 }) => {
   const totalCalories = meals.reduce((sum, meal) => sum + meal.calories, 0);
   const mealLabels: Record<string, { icon: string; time: string }> = {
@@ -195,8 +204,11 @@ const MealCard = ({
   const mealInfo = mealLabels[mealType] || { icon: '🍽️', time: '' };
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-colors">
-      <div className="p-4 border-b border-border/50">
+    <div className={`rounded-xl overflow-hidden transition-all duration-300 ${isPro
+      ? 'bg-gradient-to-br from-card to-primary/5 border-2 border-primary/10 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5'
+      : 'bg-card border border-border hover:border-primary/30'
+      }`}>
+      <div className={`p-4 border-b ${isPro ? 'border-primary/10' : 'border-border/50'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{mealInfo.icon}</span>
@@ -207,12 +219,12 @@ const MealCard = ({
           </div>
           <div className="flex items-center gap-2">
             {totalCalories > 0 && (
-              <span className="text-sm font-medium text-primary">{totalCalories} cal</span>
+              <span className={`text-sm font-medium ${isPro ? 'text-primary' : 'text-primary'}`}>{totalCalories} cal</span>
             )}
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0"
+              className={`h-8 w-8 p-0 ${isPro ? 'hover:bg-primary/10' : ''}`}
               onClick={() => onAddMeal(mealType)}
               aria-label={`Add ${mealType}`}
             >
@@ -226,7 +238,10 @@ const MealCard = ({
         {meals.length === 0 ? (
           <button
             onClick={() => onAddMeal(mealType)}
-            className="w-full py-6 border-2 border-dashed border-border rounded-lg text-muted-foreground text-sm hover:border-primary/50 hover:text-primary transition-colors"
+            className={`w-full py-6 border-2 border-dashed rounded-lg text-muted-foreground text-sm transition-all ${isPro
+              ? 'border-primary/20 hover:border-primary/40 hover:text-primary hover:bg-primary/5'
+              : 'border-border hover:border-primary/50 hover:text-primary'
+              }`}
           >
             <Plus className="h-4 w-4 mx-auto mb-1" />
             Add {mealType}
@@ -236,7 +251,10 @@ const MealCard = ({
             {meals.map((meal) => (
               <div
                 key={meal.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-muted/30 group hover:bg-muted/50 transition-colors"
+                className={`flex items-center justify-between p-3 rounded-lg group transition-colors ${isPro
+                  ? 'bg-primary/5 hover:bg-primary/10'
+                  : 'bg-muted/30 hover:bg-muted/50'
+                  }`}
               >
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground truncate">{meal.name}</p>
@@ -245,7 +263,7 @@ const MealCard = ({
                   </p>
                 </div>
                 <div className="flex items-center gap-3 ml-3">
-                  <span className="text-sm text-muted-foreground">{meal.calories} cal</span>
+                  <span className={`text-sm ${isPro ? 'text-primary' : 'text-muted-foreground'}`}>{meal.calories} cal</span>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -617,19 +635,29 @@ const Dashboard = () => {
 
   const caloriePercentage = Math.min((totals.calories / dailyTargets.calories) * 100, 100);
   const remainingCalories = Math.max(dailyTargets.calories - totals.calories, 0);
+  const isPro = profile?.plan === 'PRO';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen ${isPro ? 'bg-gradient-to-br from-background via-background to-primary/5' : 'bg-background'}`}>
       <Navigation />
 
       <main className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
           {/* Header */}
           <div className="flex items-start justify-between mb-8">
             <div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-foreground mb-1">
-                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user.displayName?.split(' ')[0] || 'there'}
-              </h1>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
+                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user.displayName?.split(' ')[0] || 'there'}
+                </h1>
+                {isPro && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium">
+                    <Crown className="w-3 h-3" />
+                    PRO
+                  </span>
+                )}
+              </div>
               <p className="text-muted-foreground">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
@@ -661,7 +689,16 @@ const Dashboard = () => {
               {/* Calorie Summary + Quick Stats */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Calorie Ring Card */}
-                <div className="bg-card border border-border rounded-xl p-6 lg:col-span-1">
+                <div className={`relative rounded-xl p-6 lg:col-span-1 overflow-hidden ${isPro
+                  ? 'bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 shadow-lg shadow-primary/5'
+                  : 'bg-card border border-border'
+                  }`}>
+                  {isPro && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-medium">
+                      <Crown className="w-2.5 h-2.5" />
+                      PRO
+                    </div>
+                  )}
                   <div className="text-center">
                     <CircularProgress value={totals.calories} max={dailyTargets.calories} size={160} strokeWidth={12}>
                       <div className="text-center">
@@ -670,20 +707,20 @@ const Dashboard = () => {
                       </div>
                     </CircularProgress>
 
-                    <div className="mt-6 pt-6 border-t border-border">
+                    <div className="mt-6 pt-6 border-t border-border/50">
                       <div className="flex justify-between items-center">
                         <div className="text-center">
-                          <p className="text-lg font-semibold text-foreground">{remainingCalories}</p>
+                          <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{remainingCalories}</p>
                           <p className="text-xs text-muted-foreground">Remaining</p>
                         </div>
-                        <div className="h-8 w-px bg-border" />
+                        <div className="h-8 w-px bg-border/50" />
                         <div className="text-center">
-                          <p className="text-lg font-semibold text-foreground">{dailyStreak}</p>
+                          <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{dailyStreak}</p>
                           <p className="text-xs text-muted-foreground">Day streak</p>
                         </div>
-                        <div className="h-8 w-px bg-border" />
+                        <div className="h-8 w-px bg-border/50" />
                         <div className="text-center">
-                          <p className="text-lg font-semibold text-foreground">{meals.length}</p>
+                          <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{meals.length}</p>
                           <p className="text-xs text-muted-foreground">Meals</p>
                         </div>
                       </div>
@@ -701,6 +738,7 @@ const Dashboard = () => {
                     unit="g"
                     color="text-blue-500"
                     bgColor="bg-blue-500/10"
+                    isPro={isPro}
                   />
                   <StatCard
                     icon={Apple}
@@ -710,6 +748,7 @@ const Dashboard = () => {
                     unit="g"
                     color="text-amber-500"
                     bgColor="bg-amber-500/10"
+                    isPro={isPro}
                   />
                   <StatCard
                     icon={Zap}
@@ -719,6 +758,7 @@ const Dashboard = () => {
                     unit="g"
                     color="text-purple-500"
                     bgColor="bg-purple-500/10"
+                    isPro={isPro}
                   />
                   <StatCard
                     icon={Droplet}
@@ -728,15 +768,19 @@ const Dashboard = () => {
                     unit=" glasses"
                     color="text-cyan-500"
                     bgColor="bg-cyan-500/10"
+                    isPro={isPro}
                   />
                 </div>
               </div>
 
               {/* Quick Actions */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex-col gap-2 hover:bg-primary/5 hover:border-primary/30"
+                  className={`h-auto py-4 flex-col gap-2 transition-all ${isPro
+                    ? 'border-2 border-primary/10 hover:border-primary/30 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/5'
+                    : 'hover:bg-primary/5 hover:border-primary/30'
+                    }`}
                   onClick={handleAddWater}
                   disabled={waterIntake >= dailyTargets.water}
                 >
@@ -745,7 +789,10 @@ const Dashboard = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex-col gap-2 hover:bg-primary/5 hover:border-primary/30"
+                  className={`h-auto py-4 flex-col gap-2 transition-all ${isPro
+                    ? 'border-2 border-primary/10 hover:border-primary/30 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/5'
+                    : 'hover:bg-primary/5 hover:border-primary/30'
+                    }`}
                   onClick={() => navigate('/profile')}
                 >
                   <TrendingUp className="h-5 w-5 text-green-500" />
@@ -753,25 +800,31 @@ const Dashboard = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex-col gap-2 hover:bg-primary/5 hover:border-primary/30"
+                  className={`h-auto py-4 flex-col gap-2 transition-all ${isPro
+                    ? 'border-2 border-primary/10 hover:border-primary/30 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/5'
+                    : 'hover:bg-primary/5 hover:border-primary/30'
+                    }`}
                   onClick={() => navigate('/meal-planner')}
                 >
                   <Calendar className="h-5 w-5 text-purple-500" />
                   <span className="text-sm">Meal Plan</span>
                 </Button>
-                <Button
-                  variant="outline"
-                  className="h-auto py-4 flex-col gap-2 hover:bg-primary/5 hover:border-primary/30"
-                  onClick={() => setShowAddMeal('snack')}
-                >
-                  <Plus className="h-5 w-5 text-primary" />
-                  <span className="text-sm">Quick Add</span>
-                </Button>
               </div>
 
               {/* Macros Breakdown */}
-              <div className="bg-card border border-border rounded-xl p-6">
-                <h3 className="font-semibold text-foreground mb-6">Today's Macros</h3>
+              <div className={`rounded-xl p-6 ${isPro
+                ? 'bg-gradient-to-br from-card to-primary/5 border-2 border-primary/10'
+                : 'bg-card border border-border'
+                }`}>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-semibold text-foreground">Today's Macros</h3>
+                  {isPro && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-medium">
+                      <Crown className="w-2.5 h-2.5" />
+                      PRO
+                    </span>
+                  )}
+                </div>
                 <div className="space-y-5">
                   <MacroBar label="Protein" value={totals.protein} target={dailyTargets.protein} color="bg-blue-500" />
                   <MacroBar label="Carbohydrates" value={totals.carbs} target={dailyTargets.carbs} color="bg-amber-500" />
@@ -811,8 +864,11 @@ const Dashboard = () => {
 
             {/* Meals Tab */}
             <TabsContent value="meals" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-foreground">Today's Meals</h2>
+              <div className={`flex items-center justify-between p-4 rounded-xl ${isPro ? 'bg-gradient-to-r from-primary/5 to-transparent' : ''}`}>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Today's Meals</h2>
+                  {isPro && <p className="text-sm text-primary">Pro: Unlimited meal logging</p>}
+                </div>
                 <PhotoCalorieChecker onAddMeal={handleAddMeal} />
               </div>
 
@@ -828,6 +884,7 @@ const Dashboard = () => {
                     meals={typeMeals}
                     onAddMeal={setShowAddMeal}
                     onDeleteMeal={handleDeleteMeal}
+                    isPro={isPro}
                   />
                 ))}
               </div>
@@ -835,24 +892,45 @@ const Dashboard = () => {
 
             {/* Health Tab */}
             <TabsContent value="health" className="space-y-6">
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <div className={`flex flex-col items-center justify-center py-20 text-center rounded-2xl ${isPro
+                  ? 'bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/10'
+                  : ''
+                }`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${isPro
+                    ? 'bg-gradient-to-br from-primary/20 to-primary/30'
+                    : 'bg-primary/10'
+                  }`}>
                   <TrendingUp className="w-8 h-8 text-primary" />
                 </div>
                 <h2 className="text-2xl font-semibold text-foreground mb-2">Health Tracking</h2>
                 <p className="text-muted-foreground max-w-md mb-6">
                   Connect your fitness devices to track steps, sleep, heart rate, and more.
                 </p>
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
-                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  Coming Soon
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${isPro
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                    : 'bg-primary/10 text-primary'
+                  }`}>
+                  <span className={`w-2 h-2 rounded-full animate-pulse ${isPro ? 'bg-white' : 'bg-primary'}`} />
+                  Coming Soon {isPro && '— Priority Access'}
                 </div>
               </div>
             </TabsContent>
 
             {/* Chat Tab */}
             <TabsContent value="chat">
-              <div className="bg-card border border-border rounded-xl p-6">
+              <div className={`rounded-xl p-6 ${isPro
+                  ? 'bg-gradient-to-br from-card to-primary/5 border-2 border-primary/10'
+                  : 'bg-card border border-border'
+                }`}>
+                {isPro && (
+                  <div className="flex items-center gap-2 mb-4 pb-4 border-b border-primary/10">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-medium">
+                      <Crown className="w-2.5 h-2.5" />
+                      PRO
+                    </span>
+                    <span className="text-sm text-muted-foreground">Unlimited AI consultations</span>
+                  </div>
+                )}
                 <LoginChat
                   dashboardData={{
                     totals,

@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff, Sparkles, Shield, Zap } from 'lucide-react';
+import { Loader2, Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react';
 
 // Types
 interface FormData {
@@ -42,14 +40,15 @@ const MESSAGES = {
 } as const;
 
 const features = [
-  { icon: Sparkles, text: "AI-Powered Nutrition" },
-  { icon: Shield, text: "Secure & Private" },
-  { icon: Zap, text: "Instant Results" }
+  "AI-powered meal recommendations",
+  "Personalized nutrition tracking",
+  "Smart restaurant discovery",
+  "Progress insights & analytics"
 ];
 
 // Sub-components
 const GoogleIcon = () => (
-  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+  <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
     <path
       fill="#4285F4"
       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -74,50 +73,41 @@ const PasswordInput = ({
   value,
   onChange,
   showPassword,
-  onTogglePassword
+  onTogglePassword,
+  placeholder = "••••••••"
 }: {
   id: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   showPassword: boolean;
   onTogglePassword: () => void;
+  placeholder?: string;
 }) => (
   <div className="relative">
     <Input
       id={id}
       type={showPassword ? "text" : "password"}
-      placeholder="••••••••"
+      placeholder={placeholder}
       value={value}
       onChange={onChange}
       required
       minLength={VALIDATION.MIN_PASSWORD_LENGTH}
-      className="pr-10"
+      className="h-12 pr-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:ring-white/20"
     />
     <Button
       type="button"
       variant="ghost"
       size="sm"
-      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/60 hover:text-white"
       onClick={onTogglePassword}
       aria-label={showPassword ? "Hide password" : "Show password"}
     >
       {showPassword ? (
-        <EyeOff className="h-4 w-4 text-muted-foreground" />
+        <EyeOff className="h-5 w-5" />
       ) : (
-        <Eye className="h-4 w-4 text-muted-foreground" />
+        <Eye className="h-5 w-5" />
       )}
     </Button>
-  </div>
-);
-
-const Divider = ({ text }: { text: string }) => (
-  <div className="relative my-6">
-    <div className="absolute inset-0 flex items-center">
-      <span className="w-full border-t" />
-    </div>
-    <div className="relative flex justify-center text-xs uppercase">
-      <span className="bg-card px-2 text-muted-foreground">{text}</span>
-    </div>
   </div>
 );
 
@@ -125,6 +115,7 @@ const Divider = ({ text }: { text: string }) => (
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -183,7 +174,6 @@ const Auth = () => {
       const { error } = await signIn(formData.email, formData.password);
 
       if (error) {
-        // Use the error message from AuthContext (now includes user-friendly messages)
         toast({
           title: MESSAGES.SIGN_IN_ERROR,
           description: error.message || 'Please check your credentials and try again.',
@@ -297,294 +287,307 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-primary/5 flex items-center justify-center p-3 sm:p-4 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-primary flex">
+      {/* Left Panel - Branding */}
+      <div className={`hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }} />
 
-      <div className="w-full max-w-6xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Left side - Branding */}
-          <div className={`hidden lg:block transition-all duration-1000 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
-            }`}>
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <img src="/logo.svg" alt="Aliva Logo" className="h-12 w-auto" />
-              </div>
+        {/* Gradient Orbs */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
-              <div>
-                <h2 className="text-4xl font-bold text-foreground mb-4">
-                  Your AI-Powered<br />Nutrition Companion
-                </h2>
-                <p className="text-muted-foreground text-lg">
-                  Start your journey to better health with personalized meal plans, smart tracking, and AI-powered insights.
-                </p>
-              </div>
+        {/* Logo */}
+        <div className="relative z-10">
+          <button onClick={() => navigate('/')} className="flex items-center gap-2 group">
+            <img src="/logo.svg" alt="Aliva" className="h-10 w-auto transition-transform group-hover:scale-105" />
+          </button>
+        </div>
 
-              <div className="space-y-4">
-                {features.map((feature, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-primary/10 hover:border-primary/30 transition-all duration-300 hover:scale-105"
-                    style={{ animationDelay: `${idx * 150}ms` }}
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <feature.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <span className="font-medium text-foreground">{feature.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-6 pt-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">1k+</div>
-                  <div className="text-sm text-muted-foreground">Active Users</div>
-                </div>
-                <div className="w-px h-12 bg-border" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">10k</div>
-                  <div className="text-sm text-muted-foreground">Meals Tracked</div>
-                </div>
-                <div className="w-px h-12 bg-border" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">4.9⭐</div>
-                  <div className="text-sm text-muted-foreground">User Rating</div>
-                </div>
-              </div>
-            </div>
+        {/* Main Content */}
+        <div className="relative z-10 space-y-8">
+          <div>
+            <h1 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
+              Your AI-Powered<br />
+              <span className="relative">
+                Nutrition Partner
+                <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" fill="none">
+                  <path d="M2 8C50 2 150 2 198 8" stroke="rgba(255,255,255,0.3)" strokeWidth="4" strokeLinecap="round" />
+                </svg>
+              </span>
+            </h1>
+            <p className="mt-6 text-lg text-white/70 max-w-md">
+              Join thousands who've transformed their health with personalized meal plans and AI-powered insights.
+            </p>
           </div>
 
-          {/* Right side - Auth Form */}
-          <div className={`transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-            }`}>
-            {/* Mobile header */}
-            <div className="lg:hidden text-center mb-8">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <img src="/logo.svg" alt="Aliva Logo" className="h-10 w-auto" />
+          {/* Features */}
+          <div className="space-y-3">
+            {features.map((feature, idx) => (
+              <div key={idx} className="flex items-center gap-3 text-white/80">
+                <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+                <span>{feature}</span>
               </div>
-              <p className="text-muted-foreground">Your AI-powered nutrition companion</p>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            <Card className="bg-card/80 backdrop-blur-xl border-2 border-primary/20 shadow-2xl">
-              <CardHeader className="text-center space-y-2">
-                <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
-                <CardDescription>Sign in or create a new account to get started</CardDescription>
-              </CardHeader>
-
-              <CardContent>
-                <Tabs defaultValue="signin" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="signin">Sign In</TabsTrigger>
-                    <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                  </TabsList>
-
-                  {/* Sign In Tab */}
-                  <TabsContent value="signin">
-                    {showForgotPassword ? (
-                      <form onSubmit={handleForgotPassword} className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="reset-email">Email</Label>
-                          <Input
-                            id="reset-email"
-                            type="email"
-                            placeholder="your@email.com"
-                            value={formData.email}
-                            onChange={(e) => updateFormData('email', e.target.value)}
-                            required
-                          />
-                        </div>
-
-                        <Button
-                          type="submit"
-                          className="w-full rounded-full h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-primary/20 transition-all duration-300"
-                          disabled={isLoading}
-                        >
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Sending reset link...
-                            </>
-                          ) : (
-                            'Send Reset Link'
-                          )}
-                        </Button>
-
-                        <Button
-                          type="button"
-                          variant="link"
-                          className="w-full text-sm"
-                          onClick={() => setShowForgotPassword(false)}
-                          disabled={isLoading}
-                        >
-                          Back to Sign In
-                        </Button>
-                      </form>
-                    ) : (
-                      <>
-                        <form onSubmit={handleSignIn} className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="signin-email">Email</Label>
-                            <Input
-                              id="signin-email"
-                              type="email"
-                              placeholder="your@email.com"
-                              value={formData.email}
-                              onChange={(e) => updateFormData('email', e.target.value)}
-                              required
-                              className="h-11"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <Label htmlFor="signin-password">Password</Label>
-                              <Button
-                                type="button"
-                                variant="link"
-                                className="h-auto p-0 text-xs text-primary hover:underline"
-                                onClick={() => setShowForgotPassword(true)}
-                              >
-                                Forgot password?
-                              </Button>
-                            </div>
-                            <PasswordInput
-                              id="signin-password"
-                              value={formData.password}
-                              onChange={(e) => updateFormData('password', e.target.value)}
-                              showPassword={showPassword}
-                              onTogglePassword={togglePasswordVisibility}
-                            />
-                          </div>
-
-                          <Button
-                            type="submit"
-                            className="w-full rounded-full h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-primary/20 transition-all duration-300 hover:scale-[1.02]"
-                            disabled={isLoading}
-                          >
-                            {isLoading ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Signing in...
-                              </>
-                            ) : (
-                              'Sign In'
-                            )}
-                          </Button>
-                        </form>
-
-                        <Divider text="Or continue with" />
-
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full h-11 hover:bg-muted/50 transition-all duration-300"
-                          onClick={handleGoogleSignIn}
-                          disabled={isLoading}
-                        >
-                          <GoogleIcon />
-                          Sign in with Google
-                        </Button>
-                      </>
-                    )}
-                  </TabsContent>
-
-                  {/* Sign Up Tab */}
-                  <TabsContent value="signup">
-                    <form onSubmit={handleSignUp} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-name">Full Name</Label>
-                        <Input
-                          id="signup-name"
-                          type="text"
-                          placeholder="Your full name"
-                          value={formData.fullName}
-                          onChange={(e) => updateFormData('fullName', e.target.value)}
-                          required
-                          className="h-11"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-email">Email</Label>
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          placeholder="your@email.com"
-                          value={formData.email}
-                          onChange={(e) => updateFormData('email', e.target.value)}
-                          required
-                          className="h-11"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password">Password</Label>
-                        <PasswordInput
-                          id="signup-password"
-                          value={formData.password}
-                          onChange={(e) => updateFormData('password', e.target.value)}
-                          showPassword={showPassword}
-                          onTogglePassword={togglePasswordVisibility}
-                        />
-                      </div>
-
-                      <Button
-                        type="submit"
-                        className="w-full rounded-full h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-primary/20 transition-all duration-300 hover:scale-[1.02]"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating account...
-                          </>
-                        ) : (
-                          'Create Account'
-                        )}
-                      </Button>
-                    </form>
-
-                    <Divider text="Or continue with" />
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full h-11 hover:bg-muted/50 transition-all duration-300"
-                      onClick={handleGoogleSignIn}
-                      disabled={isLoading}
-                    >
-                      <GoogleIcon />
-                      Sign up with Google
-                    </Button>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-
-            <p className="text-center text-sm text-muted-foreground mt-6">
-              By continuing, you agree to our{' '}
-              <a href="/terms" className="text-primary hover:underline">Terms of Service</a>
-              {' '}and{' '}
-              <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
-            </p>
+        {/* Stats */}
+        <div className="relative z-10 flex items-center gap-8">
+          <div>
+            <div className="text-3xl font-bold text-white">1k+</div>
+            <div className="text-sm text-white/60">Active Users</div>
+          </div>
+          <div className="w-px h-10 bg-white/20" />
+          <div>
+            <div className="text-3xl font-bold text-white">10k</div>
+            <div className="text-sm text-white/60">Meals Tracked</div>
+          </div>
+          <div className="w-px h-10 bg-white/20" />
+          <div>
+            <div className="text-3xl font-bold text-white">4.9★</div>
+            <div className="text-sm text-white/60">User Rating</div>
           </div>
         </div>
       </div>
 
-      <style>{`
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.6; }
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 4s ease-in-out infinite;
-        }
-      `}</style>
+      {/* Right Panel - Auth Form */}
+      <div className={`w-full lg:w-1/2 flex flex-col justify-center p-6 sm:p-12 bg-primary lg:bg-gradient-to-br lg:from-primary lg:to-primary/95 transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="w-full max-w-md mx-auto">
+          {/* Mobile Logo */}
+          <div className="lg:hidden mb-8 text-center">
+            <button onClick={() => navigate('/')} className="inline-flex items-center gap-2">
+              <img src="/logo.svg" alt="Aliva" className="h-10 w-auto" />
+            </button>
+            <p className="text-white/70 mt-2">Your AI-powered nutrition partner</p>
+          </div>
+
+          {/* Form Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">
+              {showForgotPassword ? 'Reset Password' : activeTab === 'signin' ? 'Welcome back' : 'Create account'}
+            </h2>
+            <p className="text-white/60 mt-2">
+              {showForgotPassword
+                ? 'Enter your email to receive a reset link'
+                : activeTab === 'signin'
+                  ? 'Sign in to continue your journey'
+                  : 'Start your health transformation today'}
+            </p>
+          </div>
+
+          {/* Tab Switcher */}
+          {!showForgotPassword && (
+            <div className="flex bg-white/10 rounded-xl p-1 mb-6">
+              <button
+                onClick={() => setActiveTab('signin')}
+                className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === 'signin'
+                  ? 'bg-white text-primary shadow-lg'
+                  : 'text-white/70 hover:text-white'
+                  }`}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => setActiveTab('signup')}
+                className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === 'signup'
+                  ? 'bg-white text-primary shadow-lg'
+                  : 'text-white/70 hover:text-white'
+                  }`}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
+
+          {/* Forgot Password Form */}
+          {showForgotPassword ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email" className="text-white/80">Email</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={formData.email}
+                  onChange={(e) => updateFormData('email', e.target.value)}
+                  required
+                  className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-12 bg-white text-primary font-semibold hover:bg-white/90 transition-all"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  'Send Reset Link'
+                )}
+              </Button>
+
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 w-full py-3 text-white/70 hover:text-white transition-colors"
+                onClick={() => setShowForgotPassword(false)}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Sign In
+              </button>
+            </form>
+          ) : (
+            <>
+              {/* Sign In Form */}
+              {activeTab === 'signin' && (
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email" className="text-white/80">Email</Label>
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={formData.email}
+                      onChange={(e) => updateFormData('email', e.target.value)}
+                      required
+                      className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="signin-password" className="text-white/80">Password</Label>
+                      <button
+                        type="button"
+                        className="text-sm text-white/60 hover:text-white transition-colors"
+                        onClick={() => setShowForgotPassword(true)}
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                    <PasswordInput
+                      id="signin-password"
+                      value={formData.password}
+                      onChange={(e) => updateFormData('password', e.target.value)}
+                      showPassword={showPassword}
+                      onTogglePassword={togglePasswordVisibility}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-white text-primary font-semibold hover:bg-white/90 transition-all"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </Button>
+                </form>
+              )}
+
+              {/* Sign Up Form */}
+              {activeTab === 'signup' && (
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name" className="text-white/80">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Your full name"
+                      value={formData.fullName}
+                      onChange={(e) => updateFormData('fullName', e.target.value)}
+                      required
+                      className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email" className="text-white/80">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={formData.email}
+                      onChange={(e) => updateFormData('email', e.target.value)}
+                      required
+                      className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password" className="text-white/80">Password</Label>
+                    <PasswordInput
+                      id="signup-password"
+                      value={formData.password}
+                      onChange={(e) => updateFormData('password', e.target.value)}
+                      showPassword={showPassword}
+                      onTogglePassword={togglePasswordVisibility}
+                      placeholder="At least 6 characters"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-white text-primary font-semibold hover:bg-white/90 transition-all"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : (
+                      'Create Account'
+                    )}
+                  </Button>
+                </form>
+              )}
+
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-white/20" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-primary px-3 text-white/50">Or continue with</span>
+                </div>
+              </div>
+
+              {/* Google Sign In */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12 bg-white hover:bg-white/90 text-gray-700 border-0 font-medium"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+              >
+                <GoogleIcon />
+                Continue with Google
+              </Button>
+            </>
+          )}
+
+          {/* Terms */}
+          <p className="text-center text-sm text-white/50 mt-8">
+            By continuing, you agree to our{' '}
+            <a href="/terms" className="text-white/70 hover:text-white underline">Terms</a>
+            {' '}and{' '}
+            <a href="/privacy" className="text-white/70 hover:text-white underline">Privacy Policy</a>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

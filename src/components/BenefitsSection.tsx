@@ -4,7 +4,7 @@ import {
   Target,
   Utensils,
   TrendingUp,
-  Sparkles,
+  Stethoscope,
   ChevronRight,
   Check,
   BarChart3,
@@ -59,7 +59,7 @@ const BenefitsSection = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
+            <Stethoscope className="w-4 h-4" />
             <span>Powerful Features</span>
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
@@ -115,16 +115,7 @@ const BenefitsSection = () => {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <p className="text-muted-foreground mb-4">Ready to experience smarter nutrition?</p>
-          <a
-            href="/auth"
-            className="inline-flex items-center gap-2 text-primary font-medium hover:underline underline-offset-4"
-          >
-            Get started for free
-            <ChevronRight className="w-4 h-4" />
-          </a>
-        </div>
+
       </div>
     </section>
   );

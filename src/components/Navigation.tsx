@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, LogOut, Crown, Sun, Moon, ChevronDown, LayoutDashboard, Sparkles } from "lucide-react";
+import { User, Settings, LogOut, Crown, Sun, Moon, ChevronDown, LayoutDashboard, Stethoscope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -321,7 +321,7 @@ const Navigation = () => {
                               onClick={() => navigate('/upgrade')}
                               className="cursor-pointer rounded-lg h-10 bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20"
                             >
-                              <Sparkles className="w-4 h-4 mr-3 text-amber-500" />
+                              <Stethoscope className="w-4 h-4 mr-3 text-amber-500" />
                               <span className="text-amber-600 font-medium">Upgrade to Pro</span>
                             </DropdownMenuItem>
                           </>
@@ -340,17 +340,6 @@ const Navigation = () => {
                   </>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate('/auth')}
-                      className={`hidden sm:flex rounded-lg h-9 px-4 font-medium transition-all duration-200 ${isScrolled || !isLandingPage
-                        ? 'text-foreground hover:bg-muted'
-                        : 'text-white hover:bg-white/10'
-                        }`}
-                    >
-                      Sign In
-                    </Button>
                     <Button
                       size="sm"
                       onClick={() => navigate('/auth')}
