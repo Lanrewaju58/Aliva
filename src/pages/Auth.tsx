@@ -69,15 +69,15 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const PasswordInput = ({ 
-  id, 
-  value, 
-  onChange, 
-  showPassword, 
-  onTogglePassword 
-}: { 
-  id: string; 
-  value: string; 
+const PasswordInput = ({
+  id,
+  value,
+  onChange,
+  showPassword,
+  onTogglePassword
+}: {
+  id: string;
+  value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   showPassword: boolean;
   onTogglePassword: () => void;
@@ -132,7 +132,7 @@ const Auth = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  
+
   const { signIn, signUp, signInWithGoogle, user, resetPassword } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -308,14 +308,13 @@ const Auth = () => {
       <div className="w-full max-w-6xl relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Left side - Branding */}
-          <div className={`hidden lg:block transition-all duration-1000 ${
-            isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
-          }`}>
+          <div className={`hidden lg:block transition-all duration-1000 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
+            }`}>
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <img src="/logo.svg" alt="Aliva Logo" className="h-12 w-auto" />
               </div>
-              
+
               <div>
                 <h2 className="text-4xl font-bold text-foreground mb-4">
                   Your AI-Powered<br />Nutrition Companion
@@ -327,7 +326,7 @@ const Auth = () => {
 
               <div className="space-y-4">
                 {features.map((feature, idx) => (
-                  <div 
+                  <div
                     key={idx}
                     className="flex items-center gap-3 p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-primary/10 hover:border-primary/30 transition-all duration-300 hover:scale-105"
                     style={{ animationDelay: `${idx * 150}ms` }}
@@ -342,12 +341,12 @@ const Auth = () => {
 
               <div className="flex items-center gap-6 pt-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">10K+</div>
+                  <div className="text-2xl font-bold text-foreground">1k+</div>
                   <div className="text-sm text-muted-foreground">Active Users</div>
                 </div>
                 <div className="w-px h-12 bg-border" />
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">1M+</div>
+                  <div className="text-2xl font-bold text-foreground">10k</div>
                   <div className="text-sm text-muted-foreground">Meals Tracked</div>
                 </div>
                 <div className="w-px h-12 bg-border" />
@@ -360,9 +359,8 @@ const Auth = () => {
           </div>
 
           {/* Right side - Auth Form */}
-          <div className={`transition-all duration-1000 delay-200 ${
-            isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-          }`}>
+          <div className={`transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+            }`}>
             {/* Mobile header */}
             <div className="lg:hidden text-center mb-8">
               <div className="flex items-center justify-center gap-2 mb-4">

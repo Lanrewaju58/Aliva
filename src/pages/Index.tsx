@@ -11,10 +11,12 @@ const Index = () => {
     <div className="min-h-screen" data-testid="main-content">
       <Navigation />
       <HeroSection />
-      <BenefitsSection />
-      <StatsSection />
-      <TestimonialBanner />
-      <FooterSection />
+      <div className="relative z-10 bg-background">
+        <BenefitsSection />
+        <StatsSection />
+        <TestimonialBanner />
+        <FooterSection />
+      </div>
     </div>
   );
 };

@@ -1,212 +1,145 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const FooterSection = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [hoveredSocial, setHoveredSocial] = useState<number | null>(null);
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
+  const currentYear = new Date().getFullYear();
 
-    const footer = document.querySelector('#footer-section');
-    if (footer) observer.observe(footer);
+  const footerLinks = {
+    product: [
+      { label: "Features", href: "/#features" },
+      { label: "Pricing", href: "/upgrade" },
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Meal Planner", href: "/meal-planner" }
+    ],
+    company: [
+      { label: "About", href: "/about" },
+      { label: "Contact", href: "/contact" },
+      { label: "Help Center", href: "/help" }
+    ],
+    legal: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Security", href: "/security" }
+    ]
+  };
 
-    return () => observer.disconnect();
-  }, []);
-
-  const socialButtons = [
-    { icon: Mail, label: "Email" }
-  ];
-
-  const companyLinks = [
-    { name: "About Us", href: "/about" },
-    { name: "Contact", href: "/contact" }
-  ];
-
-  const supportLinks = [
-    { name: "Help Center", href: "/help" },
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "/terms" },
-    { name: "Security", href: "/security" }
-  ];
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle newsletter subscription
+    setEmail("");
+  };
 
   return (
-    <footer id="footer-section" className="bg-gradient-to-br from-primary/5 via-background to-secondary/5 border-t border-border/50 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 pointer-events-none opacity-30">
-        <div className="absolute top-20 left-20 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-20 right-20 w-40 h-40 bg-primary/5 rounded-full blur-3xl animate-float-delayed" />
-      </div>
+    <footer className="bg-muted/30 border-t border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Main Footer */}
+        <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+          {/* Brand Column */}
+          <div className="lg:col-span-2">
+            <a href="/" className="inline-flex items-center gap-2 mb-6">
+              <img
+                src="/logo.svg"
+                alt="Aliva"
+                className="h-8 w-auto"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+              <span className="text-xl font-semibold text-foreground">Aliva</span>
+            </a>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">
+              Your AI-powered nutrition companion. Get personalized meal plans,
+              track your nutrition, and achieve your health goals with intelligent guidance.
+            </p>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className={`lg:col-span-1 transition-all duration-700 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
-            <a href="/#home" className="flex items-center space-x-3 mb-6 group">
-              <div className="flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <img
-                  src="/logo.svg"
-                  alt="Aliva Logo"
-                  className="h-10 w-auto shrink-0 group-hover:brightness-110 transition-all duration-300"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
+            {/* Newsletter */}
+            <form onSubmit={handleSubscribe} className="flex gap-2 max-w-sm">
+              <div className="relative flex-1">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full h-10 pl-10 pr-4 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
-            </a>
-            <p className="text-muted-foreground mb-6 leading-relaxed">
-              Your AI-powered nutrition platform for personalized dietary advice, 
-              healthy restaurant discovery, and custom meal planning.
-            </p>
-            <div className="flex space-x-4">
-              {socialButtons.map((social, index) => (
-                <a 
-                  key={index}
-                  href="mailto:foodaliva@gmail.com"
-                  className={`inline-flex items-center justify-center rounded-md px-3 py-2 transition-all duration-300 ${
-                    hoveredSocial === index 
-                      ? 'text-primary scale-110 -translate-y-1 shadow-lg' 
-                      : 'text-muted-foreground hover:text-primary'
-                  }`}
-                  onMouseEnter={() => setHoveredSocial(index)}
-                  onMouseLeave={() => setHoveredSocial(null)}
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Company */}
-          <div className={`transition-all duration-700 delay-150 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
-            <h3 className="font-semibold text-foreground mb-6 flex items-center gap-2">
-              Company
-              <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
-            </h3>
-            <ul className="space-y-4">
-              {companyLinks.map((link) => (
-                <li key={link.name}>
-                  <a 
-                    href={link.href}
-                    className={`group flex items-center text-muted-foreground transition-all duration-300 ${
-                      hoveredLink === link.name ? 'text-primary translate-x-2' : ''
-                    }`}
-                    onMouseEnter={() => setHoveredLink(link.name)}
-                    onMouseLeave={() => setHoveredLink(null)}
-                  >
-                    <span className={`w-0 h-px bg-primary transition-all duration-300 mr-0 ${
-                      hoveredLink === link.name ? 'w-4 mr-2' : ''
-                    }`} />
-                    {link.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div className={`transition-all duration-700 delay-300 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
-            <h3 className="font-semibold text-foreground mb-6 flex items-center gap-2">
-              Support
-              <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
-            </h3>
-            <ul className="space-y-4">
-              {supportLinks.map((link) => (
-                <li key={link.name}>
-                  <a 
-                    href={link.href}
-                    className={`group flex items-center text-muted-foreground transition-all duration-300 ${
-                      hoveredLink === link.name ? 'text-primary translate-x-2' : ''
-                    }`}
-                    onMouseEnter={() => setHoveredLink(link.name)}
-                    onMouseLeave={() => setHoveredLink(null)}
-                  >
-                    <span className={`w-0 h-px bg-primary transition-all duration-300 mr-0 ${
-                      hoveredLink === link.name ? 'w-4 mr-2' : ''
-                    }`} />
-                    {link.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div className={`transition-all duration-700 delay-450 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}>
-            <h3 className="font-semibold text-foreground mb-6 flex items-center gap-2">
-              Stay Updated
-              <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
-            </h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Get the latest nutrition tips and healthy recipes delivered to your inbox.
-            </p>
-            <div className="flex gap-2">
-              <input 
-                type="email" 
-                placeholder="Enter your email"
-                className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-300"
-              />
-              <Button 
-                size="sm" 
-                className="bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-105 active:scale-95"
-              >
-                →
+              <Button type="submit" size="sm" className="h-10 px-4">
+                Subscribe
               </Button>
-            </div>
+            </form>
+          </div>
+
+          {/* Product Links */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">Product</h4>
+            <ul className="space-y-3">
+              {footerLinks.product.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company Links */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">Company</h4>
+            <ul className="space-y-3">
+              {footerLinks.company.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal Links */}
+          <div>
+            <h4 className="font-semibold text-foreground mb-4">Legal</h4>
+            <ul className="space-y-3">
+              {footerLinks.legal.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className={`border-t border-border/50 mt-12 pt-8 transition-all duration-700 delay-600 ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-muted-foreground flex items-center gap-2">
-              © 2025 Aliva. All rights reserved.
-            </p>
+        <div className="py-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-muted-foreground">
+            © {currentYear} Aliva. All rights reserved.
+          </p>
+          <div className="flex items-center gap-6">
+            <a href="mailto:foodaliva@gmail.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              foodaliva@gmail.com
+            </a>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
-        }
-        
-        @keyframes float-delayed {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
-        }
-        
-        .animate-float {
-          animation: float 8s ease-in-out infinite;
-        }
-        
-        .animate-float-delayed {
-          animation: float-delayed 8s ease-in-out infinite;
-          animation-delay: 1.5s;
-        }
-      `}</style>
     </footer>
   );
 };

@@ -153,22 +153,20 @@ const Profile: React.FC = () => {
 
   if (loading || !user) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gradient-to-b from-primary/10 to-background' : 'bg-gradient-to-b from-primary/10 to-white'}`}>
-        <div className="flex flex-col items-center gap-8">
-          <img src="/logo.svg" alt="Aliva logo" className="h-28 w-28 animate-pulse" />
-          <div className="h-16 w-16 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <div className={`text-base ${theme === 'dark' ? 'text-foreground' : 'text-gray-700'}`}>Authenticating…</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm text-muted-foreground">Authenticating...</p>
         </div>
       </div>
     );
   }
   if (pageLoading || !profile) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gradient-to-b from-primary/10 to-background' : 'bg-gradient-to-b from-primary/10 to-white'}`}>
-        <div className="flex flex-col items-center gap-9">
-          <img src="/logo.svg" alt="Aliva logo" className="h-32 w-32 animate-pulse" />
-          <div className="h-20 w-20 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <div className={`text-base ${theme === 'dark' ? 'text-foreground' : 'text-gray-700'}`}>Loading your profile…</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading your profile...</p>
         </div>
       </div>
     );
@@ -230,31 +228,38 @@ const Profile: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation Bar */}
-      <nav className="bg-card shadow-sm border-b">
-        <div className="max-w-5xl mx-auto px-6">
+      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold">Profile Settings</h1>
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Back</span>
+              </Button>
+              <div>
+                <h1 className="text-lg font-semibold text-foreground">Settings</h1>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="rounded-full">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold mr-2">
+                  <button className="flex items-center gap-2 rounded-full p-1 pr-3 hover:bg-muted transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
                       {userInitials}
                     </div>
-                    {user?.displayName || user?.email}
-                  </Button>
+                    <span className="hidden sm:inline text-sm font-medium text-foreground">{user?.displayName?.split(' ')[0] || 'User'}</span>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Dashboard
-                  </DropdownMenuItem>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{user?.displayName || 'User'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
+                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </DropdownMenuItem>
@@ -398,7 +403,7 @@ const Profile: React.FC = () => {
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Activity Level</Label>
-                    <Select value={profile.activityLevel || ''} onValueChange={v => updateField('activityLevel', v)}>
+                    <Select value={profile.activityLevel || ''} onValueChange={v => updateField('activityLevel', v as UserProfile['activityLevel'])}>
                       <SelectTrigger className="mt-1.5">
                         <SelectValue placeholder="Select activity level" />
                       </SelectTrigger>
