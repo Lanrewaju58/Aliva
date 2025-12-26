@@ -95,7 +95,6 @@ const LoginChat = ({ dashboardData }: LoginChatProps) => {
   const [showRecentChats, setShowRecentChats] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [hoveredPrompt, setHoveredPrompt] = useState<number | null>(null);
 
   const AI_PERSONA_HEADER = `You are Aliva — a compassionate AI health companion focused exclusively on health, wellness, and medical topics.
 
@@ -1117,7 +1116,7 @@ SAFETY:
                     {idx === 0 ? (
                       <div className="text-center w-full px-4">
                         <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-primary to-primary/70 mb-4 shadow-xl animate-pulse">
-                          <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                          <Bot className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                         </div>
                         <h2 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Hi, I'm Aliva.</h2>
                         <p className="text-lg sm:text-xl text-primary font-medium mb-2">Your dedicated health companion</p>
@@ -1176,8 +1175,7 @@ SAFETY:
                   key={i}
                   size="sm"
                   variant="outline"
-                  className={`rounded-full text-xs border border-border hover:border-primary hover:bg-primary/5 px-3 py-2 transition-all duration-200 ${hoveredPrompt === i ? 'bg-primary/5 border-primary' : 'bg-card'
-                    }`}
+                  className="rounded-full text-xs border border-border bg-card px-3 py-2 transition-all duration-200 hover:border-green-500/50 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
                   onClick={() => {
                     if (q.text === "Find healthy restaurants near me") {
                       handleFindRestaurants();
@@ -1185,8 +1183,6 @@ SAFETY:
                       setInput(q.text);
                     }
                   }}
-                  onMouseEnter={() => setHoveredPrompt(i)}
-                  onMouseLeave={() => setHoveredPrompt(null)}
                   disabled={thinking}
                 >
                   <q.icon className="h-3.5 w-3.5 mr-1.5" />
@@ -1429,8 +1425,8 @@ SAFETY:
                         >
                           <div className="flex items-start gap-3">
                             <div className={`w-10 h-10 rounded-full text-white flex items-center justify-center text-sm font-bold shrink-0 shadow-md transition-transform duration-200 group-hover:scale-105 ${place.rating >= 4 ? 'bg-green-500' :
-                                place.rating >= 3.5 ? 'bg-amber-500' :
-                                  'bg-red-500'
+                              place.rating >= 3.5 ? 'bg-amber-500' :
+                                'bg-red-500'
                               }`}>
                               {index + 1}
                             </div>
