@@ -9,22 +9,18 @@ import { UserProfile } from "@/types/profile";
 import Navigation from "@/components/Navigation";
 import LoginChat from "@/components/LoginChat";
 import PhotoCalorieChecker from "@/components/PhotoCalorieChecker";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Droplet,
   TrendingUp,
   Plus,
-  Flame,
   Apple,
   UtensilsCrossed,
   Calendar,
   Target,
-  Award,
   Settings,
   Trash2,
   ChevronRight,
@@ -656,6 +652,7 @@ const Dashboard = () => {
             <TabsList className="bg-muted/50 p-1">
               <TabsTrigger value="overview" className="data-[state=active]:bg-background">Overview</TabsTrigger>
               <TabsTrigger value="meals" className="data-[state=active]:bg-background">Meals</TabsTrigger>
+              <TabsTrigger value="health" className="data-[state=active]:bg-background">Health</TabsTrigger>
               <TabsTrigger value="chat" className="data-[state=active]:bg-background">AI Assistant</TabsTrigger>
             </TabsList>
 
@@ -833,6 +830,23 @@ const Dashboard = () => {
                     onDeleteMeal={handleDeleteMeal}
                   />
                 ))}
+              </div>
+            </TabsContent>
+
+            {/* Health Tab */}
+            <TabsContent value="health" className="space-y-6">
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <TrendingUp className="w-8 h-8 text-primary" />
+                </div>
+                <h2 className="text-2xl font-semibold text-foreground mb-2">Health Tracking</h2>
+                <p className="text-muted-foreground max-w-md mb-6">
+                  Connect your fitness devices to track steps, sleep, heart rate, and more.
+                </p>
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
+                  <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                  Coming Soon
+                </div>
               </div>
             </TabsContent>
 
