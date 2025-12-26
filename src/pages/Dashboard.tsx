@@ -745,12 +745,14 @@ const Dashboard = () => {
 
           {/* Main Tabs */}
           <Tabs defaultValue="overview" className="space-y-8">
-            <TabsList className="bg-muted/50 p-1">
-              <TabsTrigger value="overview" className="data-[state=active]:bg-background">Overview</TabsTrigger>
-              <TabsTrigger value="meals" className="data-[state=active]:bg-background">Meals</TabsTrigger>
-              <TabsTrigger value="health" className="data-[state=active]:bg-background">Health</TabsTrigger>
-              <TabsTrigger value="chat" className="data-[state=active]:bg-background">AI Assistant</TabsTrigger>
-            </TabsList>
+            <div className="flex justify-center mb-6">
+              <TabsList className="bg-muted/50 p-1">
+                <TabsTrigger value="overview" className="data-[state=active]:bg-background">Overview</TabsTrigger>
+                <TabsTrigger value="meals" className="data-[state=active]:bg-background">Meals</TabsTrigger>
+                <TabsTrigger value="health" className="data-[state=active]:bg-background">Health</TabsTrigger>
+                <TabsTrigger value="chat" className="data-[state=active]:bg-background">AI Assistant</TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-8">

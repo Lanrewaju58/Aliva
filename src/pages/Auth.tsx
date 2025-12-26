@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff, CheckCircle, ArrowLeft } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 // Types
 interface FormData {
@@ -302,7 +303,7 @@ const Auth = () => {
         {/* Logo */}
         <div className="relative z-10">
           <button onClick={() => navigate('/')} className="flex items-center gap-2 group">
-            <img src="/logo.svg" alt="Aliva" className="h-10 w-auto transition-transform group-hover:scale-105" />
+            <Logo className="h-10 w-auto transition-transform group-hover:scale-105 [&_text]:fill-white" />
           </button>
         </div>
 
@@ -359,7 +360,7 @@ const Auth = () => {
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8 text-center">
             <button onClick={() => navigate('/')} className="inline-flex items-center gap-2">
-              <img src="/logo.svg" alt="Aliva" className="h-10 w-auto" />
+              <Logo className="h-10 w-auto [&_text]:fill-white" />
             </button>
             <p className="text-white/70 mt-2">Your AI-powered nutrition partner</p>
           </div>

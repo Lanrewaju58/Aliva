@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
 import { ArrowRight, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -42,16 +43,7 @@ const FooterSection = () => {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <a href="/" className="inline-flex items-center gap-2 mb-6">
-              <img
-                src="/logo.svg"
-                alt="Aliva"
-                className="h-8 w-auto"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                }}
-              />
-              <span className="text-xl font-semibold text-foreground">Aliva</span>
+              <Logo className="h-8 w-auto transition-colors duration-300" />
             </a>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">
               Your AI-powered nutrition companion. Get personalized meal plans,

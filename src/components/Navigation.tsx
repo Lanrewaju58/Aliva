@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { profileService } from "@/services/profileService";
+import Logo from "@/components/Logo";
 
 const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -193,16 +194,7 @@ const Navigation = () => {
               }}
               className="flex items-center gap-2 group"
             >
-              <img
-                src="/logo.svg"
-                alt="Aliva"
-                className="h-8 w-auto transition-transform group-hover:scale-105"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                }}
-              />
-
+              <Logo className="h-8 w-auto transition-transform group-hover:scale-105" />
             </button>
 
             {/* Center Navigation - Desktop */}

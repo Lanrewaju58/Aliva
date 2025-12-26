@@ -5,6 +5,7 @@ import { profileService } from "@/services/profileService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Logo from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
 import {
   User,
@@ -233,7 +234,7 @@ const Onboarding = () => {
         {/* Logo */}
         <div className="relative z-10">
           <button onClick={() => navigate('/')} className="flex items-center gap-2 group">
-            <img src="/logo.svg" alt="Aliva" className="h-10 w-auto transition-transform group-hover:scale-105" />
+            <Logo className="h-10 w-auto transition-transform group-hover:scale-105 [&_text]:fill-white" />
           </button>
         </div>
 
@@ -312,7 +313,7 @@ const Onboarding = () => {
           {/* Mobile Header */}
           <div className="lg:hidden mb-8">
             <button onClick={() => navigate('/')} className="inline-flex items-center gap-2 mb-4">
-              <img src="/logo.svg" alt="Aliva" className="h-8 w-auto" />
+              <Logo className="h-8 w-auto" />
             </button>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
               <span>Step {currentStep} of {steps.length}</span>
