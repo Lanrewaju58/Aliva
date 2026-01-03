@@ -52,7 +52,7 @@ const Navigation = () => {
 
           (async () => {
             try {
-              const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+              const apiBase = (import.meta.env.VITE_API_BASE_URL?.includes('localhost') && import.meta.env.PROD) ? '' : (import.meta.env.VITE_API_BASE_URL || '');
               const verifyResponse = await fetch(`${apiBase}/api/payments/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

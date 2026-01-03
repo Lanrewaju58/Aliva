@@ -17,19 +17,20 @@ const AppShell = () => {
         }
     }, [user?.uid]);
 
-    // Free users get Pro features on Mondays (getDay() returns 1 for Monday)
-    const isMonday = new Date().getDay() === 1;
-    const isPro = profile?.plan === 'PRO' || isMonday;
-
     // Calculate days until expiry
     let daysUntilExpiry = Infinity;
     if (profile?.planExpiresAt) {
         // Handle Firestore Timestamp or Date string
         const expiry = (profile.planExpiresAt as any).toDate ? (profile.planExpiresAt as any).toDate() : new Date(profile.planExpiresAt);
         const now = new Date();
-        const diffTime = Math.abs(expiry.getTime() - now.getTime());
+        const diffTime = expiry.getTime() - now.getTime();
         daysUntilExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
+
+    // Free users get Pro features on Mondays (getDay() returns 1 for Monday)
+    const isMonday = new Date().getDay() === 1;
+    // Strict enforcement: User is PRO if plan is PRO AND not expired, OR if it's Monday
+    const isPro = (profile?.plan === 'PRO' && daysUntilExpiry > 0) || isMonday;
 
     return (
         <div className="min-h-screen bg-background text-foreground">

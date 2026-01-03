@@ -140,7 +140,7 @@ const HealthConnect: React.FC<HealthConnectProps> = ({ onConnectionChange }) => 
 
         try {
             // Call backend to generate Terra widget session
-            const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+            const apiBase = (import.meta.env.VITE_API_BASE_URL?.includes('localhost') && import.meta.env.PROD) ? '' : (import.meta.env.VITE_API_BASE_URL || '');
             const response = await fetch(`${apiBase}/api/terra/generate-widget`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -201,7 +201,7 @@ const HealthConnect: React.FC<HealthConnectProps> = ({ onConnectionChange }) => 
 
         try {
             // Call backend to disconnect
-            const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+            const apiBase = (import.meta.env.VITE_API_BASE_URL?.includes('localhost') && import.meta.env.PROD) ? '' : (import.meta.env.VITE_API_BASE_URL || '');
             await fetch(`${apiBase}/api/terra/disconnect`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

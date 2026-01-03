@@ -47,7 +47,7 @@ const Upgrade = () => {
       }
 
       const normalizedPlan = planType.toUpperCase();
-      const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+      const apiBase = (import.meta.env.VITE_API_BASE_URL?.includes('localhost') && import.meta.env.PROD) ? '' : (import.meta.env.VITE_API_BASE_URL || '');
       const response = await fetch(`${apiBase}/api/payments/init`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -397,7 +397,7 @@ const Upgrade = () => {
             {!isPro && <ArrowRight className="w-4 h-4 ml-2" />}
           </Button>
           <p className="text-sm text-muted-foreground mt-3">
-            Cancel anytime • Secure payment via Paystack
+            Secure payment via Paystack
           </p>
         </div>
       </section>
