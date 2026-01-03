@@ -6,6 +6,7 @@ import {
     LayoutDashboard,
     Users,
     DollarSign,
+    Film,
     Settings,
     LogOut,
     Menu,
@@ -28,6 +29,7 @@ export const AdminLayout = ({ children, activeTab, onTabChange }: AdminLayoutPro
         { id: "overview", label: "Overview", icon: LayoutDashboard },
         { id: "users", label: "Users", icon: Users },
         { id: "revenue", label: "Revenue", icon: DollarSign },
+        { id: "content", label: "Content", icon: Film },
     ];
 
     const SidebarContent = () => (
@@ -51,8 +53,8 @@ export const AdminLayout = ({ children, activeTab, onTabChange }: AdminLayoutPro
                             setIsSidebarOpen(false);
                         }}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${activeTab === item.id
-                                ? "bg-primary text-primary-foreground shadow-md"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             }`}
                     >
                         <item.icon className="h-5 w-5" />

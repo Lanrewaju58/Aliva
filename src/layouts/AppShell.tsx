@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { UserProfile } from "@/types/profile";
 import { profileService } from "@/services/profileService";
+import { hasProAccess } from "@/utils/subscription";
 
 const AppShell = () => {
     const { user } = useAuth();
@@ -17,7 +18,7 @@ const AppShell = () => {
         }
     }, [user?.uid]);
 
-    const isPro = profile?.plan === 'PRO';
+    const isPro = hasProAccess(profile?.plan);
 
     // Calculate days until expiry
     let daysUntilExpiry = Infinity;

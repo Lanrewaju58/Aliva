@@ -6,12 +6,14 @@ import { profileService } from "@/services/profileService";
 import { mealService, Meal, MealType } from "@/services/mealService";
 import { exerciseService, Exercise, ExerciseType } from "@/services/exerciseService";
 import { UserProfile } from "@/types/profile";
+import { hasProAccess } from "@/utils/subscription";
 
 // import Navigation from "@/components/Navigation";
 import LoginChat from "@/components/LoginChat";
 import PhotoCalorieChecker from "@/components/PhotoCalorieChecker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import MeditationTab from "@/components/dashboard/MeditationTab";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -703,7 +705,7 @@ const Dashboard = () => {
 
   const caloriePercentage = Math.min((totals.calories / dailyTargets.calories) * 100, 100);
   const remainingCalories = Math.max(dailyTargets.calories - totals.calories, 0);
-  const isPro = profile?.plan === 'PRO';
+  const isPro = hasProAccess(profile?.plan);
 
   return (
     <div className={`min-h-screen ${isPro ? 'bg-gradient-to-br from-background via-background to-primary/5' : 'bg-background'}`}>
@@ -750,6 +752,7 @@ const Dashboard = () => {
                 <TabsTrigger value="overview" className="data-[state=active]:bg-background">Overview</TabsTrigger>
                 <TabsTrigger value="meals" className="data-[state=active]:bg-background">Meals</TabsTrigger>
                 <TabsTrigger value="health" className="data-[state=active]:bg-background">Health</TabsTrigger>
+                <TabsTrigger value="mindfulness" className="data-[state=active]:bg-background">Mindfulness</TabsTrigger>
                 <TabsTrigger value="chat" className="data-[state=active]:bg-background">AI Assistant</TabsTrigger>
               </TabsList>
             </div>
@@ -1139,6 +1142,11 @@ const Dashboard = () => {
                   Coming Soon {isPro && '— Priority Access'}
                 </div>
               </div>
+            </TabsContent>
+
+            {/* Mindfulness Tab */}
+            <TabsContent value="mindfulness">
+              <MeditationTab isPro={isPro} />
             </TabsContent>
 
             {/* Chat Tab */}

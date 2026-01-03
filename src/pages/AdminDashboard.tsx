@@ -7,6 +7,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 import { AdminRevenue } from "@/components/admin/AdminRevenue";
 import { AdminUsers } from "@/components/admin/AdminUsers";
+import { AdminContent } from "@/components/admin/AdminContent";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -44,6 +45,8 @@ const AdminDashboard = () => {
         return <AdminUsers />;
       case "revenue":
         return <AdminRevenue />;
+      case "content":
+        return <AdminContent />;
       default:
         return <AdminOverview />;
     }

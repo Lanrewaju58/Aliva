@@ -38,6 +38,7 @@ import { recipeService, Recipe } from "@/services/recipeService";
 import { UserProfile } from "@/types/profile";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { hasProAccess } from "@/utils/subscription";
 
 interface PlannedMeal {
   id: string;
@@ -156,16 +157,19 @@ const MealPlanner = () => {
     loadProfile();
   }, [user]);
 
-  // Check if user has active Pro plan
+  // Check if user has active Pro plan (or Monday free access)
   const isPro = useMemo(() => {
-    if (!profile?.plan || profile.plan === 'FREE') return false;
-    if (profile.plan === 'PRO') {
-      const expires = (profile as any).planExpiresAt;
-      if (!expires) return true; // No expiry = lifetime
-      const expDate = (typeof expires?.toDate === 'function')
-        ? expires.toDate()
-        : (expires instanceof Date ? expires : new Date(expires));
-      return expDate > new Date();
+    if (hasProAccess(profile?.plan)) {
+      // Also check expiry for PRO users
+      if (profile?.plan === 'PRO') {
+        const expires = (profile as any).planExpiresAt;
+        if (!expires) return true; // No expiry = lifetime
+        const expDate = (typeof expires?.toDate === 'function')
+          ? expires.toDate()
+          : (expires instanceof Date ? expires : new Date(expires));
+        return expDate > new Date();
+      }
+      return true; // Monday access
     }
     return false;
   }, [profile]);
