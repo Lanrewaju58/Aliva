@@ -11,7 +11,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { profileService } from "@/services/profileService";
 import { UserProfile } from "@/types/profile";
 import { Camera, Upload, X, Loader2, Sparkles, Image as ImageIcon, Check, Crown, Lock } from "lucide-react";
-import { hasProAccess } from "@/utils/subscription";
 
 interface NutritionData {
   name: string;
@@ -48,21 +47,17 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
-  // Check if user has active Pro plan (or Monday free access)
+  // Check if user has active Pro plan (or if it's Monday - free Pro day)
   const isPro = useMemo(() => {
-    if (hasProAccess(userProfile?.plan)) {
-      // Also check expiry for actual PRO users
-      if (userProfile?.plan === 'PRO') {
-        const expires = (userProfile as any).planExpiresAt;
-        if (!expires) return true; // No expiry = lifetime
-        const expDate = (typeof expires?.toDate === 'function')
-          ? expires.toDate()
-          : (expires instanceof Date ? expires : new Date(expires));
-        return expDate > new Date();
-      }
-      return true; // Monday access
-    }
-    return false;
+    const isMonday = new Date().getDay() === 1;
+    if (isMonday) return true; // Free Pro on Mondays
+    if (!userProfile?.plan || userProfile.plan !== 'PRO') return false;
+    const expires = (userProfile as any).planExpiresAt;
+    if (!expires) return true; // No expiry = lifetime
+    const expDate = (typeof expires?.toDate === 'function')
+      ? expires.toDate()
+      : (expires instanceof Date ? expires : new Date(expires));
+    return expDate > new Date();
   }, [userProfile]);
 
   // Load user profile

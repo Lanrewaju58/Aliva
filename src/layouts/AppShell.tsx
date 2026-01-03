@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { UserProfile } from "@/types/profile";
 import { profileService } from "@/services/profileService";
-import { hasProAccess } from "@/utils/subscription";
 
 const AppShell = () => {
     const { user } = useAuth();
@@ -18,7 +17,9 @@ const AppShell = () => {
         }
     }, [user?.uid]);
 
-    const isPro = hasProAccess(profile?.plan);
+    // Free users get Pro features on Mondays (getDay() returns 1 for Monday)
+    const isMonday = new Date().getDay() === 1;
+    const isPro = profile?.plan === 'PRO' || isMonday;
 
     // Calculate days until expiry
     let daysUntilExpiry = Infinity;

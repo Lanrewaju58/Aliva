@@ -98,11 +98,11 @@ const Upgrade = () => {
     { title: "Unlimited AI Consultations", desc: "Ask anything, anytime" },
     { title: "Personalized Meal Plans", desc: "Tailored to your goals" },
     { title: "AI Photo Food Scanning", desc: "Instant nutrition info" },
+    { title: "Mindfulness Studio", desc: "Breathing exercises & meditation" },
     { title: "Advanced Tracking", desc: "Detailed analytics" },
     { title: "Restaurant Recommendations", desc: "Find healthy options nearby" },
     { title: "Priority Support", desc: "Get help when you need it" },
     { title: "1-on-1 Nutritionist Access", desc: "Expert guidance" },
-    { title: "Custom Diet Plans", desc: "For your lifestyle" },
   ];
 
   const comparisonFeatures = [
@@ -110,10 +110,12 @@ const Upgrade = () => {
     { name: "Recipe recommendations", free: "5/month", pro: "Unlimited" },
     { name: "Meal planning", free: "Basic", pro: "Advanced" },
     { name: "Photo food scanning", free: false, pro: true },
+    { name: "Mindfulness Studio", free: false, pro: true },
     { name: "Nutritionist access", free: false, pro: true },
     { name: "Priority support", free: false, pro: true },
     { name: "Restaurant finder", free: false, pro: true },
     { name: "Analytics dashboard", free: "Basic", pro: "Advanced" },
+    { name: "Monday Pro Access", free: true, pro: true },
   ];
 
   const testimonials = [
@@ -210,13 +212,19 @@ const Upgrade = () => {
                 <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
                   <X className="w-3 h-3 text-muted-foreground" />
                 </div>
-                <span className="text-muted-foreground line-through">Photo scanning</span>
+                <span className="text-muted-foreground line-through">Mindfulness Studio</span>
               </div>
               <div className="flex items-center gap-3 opacity-40">
                 <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
                   <X className="w-3 h-3 text-muted-foreground" />
                 </div>
                 <span className="text-muted-foreground line-through">Nutritionist access</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
+                  <Check className="w-3 h-3 text-muted-foreground" />
+                </div>
+                <span className="text-foreground">Free Pro every Monday</span>
               </div>
             </div>
           </div>

@@ -6,7 +6,6 @@ import { profileService } from "@/services/profileService";
 import { mealService, Meal, MealType } from "@/services/mealService";
 import { exerciseService, Exercise, ExerciseType } from "@/services/exerciseService";
 import { UserProfile } from "@/types/profile";
-import { hasProAccess } from "@/utils/subscription";
 
 // import Navigation from "@/components/Navigation";
 import LoginChat from "@/components/LoginChat";
@@ -705,7 +704,9 @@ const Dashboard = () => {
 
   const caloriePercentage = Math.min((totals.calories / dailyTargets.calories) * 100, 100);
   const remainingCalories = Math.max(dailyTargets.calories - totals.calories, 0);
-  const isPro = hasProAccess(profile?.plan);
+  // Free users get Pro features on Mondays (getDay() returns 1 for Monday)
+  const isMonday = new Date().getDay() === 1;
+  const isPro = profile?.plan === 'PRO' || isMonday;
 
   return (
     <div className={`min-h-screen ${isPro ? 'bg-gradient-to-br from-background via-background to-primary/5' : 'bg-background'}`}>

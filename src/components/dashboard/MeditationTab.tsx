@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Play,
     Pause,
@@ -11,7 +12,8 @@ import {
     X,
     Clock,
     Star,
-    Loader2
+    Loader2,
+    Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -311,11 +313,66 @@ const BoxBreathing = () => {
 
 // ==================== MAIN COMPONENT ====================
 export default function MeditationTab({ isPro = false }: { isPro?: boolean }) {
+    const navigate = useNavigate();
     const [activeCategory, setActiveCategory] = useState<Category>('All');
     const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
     const [failedThumbnails, setFailedThumbnails] = useState<Set<string>>(new Set());
     const [videos, setVideos] = useState<Video[]>(VIDEOS);
     const [isLoadingVideos, setIsLoadingVideos] = useState(true);
+
+    // Show upgrade prompt for non-Pro users
+    if (!isPro) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center p-4">
+                <div className="max-w-md w-full text-center space-y-6">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-background flex items-center justify-center mx-auto shadow-lg">
+                        <Lock className="h-10 w-10 text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-bold">Unlock Mindfulness Studio</h2>
+                        <p className="text-muted-foreground">
+                            Access guided breathing exercises, meditation videos, and mindfulness tools to improve your mental well-being.
+                        </p>
+                    </div>
+                    <div className="bg-muted/30 rounded-xl p-4 border border-border/50 text-left">
+                        <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-amber-500" />
+                            Premium Features
+                        </h3>
+                        <ul className="space-y-2">
+                            {[
+                                "Interactive box breathing exercises",
+                                "Curated meditation video library",
+                                "Stress relief & sleep content",
+                                "New content added regularly"
+                            ].map((feature, i) => (
+                                <li key={i} className="flex items-center gap-3 text-sm">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                    {feature}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        <Button
+                            onClick={() => navigate('/upgrade')}
+                            className="w-full h-11 text-base shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
+                        >
+                            <Crown className="h-4 w-4 mr-2" />
+                            Upgrade to Pro
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => navigate('/dashboard')}
+                            className="w-full text-muted-foreground hover:text-foreground"
+                        >
+                            Maybe Later
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // Fetch videos from Firestore
     useEffect(() => {
