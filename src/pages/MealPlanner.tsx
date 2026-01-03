@@ -571,8 +571,7 @@ const MealPlanner = () => {
     setRecipeLoading(true);
     try {
       const token = user ? await user.getIdToken() : null;
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-      const response = await fetch(`${baseUrl}/api/generate-recipes`, {
+      const response = await fetch('/api/generate-recipes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
