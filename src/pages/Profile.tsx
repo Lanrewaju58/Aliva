@@ -231,10 +231,16 @@ const Profile: React.FC = () => {
       {/* Navigation Bar removed - handled by AppShell */}
       <div className="pt-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="md:hidden gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-2">
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="md:hidden gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
+        </div>
       </div>
 
       {/* Main Content */}
