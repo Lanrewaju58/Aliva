@@ -85,6 +85,16 @@ const App: React.FC = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
 
+                {/* Onboarding - Protected but outside AppShell for full-screen experience */}
+                <Route
+                  path="/onboarding"
+                  element={
+                    <ProtectedRoute>
+                      <Onboarding />
+                    </ProtectedRoute>
+                  }
+                />
+
                 {/* Protected Routes */}
                 {/* App Routes - Wrapped in AppShell */}
                 <Route element={<AppShell />}>
