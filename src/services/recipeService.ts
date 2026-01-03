@@ -53,8 +53,8 @@ export const recipeService = {
             const querySnapshot = await getDocs(q);
 
             return querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
+                ...doc.data(),
+                id: doc.id
             })) as Recipe[];
         } catch (error) {
             console.error('Error getting saved recipes:', error);
