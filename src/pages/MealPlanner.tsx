@@ -314,7 +314,7 @@ const MealPlanner = () => {
     });
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/generate-meal-plan`, {
+      const response = await fetch('/api/generate-meal-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -171,9 +171,7 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
     setIsAnalyzing(true);
 
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || '';
-
-      const response = await fetch(`${apiBase}/api/analyze-food`, {
+      const response = await fetch('/api/analyze-food', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image })
@@ -510,10 +508,10 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
                           <CardDescription className="text-sm">{result.servingSize}</CardDescription>
                         </div>
                         <div className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${result.confidence === 'High'
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : result.confidence === 'Medium'
-                              ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                              : 'bg-orange-100 text-orange-700 border border-orange-200'
+                          ? 'bg-green-100 text-green-700 border border-green-200'
+                          : result.confidence === 'Medium'
+                            ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                            : 'bg-orange-100 text-orange-700 border border-orange-200'
                           }`}>
                           {result.confidence} Confidence
                         </div>
