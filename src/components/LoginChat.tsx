@@ -36,9 +36,7 @@ type ChatSession = {
   updatedAt: Date;
 };
 
-const API_URL = import.meta.env.DEV
-  ? 'http://localhost:5000/api/chat'
-  : '/api/chat';
+const API_URL = '/api/chat';
 
 const FALLBACK_API_URL = 'https://your-vercel-app.vercel.app/api/chat';
 
