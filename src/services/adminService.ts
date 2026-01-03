@@ -1,4 +1,4 @@
-import { collection, getDocs, query, orderBy, limit, where, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, where, Timestamp, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { UserProfile } from '@/types/profile';
 
@@ -25,13 +25,13 @@ export class AdminService {
    */
   isAdmin(email: string | null | undefined): boolean {
     if (!email) return false;
-    
+
     // Get admin emails from environment variable or use default list
     const envAdmins = import.meta.env.VITE_ADMIN_EMAILS;
-    const adminEmailsFromEnv = envAdmins 
+    const adminEmailsFromEnv = envAdmins
       ? envAdmins.split(',').map(e => e.trim().toLowerCase())
       : [];
-    
+
     // Default admin emails (add your email here)
     const defaultAdminEmails = [
       'mohammedodunlami@gmail.com',
@@ -39,13 +39,13 @@ export class AdminService {
       // Add your email here to grant admin access:
       // 'your-email@example.com',
     ];
-    
+
     // Combine environment and default admin emails
     const allAdminEmails = [
       ...adminEmailsFromEnv,
       ...defaultAdminEmails.map(e => e.toLowerCase())
     ];
-    
+
     return allAdminEmails.includes(email.toLowerCase());
   }
 
@@ -57,9 +57,9 @@ export class AdminService {
       const usersRef = collection(db, 'users');
       const q = query(usersRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      
+
       const users: AdminUser[] = [];
-      
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         users.push({
@@ -74,10 +74,51 @@ export class AdminService {
           isActive: data.planExpiresAt ? (data.planExpiresAt?.toDate ? data.planExpiresAt.toDate() > new Date() : new Date(data.planExpiresAt) > new Date()) : true,
         });
       });
-      
+
       return users;
     } catch (error) {
       console.error('Error fetching users:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Subscribe to users collection for real-time updates
+   */
+  subscribeToUsers(callback: (users: AdminUser[]) => void): () => void {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('createdAt', 'desc'));
+
+    return onSnapshot(q, (snapshot) => {
+      const users: AdminUser[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        users.push({
+          userId: doc.id,
+          email: data.email || '',
+          displayName: data.displayName || null,
+          fullName: data.fullName || 'Unknown User',
+          plan: data.plan || 'FREE',
+          planExpiresAt: data.planExpiresAt?.toDate ? data.planExpiresAt.toDate() : (data.planExpiresAt ? new Date(data.planExpiresAt) : null),
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : null),
+          lastLoginAt: data.lastLoginAt?.toDate ? data.lastLoginAt.toDate() : (data.lastLoginAt ? new Date(data.lastLoginAt) : null),
+          isActive: data.planExpiresAt ? (data.planExpiresAt?.toDate ? data.planExpiresAt.toDate() > new Date() : new Date(data.planExpiresAt) > new Date()) : true,
+        });
+      });
+      callback(users);
+    }, (error) => {
+      console.error('Error subscribing to users:', error);
+    });
+  }
+
+  /**
+   * Delete a user
+   */
+  async deleteUser(userId: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+    } catch (error) {
+      console.error('Error deleting user:', error);
       throw error;
     }
   }
@@ -88,7 +129,7 @@ export class AdminService {
   async getUserStats(): Promise<{ total: number; free: number; pro: number }> {
     try {
       const users = await this.getAllUsers();
-      
+
       return {
         total: users.length,
         free: users.filter(u => u.plan === 'FREE').length,
@@ -96,6 +137,35 @@ export class AdminService {
       };
     } catch (error) {
       console.error('Error fetching user stats:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get estimated revenue stats
+   */
+  async getRevenueStats(): Promise<{ totalRevenue: number; monthlyRecurring: number; activeSubscriptions: number }> {
+    try {
+      const users = await this.getAllUsers();
+
+      // Filter for active PRO users
+      const activeProUsers = users.filter(u =>
+        u.plan === 'PRO' &&
+        u.isActive
+      );
+
+      // Estimate revenue: 
+      // PRO = 6500 monthly
+      const pricePerUser = 6500;
+      const monthlyRecurring = activeProUsers.length * pricePerUser;
+
+      return {
+        totalRevenue: monthlyRecurring * 12, // Rough annualized estimate
+        monthlyRecurring,
+        activeSubscriptions: activeProUsers.length
+      };
+    } catch (error) {
+      console.error('Error fetching revenue stats:', error);
       throw error;
     }
   }

@@ -38,7 +38,7 @@ type ChatSession = {
 
 const API_URL = '/api/chat';
 
-const FALLBACK_API_URL = 'https://your-vercel-app.vercel.app/api/chat';
+const FALLBACK_API_URL = '/api/chat';
 
 interface DashboardData {
   totals: {
