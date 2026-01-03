@@ -79,7 +79,54 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
   // Check if user can scan (Pro users have unlimited scans)
   const canScan = isPro;
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Helper: Compress image before upload
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          // Max dimension 1024px to keep payload small (<1MB)
+          const MAX_WIDTH = 1024;
+          const MAX_HEIGHT = 1024;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Failed to get canvas context'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Compress to JPEG with 0.7 quality
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -92,15 +139,22 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImage(e.target?.result as string);
+    try {
+      // Compress image before setting state
+      const compressedImage = await compressImage(file);
+      setImage(compressedImage);
       setResult(null);
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process image. Please try another.',
+        variant: 'destructive'
+      });
+    }
   };
 
-    const analyzeFoodImage = async () => {
+  const analyzeFoodImage = async () => {
     if (!image) return;
 
     if (!isPro) {
@@ -115,10 +169,10 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
     }
 
     setIsAnalyzing(true);
-    
+
     try {
       const apiBase = import.meta.env.VITE_API_BASE_URL || '';
-      
+
       const response = await fetch(`${apiBase}/api/analyze-food`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -132,17 +186,17 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
 
       const nutritionData: NutritionData = await response.json();
       setResult(nutritionData);
-      
+
       toast({
         title: 'Analysis complete!',
         description: `Found: ${nutritionData.name}`
       });
     } catch (error: any) {
       console.error('Error analyzing image:', error);
-      
+
       toast({
         title: 'Analysis failed',
-        description: error.message?.includes('Service') 
+        description: error.message?.includes('Service')
           ? 'Service temporarily unavailable. Please try again later.'
           : 'Please try again with a clearer image',
         variant: 'destructive'
@@ -165,7 +219,7 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
     });
 
     setShowSuccess(true);
-    
+
     setTimeout(() => {
       toast({
         title: 'Meal added!',
@@ -223,8 +277,8 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
               </ul>
             </div>
             <div className="flex gap-3">
-              <Button 
-                className="flex-1" 
+              <Button
+                className="flex-1"
                 onClick={() => {
                   setIsOpen(false);
                   navigate('/upgrade');
@@ -233,8 +287,8 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
                 <Crown className="h-4 w-4 mr-2" />
                 Upgrade to Pro
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setIsOpen(false)}
               >
                 Cancel
@@ -248,7 +302,7 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
 
   return (
     <>
-      <Button 
+      <Button
         onClick={() => {
           if (!isPro) {
             toast({
@@ -302,18 +356,18 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
                     onChange={handleFileSelect}
                     className="hidden"
                   />
-                  
+
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                     <Camera className="h-8 w-8 sm:h-10 sm:w-10 text-primary group-hover:rotate-12 transition-transform" />
                   </div>
-                  
+
                   <h3 className="text-lg sm:text-xl font-semibold mb-2">Take or Upload a Photo</h3>
                   <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
                     Get instant AI-powered nutrition estimates from food images
                   </p>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button 
+                    <Button
                       onClick={() => cameraInputRef.current?.click()}
                       size="lg"
                       className="gap-2 group/btn hover:scale-105 transition-all"
@@ -321,7 +375,7 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
                       <Camera className="h-4 w-4 group-hover/btn:rotate-12 transition-transform" />
                       Take Photo
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => fileInputRef.current?.click()}
                       variant="outline"
                       size="lg"
@@ -369,9 +423,9 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
             {image && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="relative rounded-xl overflow-hidden border-2 border-border shadow-lg group">
-                  <img 
-                    src={image} 
-                    alt="Food" 
+                  <img
+                    src={image}
+                    alt="Food"
                     className="w-full h-64 sm:h-80 object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -413,7 +467,7 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
                         </CardContent>
                       </Card>
                     ) : (
-                      <Button 
+                      <Button
                         onClick={analyzeFoodImage}
                         className="w-full gap-2 h-12 text-base hover:scale-[1.02] transition-transform"
                         size="lg"
@@ -455,18 +509,17 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
                           <CardTitle className="text-xl sm:text-2xl mb-1 truncate">{result.name}</CardTitle>
                           <CardDescription className="text-sm">{result.servingSize}</CardDescription>
                         </div>
-                        <div className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${
-                          result.confidence === 'High' 
-                            ? 'bg-green-100 text-green-700 border border-green-200' 
+                        <div className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${result.confidence === 'High'
+                            ? 'bg-green-100 text-green-700 border border-green-200'
                             : result.confidence === 'Medium'
-                            ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                            : 'bg-orange-100 text-orange-700 border border-orange-200'
-                        }`}>
+                              ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                              : 'bg-orange-100 text-orange-700 border border-orange-200'
+                          }`}>
                           {result.confidence} Confidence
                         </div>
                       </div>
                     </CardHeader>
-                    
+
                     <CardContent className="space-y-6">
                       <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         {[
@@ -475,7 +528,7 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
                           { label: 'Carbs', value: result.carbs, unit: 'g', color: 'green' },
                           { label: 'Fat', value: result.fat, unit: 'g', color: 'yellow' }
                         ].map((item, idx) => (
-                          <div 
+                          <div
                             key={item.label}
                             className={`p-4 rounded-xl bg-${item.color}-50 border-2 border-${item.color}-200 hover:scale-105 transition-all duration-300 animate-in fade-in zoom-in-95`}
                             style={{ animationDelay: `${idx * 100}ms` }}
@@ -508,7 +561,7 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
                         </div>
                       </div>
 
-                      <Button 
+                      <Button
                         onClick={handleAddToLog}
                         className="w-full h-12 text-base gap-2 hover:scale-[1.02] transition-transform relative overflow-hidden group"
                         disabled={showSuccess}

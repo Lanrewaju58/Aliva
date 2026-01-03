@@ -1,15 +1,16 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, History, User, UtensilsCrossed, Plus } from "lucide-react";
+import { LayoutDashboard, History, User, UtensilsCrossed, Bot } from "lucide-react";
 
 const BottomNav = () => {
+    const navigate = useNavigate();
     const location = useLocation();
 
     const navItems = [
         { label: "Home", href: "/dashboard", icon: LayoutDashboard },
         { label: "Meals", href: "/meal-planner", icon: UtensilsCrossed },
         // FAB Middle Button
-        { label: "Log", href: "#log", icon: Plus, isFab: true },
+        { label: "AI Chat", href: "/chat", icon: Bot, isFab: true },
         { label: "Progress", href: "/progress", icon: History },
         { label: "Profile", href: "/profile", icon: User },
     ];
@@ -24,14 +25,10 @@ const BottomNav = () => {
                         return (
                             <div key={item.label} className="relative -top-5">
                                 <button
-                                    onClick={() => {
-                                        // Trigger unified add modal (to be implemented)
-                                        const event = new CustomEvent('open-quick-log');
-                                        window.dispatchEvent(event);
-                                    }}
+                                    onClick={() => navigate('/chat')}
                                     className="h-14 w-14 rounded-full bg-primary text-white shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
                                 >
-                                    <Plus className="w-6 h-6" />
+                                    <Bot className="w-8 h-8" />
                                 </button>
                             </div>
                         )

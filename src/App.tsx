@@ -28,6 +28,7 @@ import MealPlanner from "./pages/MealPlanner";
 import Upgrade from "./pages/Upgrade";
 import Onboarding from "./pages/Onboarding";
 import AdminDashboard from "./pages/AdminDashboard";
+import ChatPage from "./pages/ChatPage";
 
 // Create QueryClient with optimized settings
 const queryClient = new QueryClient({
@@ -116,6 +117,14 @@ const App: React.FC = () => {
                     element={
                       <ProtectedRoute>
                         <MealPlanner />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/chat"
+                    element={
+                      <ProtectedRoute>
+                        <ChatPage />
                       </ProtectedRoute>
                     }
                   />
