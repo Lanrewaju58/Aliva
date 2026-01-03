@@ -30,7 +30,7 @@ const HeroSection = () => {
   return (
     <section id="home" className="sticky top-0 min-h-screen flex items-center overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/90" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-dark via-primary-dark to-primary-dark/90" />
 
       {/* Subtle geometric pattern */}
       <div className="absolute inset-0 opacity-[0.03]" style={{

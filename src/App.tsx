@@ -1,4 +1,5 @@
 import React from "react";
+// Re-trigger HMR
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,6 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import FloatingThemeToggle from "@/components/FloatingThemeToggle";
 import ScrollToTop from "@/components/ScrollToTop";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AppShell from "@/layouts/AppShell";
 
 // Pages
 import Index from "./pages/Index";
@@ -83,63 +85,60 @@ const App: React.FC = () => {
                 <Route path="/auth" element={<Auth />} />
 
                 {/* Protected Routes */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/progress"
-                  element={
-                    <ProtectedRoute>
-                      <Progress />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/onboarding"
-                  element={
-                    <ProtectedRoute>
-                      <Onboarding />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/meal-planner"
-                  element={
-                    <ProtectedRoute>
-                      <MealPlanner />
-                    </ProtectedRoute>
-                  }
-                />
-
-                <Route
-                  path="/upgrade"
-                  element={
-                    <ProtectedRoute>
-                      <Upgrade />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute requireAdmin={true}>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* App Routes - Wrapped in AppShell */}
+                <Route element={<AppShell />}>
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/progress"
+                    element={
+                      <ProtectedRoute>
+                        <Progress />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/meal-planner"
+                    element={
+                      <ProtectedRoute>
+                        <MealPlanner />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/upgrade"
+                    element={
+                      <ProtectedRoute>
+                        <Upgrade />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute requireAdmin={true}>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* Support Pages within App Shell context if desired, or keep outside */}
+                  <Route path="/help" element={<HelpCenter publicView={false} />} />
+                  <Route path="/security" element={<Security publicView={false} />} />
+                </Route>
 
                 {/* Company Pages */}
                 <Route path="/about" element={<About />} />

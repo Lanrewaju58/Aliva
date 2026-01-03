@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { ALL_COUNTRIES } from '@/lib/countries';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Card } from '@/components/ui/card';
@@ -227,48 +228,14 @@ const Profile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation Bar */}
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Back</span>
-              </Button>
-              <div>
-                <h1 className="text-lg font-semibold text-foreground">Settings</h1>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-full p-1 pr-3 hover:bg-muted transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
-                      {userInitials}
-                    </div>
-                    <span className="hidden sm:inline text-sm font-medium text-foreground">{user?.displayName?.split(' ')[0] || 'User'}</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user?.displayName || 'User'}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Navigation Bar removed - handled by AppShell */}
+      <div className="pt-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="md:hidden gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
+      </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -327,6 +294,21 @@ const Profile: React.FC = () => {
                       disabled
                       className="mt-1.5 bg-muted/50"
                     />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Country / Region</Label>
+                    <Select value={profile.country || ''} onValueChange={v => updateField('country', v)}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select your country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ALL_COUNTRIES.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="age" className="text-sm font-medium">Age</Label>

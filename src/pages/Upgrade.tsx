@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Check, Crown, X, ArrowRight, Shield, Zap, Users, Star, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Navigation from "@/components/Navigation";
 import FooterSection from "@/components/FooterSection";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -125,10 +124,9 @@ const Upgrade = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
 
       {/* Hero Section with Gradient */}
-      <section className="relative pt-24 pb-32 overflow-hidden">
+      <section className="relative pt-12 pb-32 overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/90" />
         <div className="absolute inset-0 opacity-[0.03]" style={{

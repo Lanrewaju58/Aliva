@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import { Search, HelpCircle, MessageCircle } from "lucide-react";
 
-const HelpCenter = () => {
+interface HelpCenterProps {
+  publicView?: boolean;
+}
+
+const HelpCenter = ({ publicView = true }: HelpCenterProps) => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navigation />
+      {publicView && <Navigation />}
       <main className="flex-1">
         {/* Hero Section */}
         <section className="py-16 bg-muted/30 border-b border-border">
@@ -55,7 +59,7 @@ const HelpCenter = () => {
           </div>
         </section>
       </main>
-      <FooterSection />
+      {publicView && <FooterSection />}
     </div>
   );
 };

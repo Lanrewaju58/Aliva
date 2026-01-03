@@ -27,7 +27,7 @@ export interface UserProfile {
   id?: string;
   userId: string;
   fullName: string;
-  
+
   // Health metrics
   age?: number;
   gender?: Gender;
@@ -35,30 +35,31 @@ export interface UserProfile {
   currentWeightKg?: number;
   targetWeightKg?: number;
   activityLevel?: ActivityLevel;
-  
+
   // Preferences
   dietaryPreferences: string[];
   healthGoals: string[];
   allergies: string[];
   medicalConditions: string[];
-  
+
   // Lifestyle
   smokingStatus?: SmokingStatus;
   alcoholFrequency?: AlcoholFrequency;
-  
+
   // Weight tracking
   weightHistory: WeightEntry[];
-  
+
   // Nutrition goals
   preferredCalorieTarget?: number;
-  
+
   // Subscription
   plan?: Plan;
   planExpiresAt?: Date | null;
-  
+
   // Profile
   photoURL?: string;
-  
+  country?: string;
+
   // Timestamps
   createdAt?: Date;
   updatedAt?: Date;

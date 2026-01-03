@@ -23,7 +23,7 @@ const CONFIG = {
   CORS_ORIGINS: [
     'http://localhost:8080',
     'http://localhost:8081',
-    'http://localhost:5173', 
+    'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost',
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
@@ -91,7 +91,7 @@ const initializeOpenAI = () => {
     openaiClient = new OpenAI({
       apiKey: CONFIG.OPENAI_API_KEY,
     });
-    
+
     console.log('✅ OpenAI client initialized successfully');
     return true;
   } catch (error) {
@@ -159,7 +159,7 @@ app.get('/api/health', (req, res) => {
 const dailyCounters = new Map(); // key -> { date: 'YYYY-MM-DD', count: number }
 
 function getDailyKey(userId, ip) {
-  const today = new Date().toISOString().slice(0,10);
+  const today = new Date().toISOString().slice(0, 10);
   const key = userId ? `u:${userId}` : `ip:${ip || 'unknown'}`;
   return { mapKey: key, today };
 }
@@ -210,7 +210,7 @@ app.post('/api/chat', async (req, res) => {
 
     // Prepare messages
     const messages = buildMessages(message, chatHistory || []);
-    
+
     console.log(`🤖 Processing chat request (${message.length} chars, ${messages.length} messages)`);
 
     // Call OpenAI API
@@ -223,11 +223,11 @@ app.post('/api/chat', async (req, res) => {
       frequency_penalty: CONFIG.OPENAI_CONFIG.frequencyPenalty,
     });
 
-    const aiResponse = completion.choices[0]?.message?.content?.trim() || 
+    const aiResponse = completion.choices[0]?.message?.content?.trim() ||
       "I'm here to help with your nutrition questions. Could you tell me more?";
 
     const duration = Date.now() - startTime;
-    
+
     console.log(`✅ Response generated in ${duration}ms (${completion.usage.total_tokens} tokens)`);
 
     // Increment counter only for non-paid users
@@ -266,7 +266,7 @@ app.post('/api/chat', async (req, res) => {
     res.status(statusCode).json({
       error: error.message || 'Internal server error',
       response: getFallbackResponse(errorCode),
-      ...(CONFIG.NODE_ENV === 'development' && { 
+      ...(CONFIG.NODE_ENV === 'development' && {
         details: {
           code: error.code,
           type: error.type,
@@ -305,8 +305,8 @@ app.post('/api/analyze-food', async (req, res) => {
       messages: [{
         role: "user",
         content: [
-          { 
-            type: "text", 
+          {
+            type: "text",
             text: `Analyze this food image and provide nutritional information in the following JSON format only, no additional text:
 {
   "name": "Name of the dish",
@@ -332,7 +332,7 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
 
     const content = completion.choices[0]?.message?.content;
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    
+
     if (!jsonMatch) throw new Error('Invalid response format');
 
     const nutritionData = JSON.parse(jsonMatch[0]);
@@ -349,6 +349,190 @@ Be as accurate as possible based on the visible portion size. If you're unsure, 
   }
 });
 
+// Generate AI Meal Plan Endpoint
+app.post('/api/generate-meal-plan', async (req, res) => {
+  const startTime = Date.now();
+
+  try {
+    const { country, diet, allergies, calories, goal, durationDays = 7 } = req.body;
+
+    if (!openaiClient) {
+      return res.status(503).json({
+        error: 'Service unavailable',
+        message: 'AI service is temporarily unavailable'
+      });
+    }
+
+    console.log(`🥗 Generating meal plan for ${country} (${calories} cal/day)`);
+
+    const prompt = `Generate a ${durationDays}-day meal plan for a user in ${country}.
+      Dietary Profile:
+      - Goal: ${goal || 'Maintain Weight'}
+      - Target Calories: ${calories || 2000} kcal/day
+      - Preferences: ${diet?.join(', ') || 'None'}
+      - Allergies/Restrictions: ${allergies?.join(', ') || 'None'}
+      
+      Requirements:
+      1. Use LOCALLY AVAILABLE ingredients and culturally appropriate dishes for ${country}.
+      2. Provide specific meal names and brief descriptions.
+      3. Include approximate calories, protein (g), carbs (g), and fat (g) for each meal.
+      4. Avoid repetition where possible.
+      
+      Output strictly valid JSON with this structure:
+      {
+        "days": [
+          {
+            "day": 1,
+            "meals": {
+              "Breakfast": { "name": "...", "calories": 0, "protein": 0, "carbs": 0, "fat": 0 },
+              "Lunch": { "name": "...", "calories": 0, "protein": 0, "carbs": 0, "fat": 0 },
+              "Dinner": { "name": "...", "calories": 0, "protein": 0, "carbs": 0, "fat": 0 },
+              "Snack": { "name": "...", "calories": 0, "protein": 0, "carbs": 0, "fat": 0 }
+            }
+          }
+          // ... repeat for all days
+        ]
+      }`;
+
+    const completion = await openaiClient.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+      max_tokens: 2500,
+      temperature: 0.7
+    });
+
+    const content = completion.choices[0]?.message?.content;
+    const plan = JSON.parse(content);
+
+    console.log(`✅ Meal plan generated in ${Date.now() - startTime}ms`);
+    res.status(200).json(plan);
+
+  } catch (error) {
+    console.error('❌ Error in /api/generate-meal-plan:', error);
+    res.status(500).json({
+      error: 'Failed to generate meal plan',
+      details: CONFIG.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ✅ AI Recipe Generation Endpoint
+app.post('/api/generate-recipes', async (req, res) => {
+  try {
+    const { country, diet, allergies, calories, query } = req.body;
+    console.log(`🍳 Generating recipes for ${country}, Diet: ${diet || 'None'}, Query: ${query || 'None'}`);
+
+    if (!openaiClient) {
+      if (!initializeOpenAI()) {
+        throw new Error('OpenAI service not available');
+      }
+    }
+
+    let systemInstruction = "You are a professional chef and nutritionist.";
+    let prompt = "";
+
+    if (query && query.trim().length > 0) {
+      // Search Mode
+      prompt = `
+          Create 3 distinct recipes that match the search term: "${query}".
+          Adjust them to be healthy and suitable for a user in ${country}.
+          
+          Preferences to respect (if possible, but prioritize the search term):
+          - Diet: ${diet || 'None'}
+          - Allergies: ${allergies ? allergies.join(', ') : 'None'}
+          - Target Calories: ~${calories ? Math.round(calories / 3) : 600} kcal
+
+          Requirements:
+          1. Strictly match the search query "${query}".
+          2. Use locally available ingredients for ${country}.
+          3. Return STRICT JSON format only.
+          4. PROVIDE DETAILED COOKING INSTRUCTIONS (at least 5 steps).
+        `;
+    } else {
+      // Discovery Mode (Original)
+      prompt = `
+          Create 3 distinct, healthy, and culturally relevant recipes for a user in ${country} with these preferences:
+          - Diet: ${diet || 'None'}
+          - Allergies: ${allergies ? allergies.join(', ') : 'None'}
+          - Target Calories per meal: ~${calories ? Math.round(calories / 3) : 600} kcal
+
+          Requirements:
+          1. Use locally available ingredients for ${country}.
+          2. Ensure recipes are nutritious and balanced.
+          3. Return STRICT JSON format only.
+          4. PROVIDE DETAILED COOKING INSTRUCTIONS (at least 5 steps).
+        `;
+    }
+
+    prompt += `
+      Output JSON Structure:
+      {
+        "recipes": [
+          {
+            "id": "unique-id-1",
+            "name": "Recipe Name",
+            "calories": 500,
+            "protein": 30,
+            "carbs": 40,
+            "fat": 15,
+            "time": "30 mins",
+            "description": "Short appetizing description",
+            "ingredients": ["1 cup rice", "200g chicken"],
+            "instructions": [
+              "Step 1: Wash the rice thoroughly...",
+              "Step 2: Marinate the chicken with spices...",
+              "Step 3: Sear the chicken in a hot pan..."
+            ]
+          }
+        ]
+      }
+    `;
+
+    const completion = await openaiClient.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "You are a professional chef and nutritionist. Output valid JSON object with a 'recipes' key containing the array." },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    console.log('OpenAI raw response:', completion.choices[0].message.content); // Debug log
+
+    let responseContent;
+    try {
+      responseContent = JSON.parse(completion.choices[0].message.content);
+    } catch (e) {
+      console.error("Failed to parse OpenAI JSON:", e);
+      throw new Error("Invalid JSON from AI");
+    }
+
+    // Handle case where AI wraps array in object key like "recipes": [...]
+    const recipes = Array.isArray(responseContent) ? responseContent : (responseContent.recipes || responseContent.data || Object.values(responseContent)[0]);
+
+    if (!recipes || !Array.isArray(recipes)) {
+      console.error("Parsed content is not an array:", responseContent);
+      throw new Error("Invalid format from AI - Expected array");
+    }
+
+    // Validate recipe structure
+    const validRecipes = recipes.map(r => ({
+      ...r,
+      name: r.name || "Untitled Recipe",
+      description: r.description || "No description available",
+      imageKeyword: r.imageKeyword || r.name || "food"
+    }));
+
+    console.log(`✅ Generated ${validRecipes.length} recipes`);
+    res.json(validRecipes);
+
+  } catch (error) {
+    console.error('❌ Error generating recipes:', error);
+    res.status(500).json({ error: 'Failed to generate recipes', details: error.message });
+  }
+});
+
 
 // Payments: Verify Paystack Transaction
 app.post('/api/payments/verify', async (req, res) => {
@@ -358,7 +542,7 @@ app.post('/api/payments/verify', async (req, res) => {
     }
 
     const { reference, userId } = req.body || {};
-    
+
     if (!reference) {
       return res.status(400).json({ error: 'Transaction reference is required' });
     }
@@ -376,17 +560,17 @@ app.post('/api/payments/verify', async (req, res) => {
     });
 
     const verifyResult = await verifyResponse.json();
-    
+
     if (!verifyResult.status || verifyResult.data?.status !== 'success') {
-      return res.status(400).json({ 
-        error: 'Payment verification failed', 
-        details: verifyResult.message || 'Transaction not successful' 
+      return res.status(400).json({
+        error: 'Payment verification failed',
+        details: verifyResult.message || 'Transaction not successful'
       });
     }
 
     const transactionData = verifyResult.data;
     const metadata = transactionData.metadata || {};
-    
+
     // Validate that the transaction belongs to this user
     const transactionUserId = metadata.userId || metadata.user_id || metadata.uid;
     if (transactionUserId !== userId) {

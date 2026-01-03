@@ -1,10 +1,10 @@
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
   serverTimestamp,
-  DocumentReference 
+  DocumentReference
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { UserProfile } from '@/types/profile';
@@ -15,11 +15,11 @@ export class ProfileService {
    */
   private verifyAuth(userId: string): void {
     const currentUser = auth.currentUser;
-    
+
     if (!currentUser) {
       throw new Error('User must be authenticated');
     }
-    
+
     if (currentUser.uid !== userId) {
       throw new Error('User ID mismatch. Cannot access another user\'s profile.');
     }
@@ -57,10 +57,10 @@ export class ProfileService {
   async getProfile(userId: string): Promise<UserProfile | null> {
     try {
       this.verifyAuth(userId);
-      
+
       const profileRef = this.getProfileRef(userId);
       const profileSnap = await getDoc(profileRef);
-      
+
       if (profileSnap.exists()) {
         const data = profileSnap.data();
         const profile: UserProfile = {
@@ -87,12 +87,13 @@ export class ProfileService {
           })),
           preferredCalorieTarget: data.preferredCalorieTarget || undefined,
           photoURL: data.photoURL || undefined,
+          country: data.country || undefined, // Add country field
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
         };
         return profile;
       }
-      
+
       console.log('No profile found for user:', userId);
       return null;
     } catch (error) {
@@ -107,7 +108,7 @@ export class ProfileService {
   async createProfile(userId: string, profileData: Partial<UserProfile>): Promise<void> {
     try {
       this.verifyAuth(userId);
-      
+
       const profileRef = this.getProfileRef(userId);
       await setDoc(profileRef, {
         userId,
@@ -132,20 +133,21 @@ export class ProfileService {
         })),
         preferredCalorieTarget: profileData.preferredCalorieTarget ?? null,
         photoURL: profileData.photoURL ?? null,
+        country: profileData.country ?? null, // Add country field
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
       console.log('Profile created successfully');
     } catch (error) {
       console.error('Error creating profile:', error);
-      
+
       // Provide more detailed error message
       if (error instanceof Error) {
         if (error.message.includes('Missing or insufficient permissions')) {
           throw new Error('Permission denied. Please check your Firestore security rules.');
         }
       }
-      
+
       throw error;
     }
   }
@@ -156,7 +158,7 @@ export class ProfileService {
   async updateProfile(userId: string, profileData: Partial<UserProfile>): Promise<void> {
     try {
       this.verifyAuth(userId);
-      
+
       const profileRef = this.getProfileRef(userId);
       const cleaned = this.sanitizeUpdate(profileData);
       await updateDoc(profileRef, {
@@ -176,9 +178,9 @@ export class ProfileService {
   async upsertProfile(userId: string, profileData: Partial<UserProfile>): Promise<void> {
     try {
       this.verifyAuth(userId);
-      
+
       const existingProfile = await this.getProfile(userId);
-      
+
       if (existingProfile) {
         console.log('Profile exists, updating...');
         await this.updateProfile(userId, profileData);
@@ -198,9 +200,9 @@ export class ProfileService {
   async addWeightEntry(userId: string, weightKg: number): Promise<void> {
     try {
       this.verifyAuth(userId);
-      
+
       const profile = await this.getProfile(userId);
-      
+
       if (!profile) {
         throw new Error('Profile not found');
       }
@@ -215,7 +217,7 @@ export class ProfileService {
         currentWeightKg: weightKg,
         weightHistory: weightHistory,
       });
-      
+
       console.log('Weight entry added successfully');
     } catch (error) {
       console.error('Error adding weight entry:', error);
@@ -229,7 +231,7 @@ export class ProfileService {
   async hasCompletedOnboarding(userId: string): Promise<boolean> {
     try {
       const profile = await this.getProfile(userId);
-      
+
       if (!profile) {
         return false;
       }

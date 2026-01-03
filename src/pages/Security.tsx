@@ -6,7 +6,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Shield, Lock, Eye, AlertTriangle } from "lucide-react";
 
-const Security = () => {
+interface SecurityProps {
+  publicView?: boolean;
+}
+
+const Security = ({ publicView = true }: SecurityProps) => {
   const { toast } = useToast();
   const [reporting, setReporting] = useState(false);
 
@@ -43,7 +47,7 @@ const Security = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navigation />
+      {publicView && <Navigation />}
       <main className="flex-1">
         {/* Hero Section */}
         <section className="py-16 bg-muted/30 border-b border-border">
@@ -105,7 +109,7 @@ const Security = () => {
           </Card>
         </section>
       </main>
-      <FooterSection />
+      {publicView && <FooterSection />}
     </div>
   );
 };

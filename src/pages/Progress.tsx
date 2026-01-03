@@ -2,21 +2,17 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import MobileNav from "@/components/MobileNav";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  TrendingUp,
+  TrendingDown,
   Calendar,
   Target,
   Flame,
   Award,
-  ChevronLeft,
-  ChevronRight
 } from "lucide-react";
 import { profileService } from "@/services/profileService";
 import { mealService } from "@/services/mealService";
@@ -49,7 +45,7 @@ const Progress = () => {
         // Calculate date range
         const endDate = new Date();
         let startDate = new Date();
-        
+
         switch (timeRange) {
           case '7days':
             startDate.setDate(endDate.getDate() - 7);
@@ -69,22 +65,22 @@ const Progress = () => {
         const end = endDate.toISOString().split('T')[0];
 
         const calories = await mealService.getCaloriesByDateRange(user.uid, start, end);
-        
+
         // Fill in missing dates with 0 calories
         const filledData = [];
         const current = new Date(startDate);
         const target = userProfile?.preferredCalorieTarget || 2000;
-        
+
         while (current <= endDate) {
           const dateStr = current.toISOString().split('T')[0];
           const existingData = calories.find(c => c.date === dateStr);
-          
+
           filledData.push({
             date: new Date(current).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
             calories: existingData?.calories || 0,
             target: target,
           });
-          
+
           current.setDate(current.getDate() + 1);
         }
 
@@ -110,22 +106,24 @@ const Progress = () => {
 
   // Calculate statistics
   const weightHistory = profile?.weightHistory || [];
-  const sortedWeights = [...weightHistory].sort((a, b) => 
+  const sortedWeights = [...weightHistory].sort((a, b) =>
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
-  
+
   const startWeight = sortedWeights[0]?.weightKg;
   const currentWeight = profile?.currentWeightKg || sortedWeights[sortedWeights.length - 1]?.weightKg;
   const targetWeight = profile?.targetWeightKg;
   const weightChange = startWeight && currentWeight ? currentWeight - startWeight : 0;
   const weightToGo = targetWeight && currentWeight ? targetWeight - currentWeight : 0;
 
-  const avgCalories = calorieData.length > 0 
-    ? Math.round(calorieData.reduce((sum, d) => sum + d.calories, 0) / calorieData.filter(d => d.calories > 0).length)
+  const daysWithCalories = calorieData.filter(d => d.calories > 0).length;
+
+  const avgCalories = daysWithCalories > 0
+    ? Math.round(calorieData.reduce((sum, d) => sum + d.calories, 0) / daysWithCalories)
     : 0;
 
-  const daysLogged = calorieData.filter(d => d.calories > 0).length;
-  const consistencyRate = calorieData.length > 0 
+  const daysLogged = daysWithCalories;
+  const consistencyRate = calorieData.length > 0
     ? Math.round((daysLogged / calorieData.length) * 100)
     : 0;
 
@@ -145,8 +143,7 @@ const Progress = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background">
-      <Navigation />
-      <main className="pt-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Your Progress</h1>
           <p className="text-muted-foreground">Track your journey and celebrate your wins</p>
@@ -258,35 +255,35 @@ const Progress = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={calorieData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis 
-                      dataKey="date" 
+                    <XAxis
+                      dataKey="date"
                       tick={{ fontSize: 12 }}
                       stroke="#6b7280"
                     />
-                    <YAxis 
+                    <YAxis
                       tick={{ fontSize: 12 }}
                       stroke="#6b7280"
                     />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'white',
                         border: '1px solid #e5e7eb',
                         borderRadius: '8px'
                       }}
                     />
                     <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="target" 
-                      stroke="#94a3b8" 
+                    <Line
+                      type="monotone"
+                      dataKey="target"
+                      stroke="#94a3b8"
                       strokeDasharray="5 5"
                       name="Target"
                       dot={false}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="calories" 
-                      stroke="#3b82f6" 
+                    <Line
+                      type="monotone"
+                      dataKey="calories"
+                      stroke="#3b82f6"
                       strokeWidth={2}
                       name="Actual"
                       dot={{ r: 3 }}
@@ -311,7 +308,7 @@ const Progress = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart 
+                  <LineChart
                     data={sortedWeights.map(w => ({
                       date: new Date(w.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                       weight: w.weightKg,
@@ -319,38 +316,38 @@ const Progress = () => {
                     }))}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis 
-                      dataKey="date" 
+                    <XAxis
+                      dataKey="date"
                       tick={{ fontSize: 12 }}
                       stroke="#6b7280"
                     />
-                    <YAxis 
+                    <YAxis
                       domain={['dataMin - 2', 'dataMax + 2']}
                       tick={{ fontSize: 12 }}
                       stroke="#6b7280"
                     />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'white',
                         border: '1px solid #e5e7eb',
                         borderRadius: '8px'
                       }}
                     />
                     <Legend />
                     {targetWeight && (
-                      <Line 
-                        type="monotone" 
-                        dataKey="target" 
-                        stroke="#94a3b8" 
+                      <Line
+                        type="monotone"
+                        dataKey="target"
+                        stroke="#94a3b8"
                         strokeDasharray="5 5"
                         name="Goal"
                         dot={false}
                       />
                     )}
-                    <Line 
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke="#10b981" 
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#10b981"
                       strokeWidth={3}
                       name="Weight (kg)"
                       dot={{ r: 4 }}
@@ -360,8 +357,8 @@ const Progress = () => {
                 </ResponsiveContainer>
 
                 <div className="mt-6">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => navigate('/profile')}
                     className="w-full"
                   >

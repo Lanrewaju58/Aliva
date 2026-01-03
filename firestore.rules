@@ -59,6 +59,15 @@ service cloud.firestore {
     match /users/{userId}/exercises {
       allow list: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Saved Recipes subcollection - users can only access their own saved recipes
+    match /users/{userId}/savedRecipes/{recipeId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/savedRecipes {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
     
     // Default: deny all other access
     match /{document=**} {

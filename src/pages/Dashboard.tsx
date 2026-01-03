@@ -7,7 +7,7 @@ import { mealService, Meal, MealType } from "@/services/mealService";
 import { exerciseService, Exercise, ExerciseType } from "@/services/exerciseService";
 import { UserProfile } from "@/types/profile";
 
-import Navigation from "@/components/Navigation";
+// import Navigation from "@/components/Navigation";
 import LoginChat from "@/components/LoginChat";
 import PhotoCalorieChecker from "@/components/PhotoCalorieChecker";
 import { Button } from "@/components/ui/button";
@@ -707,10 +707,10 @@ const Dashboard = () => {
 
   return (
     <div className={`min-h-screen ${isPro ? 'bg-gradient-to-br from-background via-background to-primary/5' : 'bg-background'}`}>
-      <Navigation />
+      {/* Navigation removed - handled by AppShell */}
 
-      <main className="pt-24 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className=""> {/* Padding handled by AppShell */}
+        <div className=""> {/* Container handled by AppShell */}.
 
           {/* Header */}
           <div className="flex items-start justify-between mb-8">
