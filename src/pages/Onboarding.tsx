@@ -27,6 +27,7 @@ import {
   Trophy
 } from "lucide-react";
 import { ActivityLevel, UserProfile } from "@/types/profile";
+import { COUNTRIES } from "@/data/countries";
 
 interface OnboardingData {
   age: number | undefined;
@@ -38,6 +39,7 @@ interface OnboardingData {
   activityLevel: string;
   dietaryPreferences: string[];
   allergies: string[];
+  country: string;
 }
 
 const steps = [
@@ -68,6 +70,7 @@ const Onboarding = () => {
     activityLevel: '',
     dietaryPreferences: [],
     allergies: [],
+    country: '',
   });
 
   const updateData = (field: keyof OnboardingData, value: any) => {
@@ -86,7 +89,7 @@ const Onboarding = () => {
   };
 
   const calculateTargets = () => {
-    if (!data.age || !data.heightCm || !data.currentWeightKg || !data.gender || data.gender === '') {
+    if (!data.age || !data.heightCm || !data.currentWeightKg || !data.gender) {
       return { calories: 2000, protein: 150, carbs: 200, fat: 65 };
     }
 
@@ -121,7 +124,7 @@ const Onboarding = () => {
 
   const handleNext = () => {
     if (currentStep === 1) {
-      if (!data.age || !data.gender || data.gender === '' || !data.heightCm || !data.currentWeightKg) {
+      if (!data.age || !data.gender || !data.heightCm || !data.currentWeightKg) {
         toast({
           title: "Missing information",
           description: "Please fill in all required fields",
@@ -142,7 +145,7 @@ const Onboarding = () => {
         return;
       }
     } else if (currentStep === 2) {
-      if (!data.targetWeightKg || !data.goal || data.goal === '') {
+      if (!data.targetWeightKg || !data.goal) {
         toast({ title: "Missing information", description: "Please fill in all required fields", variant: "destructive" });
         return;
       }
@@ -193,6 +196,7 @@ const Onboarding = () => {
               ? 'Muscle Gain'
               : 'Maintain Weight'
         ],
+        country: data.country || undefined,
         preferredCalorieTarget: targets.calories,
         weightHistory: [
           {
@@ -420,6 +424,22 @@ const Onboarding = () => {
                     className="h-12"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="country" className="text-foreground">Country</Label>
+                <select
+                  id="country"
+                  value={data.country}
+                  onChange={(e) => updateData('country', e.target.value)}
+                  className="w-full h-12 px-3 rounded-lg border-2 border-border bg-background text-foreground focus:border-primary focus:outline-none"
+                >
+                  <option value="">Select country</option>
+                  {COUNTRIES.map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           )}
