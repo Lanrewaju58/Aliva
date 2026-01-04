@@ -23,7 +23,22 @@ export class AdminService {
    * 1. Add your email to the adminEmails array below
    * 2. Or set VITE_ADMIN_EMAILS environment variable (comma-separated)
    */
-  isAdmin(email: string | null | undefined): boolean {
+  isAdmin(email: string | null | undefined, userId?: string): boolean {
+    const defaultAdminEmails = [
+      'mohammedodunlami@gmail.com',
+      'iamezekieljeremiah@gmail.com',
+    ];
+
+    const defaultAdminIds = [
+      'EJ3f1PoNSEWEPHXJkFZcerEzxeC3',
+      '1qJMBNFl0OSopYJoYaM6zqCYM1x2'
+    ];
+
+    // Check by ID first
+    if (userId && defaultAdminIds.includes(userId)) {
+      return true;
+    }
+
     if (!email) return false;
 
     // Get admin emails from environment variable or use default list
@@ -31,14 +46,6 @@ export class AdminService {
     const adminEmailsFromEnv = envAdmins
       ? envAdmins.split(',').map(e => e.trim().toLowerCase())
       : [];
-
-    // Default admin emails (add your email here)
-    const defaultAdminEmails = [
-      'mohammedodunlami@gmail.com',
-      'iamezekieljeremiah@gmail.com',
-      // Add your email here to grant admin access:
-      // 'your-email@example.com',
-    ];
 
     // Combine environment and default admin emails
     const allAdminEmails = [

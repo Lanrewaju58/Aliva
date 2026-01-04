@@ -54,20 +54,46 @@ export class ProfileService {
   /**
    * Get user profile
    */
+  /**
+   * Get user profile
+   */
   async getProfile(userId: string): Promise<UserProfile | null> {
     try {
       this.verifyAuth(userId);
 
-      const profileRef = this.getProfileRef(userId);
-      const profileSnap = await getDoc(profileRef);
+      // Fetch global settings and profile in parallel
+      const [profileSnap, globalSettings] = await Promise.all([
+        getDoc(this.getProfileRef(userId)),
+        // Ideally we would import settingsService here, but circular deps might be issue if we're not careful.
+        // Dynamic import or separate settings fetch. For now let's use the service.
+        import('./settingsService').then(m => m.settingsService.getSettings())
+      ]);
 
       if (profileSnap.exists()) {
         const data = profileSnap.data();
+
+
+        // Check for Admin status or Global Override
+        const email = data.email || auth.currentUser?.email;
+
+        const isAdmin = (await import('./adminService')).adminService.isAdmin(email, userId);
+
+        let plan = data.plan;
+        // Default expiry
+        let planExpiresAt = data.planExpiresAt?.toDate ? data.planExpiresAt.toDate() : (data.planExpiresAt ? new Date(data.planExpiresAt) : null);
+
+        if (isAdmin || globalSettings.freeUsersArePro) {
+          plan = 'PRO';
+          // Set expiry to far future
+          planExpiresAt = new Date('2099-12-31T23:59:59.999Z');
+        }
+
         const profile: UserProfile = {
           id: profileSnap.id,
           userId: data.userId,
-          plan: data.plan,
-          planExpiresAt: data.planExpiresAt?.toDate ? data.planExpiresAt.toDate() : (data.planExpiresAt ? new Date(data.planExpiresAt) : null),
+          email: data.email, // Ensure email is passed
+          plan: plan,
+          planExpiresAt: planExpiresAt,
           fullName: data.fullName,
           dietaryPreferences: data.dietaryPreferences || [],
           healthGoals: data.healthGoals || [],
@@ -112,6 +138,7 @@ export class ProfileService {
       const profileRef = this.getProfileRef(userId);
       await setDoc(profileRef, {
         userId,
+        email: auth.currentUser?.email, // Store email
         fullName: profileData.fullName || '',
         plan: profileData.plan || 'FREE',
         planExpiresAt: profileData.planExpiresAt || null,

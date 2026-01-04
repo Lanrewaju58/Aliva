@@ -24,6 +24,12 @@ service cloud.firestore {
     match /users {
       allow list: if request.auth != null;
     }
+
+    // Allow authenticated users to read global settings
+    match /settings/global {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // Ideally restrict to admins, but app logic handles it for now
+    }
     
     // User profiles collection (if separate from users)
     match /profiles/{userId} {

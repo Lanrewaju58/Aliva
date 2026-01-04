@@ -22,10 +22,10 @@ const AdminDashboard = () => {
       return;
     }
 
-    if (!adminService.isAdmin(user.email)) {
+    if (!adminService.isAdmin(user.email, user.uid)) {
       toast({
         title: "Access Denied",
-        description: `Your email (${user.email}) is not authorized.`,
+        description: `Your account is not authorized.`,
         variant: "destructive",
       });
       navigate('/dashboard');
@@ -33,7 +33,7 @@ const AdminDashboard = () => {
     }
   }, [user, navigate, toast]);
 
-  if (!user || !adminService.isAdmin(user.email)) {
+  if (!user || !adminService.isAdmin(user.email, user.uid)) {
     return null;
   }
 

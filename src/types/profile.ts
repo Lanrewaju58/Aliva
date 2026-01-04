@@ -26,6 +26,7 @@ export interface WeightEntry {
 export interface UserProfile {
   id?: string;
   userId: string;
+  email?: string; // Add email field for admin check
   fullName: string;
 
   // Health metrics

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
     Table,
     TableBody,
@@ -18,17 +19,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     MoreHorizontal,
     Search,
-    User,
-    Mail,
     Trash2,
-    ShieldAlert,
     Calendar,
-    Filter
+    Shield,
+    Crown,
+    Users
 } from "lucide-react";
 import { adminService, AdminUser } from "@/services/adminService";
+import { settingsService, GlobalSettings } from "@/services/settingsService";
 import { useToast } from "@/hooks/use-toast";
 import {
     AlertDialog,
@@ -43,196 +46,249 @@ import {
 
 export const AdminUsers = () => {
     const [users, setUsers] = useState<AdminUser[]>([]);
-    const [filteredUsers, setFilteredUsers] = useState<AdminUser[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+    const [globalSettings, setGlobalSettings] = useState<GlobalSettings>({ freeUsersArePro: false });
+    const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
     const { toast } = useToast();
+    const { user: currentUser } = useAuth();
+
+    // Super admin ID - only this user can delete other admins
+    const SUPER_ADMIN_ID = 'EJ3f1PoNSEWEPHXJkFZcerEzxeC3';
 
     // Real-time subscription
     useEffect(() => {
         setIsLoading(true);
-        const unsubscribe = adminService.subscribeToUsers((updatedUsers) => {
+        const unsubscribeSettings = settingsService.subscribeToSettings(setGlobalSettings);
+        const unsubscribeUsers = adminService.subscribeToUsers((updatedUsers) => {
             setUsers(updatedUsers);
             setIsLoading(false);
         });
-
-        return () => unsubscribe();
+        return () => {
+            unsubscribeSettings();
+            unsubscribeUsers();
+        };
     }, []);
 
-    // Filter logic
-    useEffect(() => {
-        if (!searchQuery.trim()) {
-            setFilteredUsers(users);
-            return;
-        }
+    // Categorize users
+    const categorizeUsers = () => {
+        const admins: AdminUser[] = [];
+        const proUsers: AdminUser[] = [];
+        const freeUsers: AdminUser[] = [];
 
+        users.forEach(user => {
+            if (adminService.isAdmin(user.email, user.userId)) {
+                admins.push(user);
+            } else if (user.plan === 'PRO') {
+                proUsers.push(user);
+            } else {
+                freeUsers.push(user);
+            }
+        });
+
+        return { admins, proUsers, freeUsers };
+    };
+
+    const { admins, proUsers, freeUsers } = categorizeUsers();
+
+    // Filter by search
+    const filterBySearch = (list: AdminUser[]) => {
+        if (!searchQuery.trim()) return list;
         const query = searchQuery.toLowerCase();
-        const filtered = users.filter(user =>
+        return list.filter(user =>
             user.fullName.toLowerCase().includes(query) ||
             user.email.toLowerCase().includes(query) ||
             user.userId.toLowerCase().includes(query)
         );
-        setFilteredUsers(filtered);
-    }, [searchQuery, users]);
+    };
 
     const handleDeleteUser = async () => {
         if (!deleteUserId) return;
 
+        // Prevent non-super-admins from deleting admins
+        const targetUser = users.find(u => u.userId === deleteUserId);
+        const isTargetAdmin = targetUser && adminService.isAdmin(targetUser.email, targetUser.userId);
+        const isSuperAdmin = currentUser?.uid === SUPER_ADMIN_ID;
+
+        if (isTargetAdmin && !isSuperAdmin) {
+            toast({ title: "Permission Denied", description: "Only the super admin can delete other administrators.", variant: "destructive" });
+            setDeleteUserId(null);
+            return;
+        }
+
         try {
             await adminService.deleteUser(deleteUserId);
-            toast({
-                title: "User deleted",
-                description: "The user account has been permanently removed.",
-            });
+            toast({ title: "User deleted", description: "The user account has been permanently removed." });
         } catch (error) {
-            toast({
-                title: "Error",
-                description: "Failed to delete user. Please try again.",
-                variant: "destructive",
-            });
+            toast({ title: "Error", description: "Failed to delete user. Please try again.", variant: "destructive" });
         } finally {
             setDeleteUserId(null);
         }
     };
 
-    const formatDate = (date: Date | null) => {
-        if (!date) return "N/A";
-        return new Date(date).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
+    const handleGlobalProToggle = async (checked: boolean) => {
+        setIsUpdatingSettings(true);
+        try {
+            await settingsService.updateSettings({ freeUsersArePro: checked });
+            toast({
+                title: checked ? "Global Pro Enabled" : "Global Pro Disabled",
+                description: checked ? "All free users now have Pro access." : "Free users reverted to standard access.",
+            });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to update settings.", variant: "destructive" });
+        } finally {
+            setIsUpdatingSettings(false);
+        }
     };
 
+    const formatDate = (date: Date | null) => {
+        if (!date) return "N/A";
+        return new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+    };
+
+    const UserTableRow = ({ user, planBadgeClass }: { user: AdminUser; planBadgeClass?: string }) => (
+        <TableRow key={user.userId}>
+            <TableCell>
+                <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs border border-primary/20">
+                        {(user.fullName || user.email || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div className="font-medium text-sm">{user.fullName}</div>
+                        <div className="text-xs text-muted-foreground">{user.email}</div>
+                    </div>
+                </div>
+            </TableCell>
+            <TableCell>
+                <Badge variant={user.isActive ? "secondary" : "outline"} className={user.isActive ? "bg-green-500/10 text-green-700" : "text-muted-foreground"}>
+                    {user.isActive ? "Active" : "Inactive"}
+                </Badge>
+            </TableCell>
+            <TableCell>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    {formatDate(user.createdAt)}
+                </div>
+            </TableCell>
+            <TableCell>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user.userId)}>Copy User ID</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteUserId(user.userId)}>
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete User
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </TableCell>
+        </TableRow>
+    );
+
+    const UserTable = ({ userList }: { userList: AdminUser[] }) => (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {userList.length === 0 ? (
+                    <TableRow><TableCell colSpan={4} className="h-16 text-center text-muted-foreground">No users in this category.</TableCell></TableRow>
+                ) : (
+                    userList.map((user) => <UserTableRow key={user.userId} user={user} />)
+                )}
+            </TableBody>
+        </Table>
+    );
+
+    if (isLoading) {
+        return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading users...</div>;
+    }
+
     return (
-        <div className="space-y-4">
-            {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-card p-4 rounded-lg border border-border shadow-sm">
-                <div className="relative w-full sm:w-72">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search users..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9"
-                    />
-                </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <Button variant="outline" size="sm" className="ml-auto">
-                        <Filter className="h-4 w-4 mr-2" />
-                        Filter
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        Export
-                    </Button>
-                </div>
+        <div className="space-y-6">
+            {/* Search */}
+            <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search users..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
             </div>
 
-            {/* Table */}
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>User</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Plan</TableHead>
-                            <TableHead>Joined</TableHead>
-                            <TableHead className="w-[50px]"></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
-                                    Loading users...
-                                </TableCell>
-                            </TableRow>
-                        ) : filteredUsers.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                    No users found.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            filteredUsers.map((user) => (
-                                <TableRow key={user.userId}>
-                                    <TableCell>
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs border border-primary/20">
-                                                {(user.fullName || user.email || 'U').charAt(0).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <div className="font-medium text-sm">{user.fullName}</div>
-                                                <div className="text-xs text-muted-foreground">{user.email}</div>
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant={(user.isActive) ? "secondary" : "outline"}
-                                            className={user.isActive ? "bg-green-500/10 text-green-700 hover:bg-green-500/20" : "text-muted-foreground"}
-                                        >
-                                            {user.isActive ? "Active" : "Inactive"}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant="outline"
-                                            className={user.plan === 'PRO' ? "border-yellow-500 text-yellow-600 bg-yellow-50" : ""}
-                                        >
-                                            {user.plan}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <Calendar className="h-3 w-3" />
-                                            {formatDate(user.createdAt)}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Open menu</span>
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user.userId)}>
-                                                    Copy User ID
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteUserId(user.userId)}>
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    Delete User
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+            {/* Admins Section */}
+            <Card>
+                <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                        <Shield className="h-5 w-5 text-blue-500" />
+                        <CardTitle className="text-lg">Administrators ({filterBySearch(admins).length})</CardTitle>
+                    </div>
+                    <CardDescription>Users with administrative privileges. Always have Pro access.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <UserTable userList={filterBySearch(admins)} />
+                </CardContent>
+            </Card>
+
+            {/* Pro Subscribers Section */}
+            <Card>
+                <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                        <Crown className="h-5 w-5 text-yellow-500" />
+                        <CardTitle className="text-lg">Pro Subscribers ({filterBySearch(proUsers).length})</CardTitle>
+                    </div>
+                    <CardDescription>Paying users with active Pro subscriptions.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <UserTable userList={filterBySearch(proUsers)} />
+                </CardContent>
+            </Card>
+
+            {/* Free Users Section */}
+            <Card>
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <Users className="h-5 w-5 text-gray-500" />
+                                <CardTitle className="text-lg">Free Users ({filterBySearch(freeUsers).length})</CardTitle>
+                            </div>
+                            <CardDescription>Users on the free plan.</CardDescription>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
+                            <div className="text-sm">
+                                <p className="font-medium">Enable Pro for All Free Users</p>
+                                <p className="text-xs text-muted-foreground">Override access for all free users</p>
+                            </div>
+                            <Switch
+                                checked={globalSettings.freeUsersArePro}
+                                onCheckedChange={handleGlobalProToggle}
+                                disabled={isUpdatingSettings}
+                            />
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <UserTable userList={filterBySearch(freeUsers)} />
+                </CardContent>
+            </Card>
 
             <AlertDialog open={!!deleteUserId} onOpenChange={(open) => !open && setDeleteUserId(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the user account
-                            and remove their data from our servers.
+                            This action cannot be undone. This will permanently delete the user account and remove their data from our servers.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDeleteUser}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
+                        <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                             Delete Account
                         </AlertDialogAction>
                     </AlertDialogFooter>
