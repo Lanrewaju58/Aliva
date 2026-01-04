@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Play,
@@ -13,7 +13,9 @@ import {
     Clock,
     Star,
     Loader2,
-    Lock
+    Lock,
+    Volume2,
+    VolumeX
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,9 +47,76 @@ const BoxBreathing = () => {
     const [phase, setPhase] = useState<'inhale' | 'hold1' | 'exhale' | 'hold2'>('inhale');
     const [progress, setProgress] = useState(0);
     const [cycles, setCycles] = useState(0);
+    const [isMuted, setIsMuted] = useState(false);
+    const femaleVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+    const previousPhaseRef = useRef<string>('');
 
     const PHASE_DURATION = 4000;
     const TICK_INTERVAL = 50;
+
+    // Initialize female voice
+    useEffect(() => {
+        const loadVoices = () => {
+            const voices = speechSynthesis.getVoices();
+            // Try to find a female English voice
+            const femaleVoice = voices.find(v =>
+                v.lang.startsWith('en') &&
+                (v.name.toLowerCase().includes('female') ||
+                    v.name.toLowerCase().includes('samantha') ||
+                    v.name.toLowerCase().includes('victoria') ||
+                    v.name.toLowerCase().includes('karen') ||
+                    v.name.toLowerCase().includes('moira') ||
+                    v.name.toLowerCase().includes('tessa') ||
+                    v.name.toLowerCase().includes('fiona') ||
+                    v.name.toLowerCase().includes('zira') ||
+                    v.name.includes('Google UK English Female') ||
+                    v.name.includes('Google US English'))
+            ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+            femaleVoiceRef.current = femaleVoice;
+        };
+
+        loadVoices();
+        speechSynthesis.onvoiceschanged = loadVoices;
+
+        return () => {
+            speechSynthesis.onvoiceschanged = null;
+            speechSynthesis.cancel();
+        };
+    }, []);
+
+    // Speak phase changes
+    useEffect(() => {
+        if (!isActive || isMuted) return;
+
+        const phaseText = getPhaseLabel();
+
+        // Only speak if phase actually changed
+        if (previousPhaseRef.current !== phase) {
+            previousPhaseRef.current = phase;
+
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(phaseText);
+            if (femaleVoiceRef.current) {
+                utterance.voice = femaleVoiceRef.current;
+            }
+            utterance.rate = 0.9;
+            utterance.pitch = 1.1;
+            utterance.volume = 0.8;
+
+            speechSynthesis.speak(utterance);
+        }
+    }, [phase, isActive, isMuted]);
+
+    // Stop speech when session ends
+    useEffect(() => {
+        if (!isActive) {
+            speechSynthesis.cancel();
+            previousPhaseRef.current = '';
+        }
+    }, [isActive]);
 
     useEffect(() => {
         let interval: ReturnType<typeof setInterval>;
@@ -81,6 +150,7 @@ const BoxBreathing = () => {
         if (!isActive) {
             setPhase('inhale');
             setProgress(0);
+            previousPhaseRef.current = '';
         }
         setIsActive(!isActive);
     };
@@ -90,6 +160,8 @@ const BoxBreathing = () => {
         setPhase('inhale');
         setProgress(0);
         setCycles(0);
+        speechSynthesis.cancel();
+        previousPhaseRef.current = '';
     };
 
     const getPhaseLabel = () => {
@@ -195,6 +267,17 @@ const BoxBreathing = () => {
                         >
                             {isActive ? <Pause className="h-5 w-5 mr-2" style={{ color: 'inherit' }} /> : <Play className="h-5 w-5 mr-2" style={{ color: 'inherit' }} />}
                             {isActive ? 'Pause' : 'Start Session'}
+                        </Button>
+
+                        {/* Mute/Unmute Button */}
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setIsMuted(!isMuted)}
+                            className="rounded-full h-10 w-10 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all"
+                            title={isMuted ? 'Unmute voice guidance' : 'Mute voice guidance'}
+                        >
+                            {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                         </Button>
 
                         {cycles > 0 && (

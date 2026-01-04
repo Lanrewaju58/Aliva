@@ -202,14 +202,30 @@ const Profile: React.FC = () => {
     setAddDialogOpen(true);
   };
 
-  const saveWeightHistoryDebounced = (nextHistory: NonNullable<UserProfile['weightHistory']>) => {
+  const saveWeightHistoryDebounced = (nextHistory: NonNullable<UserProfile['weightHistory']>, newCurrentWeight?: number) => {
     if (!user) return;
     if (weightSaveTimerRef.current) {
       window.clearTimeout(weightSaveTimerRef.current);
     }
     weightSaveTimerRef.current = window.setTimeout(async () => {
       try {
-        await profileService.updateProfile(user.uid, { weightHistory: nextHistory });
+        // Sort to find the most recent weight entry
+        const sorted = [...nextHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const latestWeight = newCurrentWeight ?? sorted[0]?.weightKg;
+
+        // Update both weightHistory and currentWeightKg
+        const updateData: Partial<UserProfile> = { weightHistory: nextHistory };
+        if (latestWeight !== undefined) {
+          updateData.currentWeightKg = latestWeight;
+        }
+
+        await profileService.updateProfile(user.uid, updateData);
+
+        // Also update local state for currentWeightKg
+        if (latestWeight !== undefined) {
+          setProfile(prev => prev ? { ...prev, currentWeightKg: latestWeight } : prev);
+        }
+
         toast({ title: 'Weight updated' });
       } catch (e) {
         toast({ title: 'Autosave failed', description: 'We will retry on next change.' });
@@ -763,8 +779,9 @@ const Profile: React.FC = () => {
                   if (!prev) return prev;
                   const newEntry = { date: new Date(newWeightDate).toISOString(), weightKg: val };
                   const nextHistory = [...(prev.weightHistory || []), newEntry];
-                  saveWeightHistoryDebounced(nextHistory);
-                  return { ...prev, weightHistory: nextHistory };
+                  saveWeightHistoryDebounced(nextHistory, val);
+                  // Also update currentWeightKg locally
+                  return { ...prev, weightHistory: nextHistory, currentWeightKg: val };
                 });
                 setAddDialogOpen(false);
               }}>

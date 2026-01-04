@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, Salad, Sparkles, User, AlertCircle, MapPin, RotateCcw, ChefHat, Settings, MessageSquare, Clock, Trash2, X, Menu, Loader2, Filter, Apple, Target, Heart, Utensils } from "lucide-react";
+import { Bot, Send, Salad, Sparkles, User, AlertCircle, MapPin, RotateCcw, ChefHat, Settings, MessageSquare, Clock, Trash2, X, Menu, Loader2, Filter, Apple, Target, Heart, Utensils, Square } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
@@ -93,6 +93,9 @@ const LoginChat = ({ dashboardData }: LoginChatProps) => {
   const [showRecentChats, setShowRecentChats] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const [isStreamingResponse, setIsStreamingResponse] = useState(false);
+  const stopStreamingRef = useRef(false);
 
   const AI_PERSONA_HEADER = `You are Aliva — a compassionate AI health companion focused exclusively on health, wellness, and medical topics.
 
@@ -922,6 +925,8 @@ SAFETY:
 
   const streamAssistantResponse = async (fullText: string) => {
     let newIndex = -1;
+    stopStreamingRef.current = false; // Reset stop flag
+
     setMessages(prev => {
       const next = prev.concat([{ role: "assistant", content: "" } as ChatMessage]);
       newIndex = next.length - 1;
@@ -929,11 +934,19 @@ SAFETY:
     });
 
     await new Promise(r => setTimeout(r, 20));
+    setIsStreamingResponse(true);
 
     const step = 2;
     const baseDelay = 20;
 
     for (let i = 0; i < fullText.length; i += step) {
+      // Check if stopped - this is checked synchronously before each character
+      if (stopStreamingRef.current) {
+        setIsStreamingResponse(false);
+        setThinking(false);
+        return;
+      }
+
       const slice = fullText.slice(0, i + step);
       setMessages(prev => {
         const next = prev.slice();
@@ -954,13 +967,49 @@ SAFETY:
         delay = baseDelay * 1.5;
       }
 
-      await new Promise(r => setTimeout(r, delay));
+      // Use a shorter timeout and check stop flag after each wait
+      await new Promise<void>(resolve => {
+        const checkInterval = setInterval(() => {
+          if (stopStreamingRef.current) {
+            clearInterval(checkInterval);
+            resolve();
+          }
+        }, 10);
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          resolve();
+        }, delay);
+      });
+
+      // Check again after delay
+      if (stopStreamingRef.current) {
+        setIsStreamingResponse(false);
+        setThinking(false);
+        return;
+      }
     }
+
+    setIsStreamingResponse(false);
+  };
+
+  const handleStopResponse = () => {
+    // Set stop flag immediately - this will be checked in the loop
+    stopStreamingRef.current = true;
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setThinking(false);
+    setIsStreamingResponse(false);
   };
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || thinking) return;
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     if (messages.length === 1) {
       createNewChat();
@@ -1203,14 +1252,25 @@ SAFETY:
                 className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground px-0 text-sm sm:text-base"
                 disabled={thinking}
               />
-              <Button
-                onClick={handleSend}
-                disabled={!input.trim() || thinking}
-                size="icon"
-                className="rounded-full h-9 w-9 sm:h-10 sm:w-10 bg-primary hover:bg-primary/90 transition-all duration-200 shadow-sm disabled:opacity-50"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              {thinking ? (
+                <Button
+                  onClick={handleStopResponse}
+                  size="icon"
+                  className="rounded-full h-9 w-9 sm:h-10 sm:w-10 bg-green-500 hover:bg-green-600 text-white transition-all duration-200 shadow-sm"
+                  title="Stop response"
+                >
+                  <Square className="h-4 w-4 fill-current" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  size="icon"
+                  className="rounded-full h-9 w-9 sm:h-10 sm:w-10 bg-primary hover:bg-primary/90 transition-all duration-200 shadow-sm disabled:opacity-50"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
             {/* Action Buttons */}
