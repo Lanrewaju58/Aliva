@@ -50,7 +50,7 @@ const HeroSection = () => {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white/90 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-white/10">
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span>Trusted by 1k+ users</span>
+                <span>Trusted by 100+ users</span>
               </div>
 
               {/* Headline */}

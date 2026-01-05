@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import HeroSection from "@/components/HeroSection";
+import FeatureShowcase from "@/components/FeatureShowcase";
 import StatsSection from "@/components/StatsSection";
 import TestimonialBanner from "@/components/TestimonialBanner";
 import BenefitsSection from "@/components/BenefitsSection";
@@ -12,6 +13,7 @@ const Index = () => {
       <Navigation />
       <HeroSection />
       <div className="relative z-10 bg-background">
+        <FeatureShowcase />
         <BenefitsSection />
         <StatsSection />
         <TestimonialBanner />

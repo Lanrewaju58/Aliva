@@ -1,7 +1,7 @@
 const StatsSection = () => {
   const stats = [
     { value: "92%", label: "Success Rate", description: "Users achieve their nutrition goals" },
-    { value: "1k+", label: "Active Users", description: "Trust Aliva for daily guidance" },
+    { value: "100+", label: "Active Users", description: "Trust Aliva for daily guidance" },
     { value: "10k", label: "Meals Tracked", description: "Healthy choices made every day" }
   ];
 

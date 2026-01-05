@@ -103,6 +103,10 @@ const Upgrade = () => {
     { title: "Restaurant Recommendations", desc: "Find healthy options nearby" },
     { title: "Priority Support", desc: "Get help when you need it" },
     { title: "1-on-1 Nutritionist Access", desc: "Expert guidance" },
+    { title: "Women's Health Tracking", desc: "Cycle, symptoms & wellness insights" },
+    { title: "Progress Sharing", desc: "Share your journey on social media" },
+    { title: "Exercise Logging", desc: "Track workouts with calorie burn" },
+    { title: "Health Metrics Dashboard", desc: "Steps, sleep, heart rate monitoring" },
   ];
 
   const comparisonFeatures = [
@@ -116,6 +120,10 @@ const Upgrade = () => {
     { name: "Restaurant finder", free: false, pro: true },
     { name: "Analytics dashboard", free: "Basic", pro: "Advanced" },
     { name: "Monday Pro Access", free: true, pro: true },
+    { name: "Women's Health Tracking", free: false, pro: true },
+    { name: "Progress Sharing", free: false, pro: true },
+    { name: "Exercise Logging", free: false, pro: true },
+    { name: "Health Metrics", free: "Basic", pro: "Advanced" },
   ];
 
   const testimonials = [

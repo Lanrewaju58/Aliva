@@ -338,7 +338,7 @@ const Auth = () => {
         {/* Stats */}
         <div className="relative z-10 flex items-center gap-8">
           <div>
-            <div className="text-3xl font-bold text-white">1k+</div>
+            <div className="text-3xl font-bold text-white">100+</div>
             <div className="text-sm text-white/60">Active Users</div>
           </div>
           <div className="w-px h-10 bg-white/20" />
