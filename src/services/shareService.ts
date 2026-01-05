@@ -10,7 +10,7 @@ export interface ShareableProgress {
     isPro: boolean;
 }
 
-export type SharePlatform = 'twitter' | 'facebook' | 'whatsapp' | 'linkedin' | 'copy';
+export type SharePlatform = 'twitter' | 'facebook' | 'whatsapp' | 'linkedin' | 'copy' | 'native';
 
 // Pregenerated encouraging text templates
 const progressTemplates = [
@@ -123,6 +123,13 @@ class ShareService {
     }
 
     /**
+     * Check if native share API is available
+     */
+    canUseNativeShare(): boolean {
+        return typeof navigator !== 'undefined' && !!navigator.share;
+    }
+
+    /**
      * Share to platform - opens in new window or copies to clipboard
      */
     async share(platform: SharePlatform, text: string): Promise<boolean> {
@@ -132,21 +139,29 @@ class ShareService {
                 return true;
             }
 
-            const url = this.getShareUrl(platform, text);
-
-            // Try native share API first on mobile
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'My Health Progress',
-                        text: text,
-                        url: 'https://aliva.app',
-                    });
-                    return true;
-                } catch {
-                    // Fall back to URL-based sharing
+            // Use native share API for 'native' platform or as fallback on mobile
+            if (platform === 'native' || this.canUseNativeShare()) {
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'My Health Progress with Aliva',
+                            text: text,
+                            url: 'https://aliva.food',
+                        });
+                        return true;
+                    } catch (e) {
+                        // User cancelled or native share failed
+                        if (platform === 'native') {
+                            // If explicitly requested native, don't fall back
+                            return false;
+                        }
+                        // Fall through to URL-based sharing for other platforms
+                    }
                 }
             }
+
+            // URL-based sharing for specific platforms
+            const url = this.getShareUrl(platform, text);
 
             // Open in new window
             const width = 600;
@@ -172,6 +187,7 @@ class ShareService {
      */
     getPlatformInfo(platform: SharePlatform): { name: string; icon: string; color: string } {
         const platforms: Record<SharePlatform, { name: string; icon: string; color: string }> = {
+            native: { name: 'Share', icon: '📤', color: 'bg-primary hover:bg-primary/90' },
             twitter: { name: 'X (Twitter)', icon: '𝕏', color: 'bg-black hover:bg-gray-800' },
             facebook: { name: 'Facebook', icon: 'f', color: 'bg-[#1877F2] hover:bg-[#166FE5]' },
             whatsapp: { name: 'WhatsApp', icon: '💬', color: 'bg-[#25D366] hover:bg-[#20BD5A]' },

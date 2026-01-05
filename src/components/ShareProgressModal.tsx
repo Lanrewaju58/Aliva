@@ -12,7 +12,7 @@ interface ShareProgressModalProps {
     progress: ShareableProgress;
 }
 
-const platforms: { id: SharePlatform; name: string; icon: React.ReactNode; bgColor: string }[] = [
+const socialPlatforms: { id: SharePlatform; name: string; icon: React.ReactNode; bgColor: string }[] = [
     {
         id: 'twitter',
         name: 'X (Twitter)',
@@ -49,6 +49,17 @@ const ShareProgressModal = ({ isOpen, onClose, progress }: ShareProgressModalPro
     const [shareText, setShareText] = useState('');
     const [copied, setCopied] = useState(false);
     const [sharing, setSharing] = useState<SharePlatform | null>(null);
+
+    // Dynamic platforms list including native share if available
+    const platforms = [
+        ...(shareService.canUseNativeShare() ? [{
+            id: 'native' as SharePlatform,
+            name: 'Share via...',
+            icon: <Share2 className="w-5 h-5" />,
+            bgColor: 'bg-primary hover:bg-primary/90 text-primary-foreground'
+        }] : []),
+        ...socialPlatforms
+    ];
 
     useEffect(() => {
         if (isOpen) {
