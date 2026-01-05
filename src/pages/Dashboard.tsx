@@ -16,6 +16,8 @@ import ShareProgressModal from "@/components/ShareProgressModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MeditationTab from "@/components/dashboard/MeditationTab";
+import WomenHealthDashboard from "@/components/WomenHealthDashboard";
+import HealthDashboard from "@/components/HealthDashboard";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -1142,28 +1144,33 @@ const Dashboard = () => {
 
             {/* Health Tab */}
             <TabsContent value="health" className="space-y-6">
-              <div className={`flex flex-col items-center justify-center py-20 text-center rounded-2xl ${isPro
-                ? 'bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/10'
-                : ''
-                }`}>
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${isPro
-                  ? 'bg-gradient-to-br from-primary/20 to-primary/30'
-                  : 'bg-primary/10'
-                  }`}>
-                  <TrendingUp className="w-8 h-8 text-primary" />
+              {/* Show Women's Health Dashboard + Health Metrics for female Pro users */}
+              {profile?.gender === 'female' && isPro ? (
+                <div className="space-y-8">
+                  <WomenHealthDashboard />
+                  <div className="border-t pt-8">
+                    <HealthDashboard />
+                  </div>
                 </div>
-                <h2 className="text-2xl font-semibold text-foreground mb-2">Health Tracking</h2>
-                <p className="text-muted-foreground max-w-md mb-6">
-                  Connect your fitness devices to track steps, sleep, heart rate, and more.
-                </p>
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${isPro
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                  : 'bg-primary/10 text-primary'
-                  }`}>
-                  <span className={`w-2 h-2 rounded-full animate-pulse ${isPro ? 'bg-white' : 'bg-primary'}`} />
-                  Coming Soon {isPro && '— Priority Access'}
+              ) : isPro ? (
+                <HealthDashboard />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-primary/10">
+                    <TrendingUp className="w-8 h-8 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-semibold text-foreground mb-2">Health Tracking</h2>
+                  <p className="text-muted-foreground max-w-md mb-6">
+                    {profile?.gender === 'female'
+                      ? 'Upgrade to Pro to access menstrual cycle tracking, symptom logging, and personalized insights.'
+                      : 'Upgrade to Pro to track steps, sleep, heart rate, and log your daily health metrics.'}
+                  </p>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-primary/10 text-primary">
+                    <span className="w-2 h-2 rounded-full animate-pulse bg-primary" />
+                    Upgrade to Pro
+                  </div>
                 </div>
-              </div>
+              )}
             </TabsContent>
 
             {/* Mindfulness Tab */}

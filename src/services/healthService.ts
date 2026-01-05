@@ -17,12 +17,13 @@ import {
 export interface HealthEntry {
     id?: string;
     userId: string;
-    provider: 'google' | 'apple' | 'fitbit' | 'garmin' | 'oura' | 'samsung' | 'withings';
+    provider: 'google' | 'apple' | 'fitbit' | 'garmin' | 'oura' | 'samsung' | 'withings' | 'manual';
     dataType: 'sleep' | 'activity' | 'heart_rate' | 'steps' | 'nutrition';
     date: Date;
     data: {
         // Sleep data
         totalSleepMinutes?: number;
+        durationHours?: number; // For manual entries
         deepSleepMinutes?: number;
         lightSleepMinutes?: number;
         remSleepMinutes?: number;
@@ -135,12 +136,18 @@ class HealthService {
 
         entries.forEach(entry => {
             if (entry.dataType === 'activity' || entry.dataType === 'steps') {
+                // Support both nested (device) and flat (manual) data structures
                 steps += entry.data.steps || 0;
                 caloriesBurned += entry.data.caloriesBurned || 0;
                 activeMinutes += entry.data.activeMinutes || 0;
             }
             if (entry.dataType === 'sleep') {
-                sleepMinutes += entry.data.totalSleepMinutes || 0;
+                // Support both totalSleepMinutes (device) and durationHours (manual)
+                if (entry.data.totalSleepMinutes) {
+                    sleepMinutes += entry.data.totalSleepMinutes;
+                } else if (entry.data.durationHours) {
+                    sleepMinutes += entry.data.durationHours * 60;
+                }
             }
             if (entry.dataType === 'heart_rate' && entry.data.avgHeartRate) {
                 heartRateSum += entry.data.avgHeartRate;
@@ -255,6 +262,76 @@ class HealthService {
     }
 
     /**
+     * Save manual health entry (user-logged data without devices)
+     */
+    async saveManualEntry(
+        userId: string,
+        date: Date,
+        data: {
+            steps?: number;
+            sleepHours?: number;
+            caloriesBurned?: number;
+            avgHeartRate?: number;
+            activeMinutes?: number;
+        }
+    ): Promise<void> {
+        try {
+            const entriesRef = collection(db, this.healthCollection, userId, 'entries');
+            const dateStr = date.toISOString().split('T')[0];
+
+            // Save each data type as a separate entry (matching device data structure)
+            if (data.steps !== undefined) {
+                await setDoc(doc(entriesRef, `manual_steps_${dateStr}`), {
+                    userId,
+                    provider: 'manual',
+                    dataType: 'steps',
+                    date: Timestamp.fromDate(date),
+                    steps: data.steps,
+                    createdAt: Timestamp.now()
+                }, { merge: true });
+            }
+
+            if (data.sleepHours !== undefined) {
+                await setDoc(doc(entriesRef, `manual_sleep_${dateStr}`), {
+                    userId,
+                    provider: 'manual',
+                    dataType: 'sleep',
+                    date: Timestamp.fromDate(date),
+                    durationHours: data.sleepHours,
+                    createdAt: Timestamp.now()
+                }, { merge: true });
+            }
+
+            if (data.caloriesBurned !== undefined || data.activeMinutes !== undefined) {
+                await setDoc(doc(entriesRef, `manual_activity_${dateStr}`), {
+                    userId,
+                    provider: 'manual',
+                    dataType: 'activity',
+                    date: Timestamp.fromDate(date),
+                    caloriesBurned: data.caloriesBurned || 0,
+                    activeMinutes: data.activeMinutes || 0,
+                    createdAt: Timestamp.now()
+                }, { merge: true });
+            }
+
+            if (data.avgHeartRate !== undefined) {
+                await setDoc(doc(entriesRef, `manual_heart_rate_${dateStr}`), {
+                    userId,
+                    provider: 'manual',
+                    dataType: 'heart_rate',
+                    date: Timestamp.fromDate(date),
+                    avgHeartRate: data.avgHeartRate,
+                    createdAt: Timestamp.now()
+                }, { merge: true });
+            }
+        } catch (error) {
+            console.error('Error saving manual health entry:', error);
+            throw error;
+        }
+    }
+
+
+    /**
      * Update connected provider status
      */
     async updateProviderConnection(
@@ -283,13 +360,26 @@ class HealthService {
      * Parse Firestore document to HealthEntry
      */
     private parseHealthEntry(id: string, data: DocumentData): HealthEntry {
+        // Support both nested (Terra/device) and flat (manual) data structures
+        const entryData = data.data || {
+            steps: data.steps,
+            caloriesBurned: data.caloriesBurned,
+            activeMinutes: data.activeMinutes,
+            totalSleepMinutes: data.totalSleepMinutes,
+            durationHours: data.durationHours,
+            avgHeartRate: data.avgHeartRate,
+            restingHeartRate: data.restingHeartRate,
+            maxHeartRate: data.maxHeartRate,
+            minHeartRate: data.minHeartRate,
+        };
+
         return {
             id,
             userId: data.userId,
             provider: data.provider,
             dataType: data.dataType,
             date: data.date?.toDate() || new Date(),
-            data: data.data || {},
+            data: entryData,
             createdAt: data.createdAt?.toDate() || new Date(),
             rawData: data.rawData
         };

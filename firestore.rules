@@ -74,6 +74,53 @@ service cloud.firestore {
       allow list: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Menstrual Health - Period tracking subcollection
+    match /users/{userId}/menstrualPeriods/{periodId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/menstrualPeriods {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Menstrual Health - Symptoms subcollection
+    match /users/{userId}/menstrualSymptoms/{symptomId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/menstrualSymptoms {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Menstrual Health - Settings subcollection
+    match /users/{userId}/menstrualSettings/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Health Data collection - for steps, sleep, calories, heart rate
+    match /healthData/{userId}/entries/{entryId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /healthData/{userId}/entries {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /healthData/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Connected Providers collection - for health device connections
+    match /connectedProviders/{docId} {
+      allow read, write: if request.auth != null && 
+                          (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    match /connectedProviders {
+      allow list: if request.auth != null;
+    }
+
     // Saved Recipes subcollection - users can only access their own saved recipes
     match /users/{userId}/savedRecipes/{recipeId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
