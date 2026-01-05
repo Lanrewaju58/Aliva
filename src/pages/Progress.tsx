@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,12 +13,17 @@ import {
   Target,
   Flame,
   Award,
+  Share2,
 } from "lucide-react";
 import { profileService } from "@/services/profileService";
-import { mealService } from "@/services/mealService";
+import { mealService, Meal } from "@/services/mealService";
+import { exerciseService, Exercise } from "@/services/exerciseService";
+import { adminService } from "@/services/adminService";
 import { UserProfile } from "@/types/profile";
 import { useToast } from "@/hooks/use-toast";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import ShareProgressModal from "@/components/ShareProgressModal";
+import { ShareableProgress } from "@/services/shareService";
 
 type TimeRange = '7days' | '30days' | '90days' | 'all';
 
@@ -33,6 +38,9 @@ const Progress = () => {
   const [pageLoading, setPageLoading] = useState(true);
   const [currentWeek, setCurrentWeek] = useState(0);
   const [dailyStreak, setDailyStreak] = useState<number>(0);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [todayMeals, setTodayMeals] = useState<Meal[]>([]);
+  const [todayExercises, setTodayExercises] = useState<Exercise[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -89,6 +97,13 @@ const Progress = () => {
         // Load daily streak
         const streak = await mealService.getDailyStreak(user.uid);
         setDailyStreak(streak);
+
+        // Load today's meals and exercises for share modal
+        const today = new Date().toISOString().split('T')[0];
+        const meals = await mealService.getMealsByDate(user.uid, today);
+        const exercises = await exerciseService.getExercisesByDate(user.uid, today);
+        setTodayMeals(meals);
+        setTodayExercises(exercises);
       } catch (error) {
         console.error('Error loading progress data:', error);
         toast({
@@ -127,6 +142,22 @@ const Progress = () => {
     ? Math.round((daysLogged / calorieData.length) * 100)
     : 0;
 
+  // Check if user can share (Pro or Admin)
+  const isPro = profile?.plan === 'PRO';
+  const isAdmin = user ? adminService.isAdmin(user.email, user.uid) : false;
+  const canShare = isPro || isAdmin;
+
+  // Prepare shareable progress data
+  const shareableProgress: ShareableProgress = useMemo(() => ({
+    caloriesConsumed: avgCalories,
+    calorieTarget: profile?.preferredCalorieTarget || 2000,
+    dailyStreak,
+    mealsToday: todayMeals.map(m => ({ name: m.name, calories: m.calories })),
+    exercisesToday: todayExercises.map(e => ({ name: e.name, duration: e.duration, caloriesBurned: e.caloriesBurned })),
+    userName: user?.displayName || 'User',
+    isPro,
+  }), [avgCalories, profile?.preferredCalorieTarget, dailyStreak, todayMeals, todayExercises, user?.displayName, isPro]);
+
   // Get weekly weight data
   const weeklyWeights = sortedWeights.slice(currentWeek * 7, (currentWeek + 1) * 7);
 
@@ -145,8 +176,21 @@ const Progress = () => {
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Your Progress</h1>
-          <p className="text-muted-foreground">Track your journey and celebrate your wins</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Your Progress</h1>
+              <p className="text-muted-foreground">Track your journey and celebrate your wins</p>
+            </div>
+            {canShare && (
+              <Button
+                onClick={() => setShowShareModal(true)}
+                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/25"
+              >
+                <Share2 className="h-4 w-4" />
+                Share Your Progress
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -449,6 +493,13 @@ const Progress = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Share Progress Modal */}
+        <ShareProgressModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          progress={shareableProgress}
+        />
       </main>
     </div>
   );

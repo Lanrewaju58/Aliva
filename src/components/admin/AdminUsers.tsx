@@ -28,7 +28,9 @@ import {
     Calendar,
     Shield,
     Crown,
-    Users
+    Users,
+    ArrowUpCircle,
+    ArrowDownCircle
 } from "lucide-react";
 import { adminService, AdminUser } from "@/services/adminService";
 import { settingsService, GlobalSettings } from "@/services/settingsService";
@@ -53,6 +55,11 @@ export const AdminUsers = () => {
     const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
     const { toast } = useToast();
     const { user: currentUser } = useAuth();
+
+    // Promotion state
+    const [promoteUserId, setPromoteUserId] = useState<string | null>(null);
+    const [promoteDuration, setPromoteDuration] = useState<number>(30);
+    const [isPromoting, setIsPromoting] = useState(false);
 
     // Super admin ID - only this user can delete other admins
     const SUPER_ADMIN_ID = 'EJ3f1PoNSEWEPHXJkFZcerEzxeC3';
@@ -142,12 +149,46 @@ export const AdminUsers = () => {
         }
     };
 
+    // Handle promoting a user to Pro
+    const handlePromoteUser = async () => {
+        if (!promoteUserId) return;
+        setIsPromoting(true);
+        try {
+            await adminService.promoteToProUser(promoteUserId, promoteDuration);
+            const targetUser = users.find(u => u.userId === promoteUserId);
+            toast({
+                title: "User Promoted to Pro",
+                description: `${targetUser?.fullName || 'User'} now has Pro access for ${promoteDuration} days.`,
+            });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to promote user.", variant: "destructive" });
+        } finally {
+            setPromoteUserId(null);
+            setIsPromoting(false);
+            setPromoteDuration(30);
+        }
+    };
+
+    // Handle demoting a user to Free
+    const handleDemoteUser = async (userId: string) => {
+        try {
+            await adminService.demoteToFree(userId);
+            const targetUser = users.find(u => u.userId === userId);
+            toast({
+                title: "User Demoted",
+                description: `${targetUser?.fullName || 'User'} is now on the Free plan.`,
+            });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to demote user.", variant: "destructive" });
+        }
+    };
+
     const formatDate = (date: Date | null) => {
         if (!date) return "N/A";
         return new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
     };
 
-    const UserTableRow = ({ user, planBadgeClass }: { user: AdminUser; planBadgeClass?: string }) => (
+    const UserTableRow = ({ user, planBadgeClass, showPromote = false, showDemote = false }: { user: AdminUser; planBadgeClass?: string; showPromote?: boolean; showDemote?: boolean }) => (
         <TableRow key={user.userId}>
             <TableCell>
                 <div className="flex items-center gap-3">
@@ -180,6 +221,16 @@ export const AdminUsers = () => {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user.userId)}>Copy User ID</DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        {showPromote && (
+                            <DropdownMenuItem onClick={() => setPromoteUserId(user.userId)} className="text-yellow-600 focus:text-yellow-600">
+                                <ArrowUpCircle className="mr-2 h-4 w-4" /> Promote to Pro
+                            </DropdownMenuItem>
+                        )}
+                        {showDemote && (
+                            <DropdownMenuItem onClick={() => handleDemoteUser(user.userId)} className="text-orange-600 focus:text-orange-600">
+                                <ArrowDownCircle className="mr-2 h-4 w-4" /> Demote to Free
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteUserId(user.userId)}>
                             <Trash2 className="mr-2 h-4 w-4" /> Delete User
                         </DropdownMenuItem>
@@ -189,7 +240,7 @@ export const AdminUsers = () => {
         </TableRow>
     );
 
-    const UserTable = ({ userList }: { userList: AdminUser[] }) => (
+    const UserTable = ({ userList, showPromote = false, showDemote = false }: { userList: AdminUser[]; showPromote?: boolean; showDemote?: boolean }) => (
         <Table>
             <TableHeader>
                 <TableRow>
@@ -203,7 +254,7 @@ export const AdminUsers = () => {
                 {userList.length === 0 ? (
                     <TableRow><TableCell colSpan={4} className="h-16 text-center text-muted-foreground">No users in this category.</TableCell></TableRow>
                 ) : (
-                    userList.map((user) => <UserTableRow key={user.userId} user={user} />)
+                    userList.map((user) => <UserTableRow key={user.userId} user={user} showPromote={showPromote} showDemote={showDemote} />)
                 )}
             </TableBody>
         </Table>
@@ -245,7 +296,7 @@ export const AdminUsers = () => {
                     <CardDescription>Paying users with active Pro subscriptions.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <UserTable userList={filterBySearch(proUsers)} />
+                    <UserTable userList={filterBySearch(proUsers)} showDemote />
                 </CardContent>
             </Card>
 
@@ -274,7 +325,7 @@ export const AdminUsers = () => {
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <UserTable userList={filterBySearch(freeUsers)} />
+                    <UserTable userList={filterBySearch(freeUsers)} showPromote />
                 </CardContent>
             </Card>
 
@@ -290,6 +341,47 @@ export const AdminUsers = () => {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                             Delete Account
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Promote User Dialog */}
+            <AlertDialog open={!!promoteUserId} onOpenChange={(open) => !open && setPromoteUserId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                            <Crown className="h-5 w-5 text-yellow-500" />
+                            Promote User to Pro
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Select the duration for this user's Pro subscription. They will have access to all Pro features during this period.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="py-4">
+                        <div className="grid grid-cols-5 gap-2">
+                            {[1, 7, 30, 90, 365].map((days) => (
+                                <Button
+                                    key={days}
+                                    variant={promoteDuration === days ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setPromoteDuration(days)}
+                                    className="w-full"
+                                >
+                                    {days === 365 ? '1 Year' : days === 90 ? '3 Months' : days === 30 ? '1 Month' : days === 7 ? '1 Week' : '1 Day'}
+                                </Button>
+                            ))}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-3 text-center">
+                            Pro access will expire on <span className="font-medium text-foreground">
+                                {new Date(Date.now() + promoteDuration * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                            </span>
+                        </p>
+                    </div>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isPromoting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handlePromoteUser} disabled={isPromoting} className="bg-yellow-500 text-white hover:bg-yellow-600">
+                            {isPromoting ? 'Promoting...' : 'Promote to Pro'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

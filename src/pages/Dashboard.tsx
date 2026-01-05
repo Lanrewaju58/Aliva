@@ -753,17 +753,6 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {canShare && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowShareModal(true)}
-                  className="hidden sm:flex gap-2 border-primary/30 text-primary hover:bg-primary/10"
-                >
-                  <Share2 className="h-4 w-4" />
-                  Share Progress
-                </Button>
-              )}
               <Button variant="outline" size="sm" onClick={() => navigate('/profile')} className="hidden sm:flex">
                 <Settings className="h-4 w-4 mr-2" />
                 Settings

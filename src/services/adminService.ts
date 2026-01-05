@@ -131,6 +131,51 @@ export class AdminService {
   }
 
   /**
+   * Promote a user to Pro plan for a specified duration
+   * @param userId - The user ID to promote
+   * @param durationDays - Number of days for the Pro subscription (e.g., 30, 90, 365)
+   */
+  async promoteToProUser(userId: string, durationDays: number): Promise<void> {
+    try {
+      const { updateDoc } = await import('firebase/firestore');
+      const userRef = doc(db, 'users', userId);
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + durationDays);
+
+      await updateDoc(userRef, {
+        plan: 'PRO',
+        planExpiresAt: Timestamp.fromDate(expiresAt),
+        promotedByAdmin: true,
+        promotedAt: Timestamp.now(),
+      });
+    } catch (error) {
+      console.error('Error promoting user to Pro:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Demote a user back to Free plan
+   */
+  async demoteToFree(userId: string): Promise<void> {
+    try {
+      const { updateDoc, deleteField } = await import('firebase/firestore');
+      const userRef = doc(db, 'users', userId);
+
+      await updateDoc(userRef, {
+        plan: 'FREE',
+        planExpiresAt: deleteField(),
+        promotedByAdmin: deleteField(),
+        promotedAt: deleteField(),
+      });
+    } catch (error) {
+      console.error('Error demoting user:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get user count by plan
    */
   async getUserStats(): Promise<{ total: number; free: number; pro: number }> {

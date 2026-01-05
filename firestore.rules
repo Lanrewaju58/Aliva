@@ -14,6 +14,10 @@ service cloud.firestore {
       // Allow users to create/update their own profile
       allow create, update: if request.auth != null && request.auth.uid == userId;
       
+      // Allow admins to update any user profile (for promoting/demoting users)
+      allow update: if request.auth.token.email == 'mohammedodunlami@gmail.com' || 
+                   request.auth.token.email == 'iamezekieljeremiah@gmail.com';
+      
       // Allow specific admins to delete users
       allow delete: if request.auth.token.email == 'mohammedodunlami@gmail.com' || 
                    request.auth.token.email == 'iamezekieljeremiah@gmail.com';
