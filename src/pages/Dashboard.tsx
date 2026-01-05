@@ -5,11 +5,14 @@ import { useToast } from "@/hooks/use-toast";
 import { profileService } from "@/services/profileService";
 import { mealService, Meal, MealType } from "@/services/mealService";
 import { exerciseService, Exercise, ExerciseType } from "@/services/exerciseService";
+import { adminService } from "@/services/adminService";
+import { ShareableProgress } from "@/services/shareService";
 import { UserProfile } from "@/types/profile";
 
 // import Navigation from "@/components/Navigation";
 import LoginChat from "@/components/LoginChat";
 import PhotoCalorieChecker from "@/components/PhotoCalorieChecker";
+import ShareProgressModal from "@/components/ShareProgressModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import MeditationTab from "@/components/dashboard/MeditationTab";
@@ -32,7 +35,8 @@ import {
   Dumbbell,
   Flame,
   Clock,
-  X
+  X,
+  Share2
 } from "lucide-react";
 
 // ==================== TYPES ====================
@@ -482,6 +486,7 @@ const Dashboard = () => {
 
   const [showAddMeal, setShowAddMeal] = useState<string | null>(null);
   const [showAddExercise, setShowAddExercise] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [dailyStreak, setDailyStreak] = useState<number>(0);
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
@@ -688,6 +693,23 @@ const Dashboard = () => {
 
   // ==================== RENDER ====================
 
+  // Must compute these before any conditional returns (React hooks rules)
+  const isMonday = new Date().getDay() === 1;
+  const isPro = profile?.plan === 'PRO' || isMonday;
+  const isAdmin = user ? adminService.isAdmin(user.email, user.uid) : false;
+  const canShare = isPro || isAdmin;
+
+  // Prepare shareable progress data (must be before conditional returns for hooks)
+  const shareableProgress: ShareableProgress = useMemo(() => ({
+    caloriesConsumed: totals.calories,
+    calorieTarget: dailyTargets.calories,
+    dailyStreak,
+    mealsToday: meals.map(m => ({ name: m.name, calories: m.calories })),
+    exercisesToday: exercises.map(e => ({ name: e.name, duration: e.duration, caloriesBurned: e.caloriesBurned })),
+    userName: user?.displayName || 'User',
+    isPro,
+  }), [totals.calories, dailyTargets.calories, dailyStreak, meals, exercises, user?.displayName, isPro]);
+
   // Loading state
   if (authLoading || isLoading) {
     return (
@@ -704,9 +726,6 @@ const Dashboard = () => {
 
   const caloriePercentage = Math.min((totals.calories / dailyTargets.calories) * 100, 100);
   const remainingCalories = Math.max(dailyTargets.calories - totals.calories, 0);
-  // Free users get Pro features on Mondays (getDay() returns 1 for Monday)
-  const isMonday = new Date().getDay() === 1;
-  const isPro = profile?.plan === 'PRO' || isMonday;
 
   return (
     <div className={`min-h-screen ${isPro ? 'bg-gradient-to-br from-background via-background to-primary/5' : 'bg-background'}`}>
@@ -733,10 +752,23 @@ const Dashboard = () => {
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => navigate('/profile')} className="hidden sm:flex">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
+            <div className="flex items-center gap-2">
+              {canShare && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowShareModal(true)}
+                  className="hidden sm:flex gap-2 border-primary/30 text-primary hover:bg-primary/10"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share Progress
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => navigate('/profile')} className="hidden sm:flex">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            </div>
           </div>
 
           {/* Error Alert */}
@@ -1177,6 +1209,13 @@ const Dashboard = () => {
           </Tabs>
         </div>
       </main>
+
+      {/* Share Progress Modal */}
+      <ShareProgressModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        progress={shareableProgress}
+      />
     </div>
   );
 };

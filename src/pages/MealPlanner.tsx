@@ -31,7 +31,8 @@ import {
   ChefHat,
   Search,
   Filter,
-  UtensilsCrossed // Added missing import
+  UtensilsCrossed,
+  Loader2
 } from "lucide-react";
 import { profileService } from "@/services/profileService";
 import { recipeService, Recipe } from "@/services/recipeService";
@@ -707,9 +708,9 @@ const MealPlanner = () => {
               <Trash2 className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Reset</span>
             </Button>
-            <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm border-muted-foreground/20" onClick={handleSmartAutoFill}>
-              <Utensils className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Auto-Fill</span>
+            <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm border-muted-foreground/20" onClick={handleSmartAutoFill} disabled={generating}>
+              {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Utensils className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">{generating ? 'Generating...' : 'Auto-Fill'}</span>
             </Button>
             <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm border-muted-foreground/20" onClick={handleCopyMealCalendar}>
               <Copy className="h-3.5 w-3.5" />
@@ -797,6 +798,30 @@ const MealPlanner = () => {
                 <ChevronRight className="h-5 w-5" />
               </Button>
             </div>
+
+            {/* Loading Overlay for Auto-Fill */}
+            {generating && (
+              <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                <div className="bg-card border border-border rounded-2xl p-8 shadow-2xl max-w-md w-full mx-4 text-center">
+                  <div className="relative w-20 h-20 mx-auto mb-6">
+                    <div className="absolute inset-0 rounded-full border-4 border-muted"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                    <div className="absolute inset-3 rounded-full bg-primary/10 flex items-center justify-center">
+                      <ChefHat className="w-8 h-8 text-primary" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">Creating Your Meal Plan</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Generating a personalized {profile?.country || 'healthy'} diet plan based on your preferences...
+                  </p>
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
               {MEAL_TYPES.map((type) => (
