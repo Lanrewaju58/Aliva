@@ -99,17 +99,20 @@ class ShareService {
      */
     getShareUrl(platform: SharePlatform, text: string, url?: string): string {
         const encodedText = encodeURIComponent(text);
-        const encodedUrl = encodeURIComponent(url || 'https://aliva.app');
+        const encodedUrl = encodeURIComponent(url || 'https://aliva.food');
 
         switch (platform) {
             case 'twitter':
+                // Use twitter:// intent to open app, falls back to web
                 return `https://twitter.com/intent/tweet?text=${encodedText}`;
 
             case 'facebook':
+                // Facebook app deep link
                 return `https://www.facebook.com/sharer/sharer.php?quote=${encodedText}&u=${encodedUrl}`;
 
             case 'whatsapp':
-                return `https://wa.me/?text=${encodedText}`;
+                // WhatsApp deep link - opens app directly on mobile
+                return `whatsapp://send?text=${encodedText}`;
 
             case 'linkedin':
                 return `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&summary=${encodedText}`;
@@ -123,6 +126,27 @@ class ShareService {
     }
 
     /**
+     * Get web fallback URL for platforms
+     */
+    getWebFallbackUrl(platform: SharePlatform, text: string, url?: string): string {
+        const encodedText = encodeURIComponent(text);
+        const encodedUrl = encodeURIComponent(url || 'https://aliva.food');
+
+        switch (platform) {
+            case 'twitter':
+                return `https://twitter.com/intent/tweet?text=${encodedText}`;
+            case 'facebook':
+                return `https://www.facebook.com/sharer/sharer.php?quote=${encodedText}&u=${encodedUrl}`;
+            case 'whatsapp':
+                return `https://web.whatsapp.com/send?text=${encodedText}`;
+            case 'linkedin':
+                return `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&summary=${encodedText}`;
+            default:
+                return '';
+        }
+    }
+
+    /**
      * Check if native share API is available
      */
     canUseNativeShare(): boolean {
@@ -130,7 +154,7 @@ class ShareService {
     }
 
     /**
-     * Share to platform - opens in new window or copies to clipboard
+     * Share to platform - opens app directly via deep link, falls back to web
      */
     async share(platform: SharePlatform, text: string): Promise<boolean> {
         try {
@@ -139,8 +163,8 @@ class ShareService {
                 return true;
             }
 
-            // Use native share API for 'native' platform or as fallback on mobile
-            if (platform === 'native' || this.canUseNativeShare()) {
+            // Use native share API for 'native' platform - this opens the device share sheet
+            if (platform === 'native') {
                 if (navigator.share) {
                     try {
                         await navigator.share({
@@ -149,30 +173,45 @@ class ShareService {
                             url: 'https://aliva.food',
                         });
                         return true;
-                    } catch (e) {
-                        // User cancelled or native share failed
-                        if (platform === 'native') {
-                            // If explicitly requested native, don't fall back
-                            return false;
-                        }
-                        // Fall through to URL-based sharing for other platforms
+                    } catch {
+                        return false;
                     }
                 }
+                return false;
             }
 
-            // URL-based sharing for specific platforms
-            const url = this.getShareUrl(platform, text);
+            // For specific platforms, try deep link to open app directly
+            const deepLinkUrl = this.getShareUrl(platform, text);
+            const webFallbackUrl = this.getWebFallbackUrl(platform, text);
 
-            // Open in new window
+            // Check if we're on mobile (more likely to have apps installed)
+            const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            if (isMobile && platform === 'whatsapp') {
+                // WhatsApp deep link - try to open app directly
+                window.location.href = deepLinkUrl;
+
+                // Set a timeout to fall back to web if app doesn't open
+                setTimeout(() => {
+                    // If we're still here after 1.5s, the app didn't open - use web fallback
+                    if (document.visibilityState !== 'hidden') {
+                        window.open(webFallbackUrl, '_blank');
+                    }
+                }, 1500);
+
+                return true;
+            }
+
+            // For other platforms or desktop, open in popup/new tab
             const width = 600;
             const height = 400;
             const left = window.screenX + (window.innerWidth - width) / 2;
             const top = window.screenY + (window.innerHeight - height) / 2;
 
             window.open(
-                url,
-                'share',
-                `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+                isMobile ? deepLinkUrl : webFallbackUrl,
+                '_blank',
+                isMobile ? undefined : `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
             );
 
             return true;
