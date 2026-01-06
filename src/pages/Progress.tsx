@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHealthData } from "@/contexts/HealthDataContext";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,24 +33,27 @@ const Progress = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  // Get shared data from context
+  const {
+    profile,
+    meals: todayMeals,
+    exercises: todayExercises,
+    dailyStreak,
+    dailyTargets,
+  } = useHealthData();
+
+  // Page-specific state
   const [calorieData, setCalorieData] = useState<{ date: string; calories: number; target: number }[]>([]);
   const [timeRange, setTimeRange] = useState<TimeRange>('30days');
   const [pageLoading, setPageLoading] = useState(true);
   const [currentWeek, setCurrentWeek] = useState(0);
-  const [dailyStreak, setDailyStreak] = useState<number>(0);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [todayMeals, setTodayMeals] = useState<Meal[]>([]);
-  const [todayExercises, setTodayExercises] = useState<Exercise[]>([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !profile) return;
 
-    const loadData = async () => {
+    const loadCalorieData = async () => {
       try {
-        const userProfile = await profileService.getProfile(user.uid);
-        setProfile(userProfile);
-
         // Calculate date range
         const endDate = new Date();
         let startDate = new Date();
@@ -65,7 +69,7 @@ const Progress = () => {
             startDate.setDate(endDate.getDate() - 90);
             break;
           case 'all':
-            startDate = new Date(userProfile?.createdAt || new Date());
+            startDate = new Date(profile?.createdAt || new Date());
             break;
         }
 
@@ -77,7 +81,7 @@ const Progress = () => {
         // Fill in missing dates with 0 calories
         const filledData = [];
         const current = new Date(startDate);
-        const target = userProfile?.preferredCalorieTarget || 2000;
+        const target = dailyTargets.calories;
 
         while (current <= endDate) {
           const dateStr = current.toISOString().split('T')[0];
@@ -93,17 +97,6 @@ const Progress = () => {
         }
 
         setCalorieData(filledData);
-
-        // Load daily streak
-        const streak = await mealService.getDailyStreak(user.uid);
-        setDailyStreak(streak);
-
-        // Load today's meals and exercises for share modal
-        const today = new Date().toISOString().split('T')[0];
-        const meals = await mealService.getMealsByDate(user.uid, today);
-        const exercises = await exerciseService.getExercisesByDate(user.uid, today);
-        setTodayMeals(meals);
-        setTodayExercises(exercises);
       } catch (error) {
         console.error('Error loading progress data:', error);
         toast({
@@ -116,8 +109,8 @@ const Progress = () => {
       }
     };
 
-    loadData();
-  }, [user, timeRange, toast]);
+    loadCalorieData();
+  }, [user, profile, timeRange, dailyTargets.calories, toast]);
 
   // Calculate statistics
   const weightHistory = profile?.weightHistory || [];

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHealthData } from "@/contexts/HealthDataContext";
 import { useToast } from "@/hooks/use-toast";
 import { profileService } from "@/services/profileService";
 import { mealService, Meal, MealType } from "@/services/mealService";
@@ -489,52 +490,24 @@ const Dashboard = () => {
   const [showAddMeal, setShowAddMeal] = useState<string | null>(null);
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [dailyStreak, setDailyStreak] = useState<number>(0);
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  const { profile, meals, setMeals, exercises, setExercises, waterIntake, setWaterIntake, isLoading, error } =
-    useDashboardData(user?.uid || '', today);
-
-  // Load daily streak
-  useEffect(() => {
-    const loadStreak = async () => {
-      if (!user?.uid) {
-        setDailyStreak(0);
-        return;
-      }
-      try {
-        const streak = await mealService.getDailyStreak(user.uid);
-        setDailyStreak(streak);
-      } catch (error) {
-        console.error('Error loading daily streak:', error);
-        setDailyStreak(0);
-      }
-    };
-    loadStreak();
-  }, [user?.uid, meals]);
-
-  // Calculate daily targets
-  const dailyTargets: DailyTargets = useMemo(() => ({
-    calories: profile?.preferredCalorieTarget || 2000,
-    protein: profile?.currentWeightKg ? Math.round(profile.currentWeightKg * 1.8) : 150,
-    carbs: 200,
-    fat: 65,
-    water: 8
-  }), [profile]);
-
-  // Calculate nutrition totals
-  const totals: NutritionTotals = useMemo(() =>
-    meals.reduce(
-      (acc, meal) => ({
-        calories: acc.calories + meal.calories,
-        protein: acc.protein + meal.protein,
-        carbs: acc.carbs + meal.carbs,
-        fat: acc.fat + meal.fat
-      }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
-    ),
-    [meals]
-  );
+  // Use shared health data from context
+  const {
+    profile,
+    meals,
+    setMeals,
+    exercises,
+    setExercises,
+    waterIntake,
+    setWaterIntake,
+    dailyStreak,
+    setDailyStreak,
+    today,
+    isLoading,
+    error,
+    dailyTargets,
+    nutritionTotals: totals,
+  } = useHealthData();
 
   // Filter meals by type
   const mealsByType = useMemo(() => ({

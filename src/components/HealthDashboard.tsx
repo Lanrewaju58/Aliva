@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHealthData } from "@/contexts/HealthDataContext";
 import { useToast } from "@/hooks/use-toast";
-import { healthService, HealthSummary } from "@/services/healthService";
+import { healthService } from "@/services/healthService";
 import {
     Activity,
     Moon,
@@ -31,8 +32,10 @@ const DEFAULT_GOALS = {
 const HealthDashboard = () => {
     const { user } = useAuth();
     const { toast } = useToast();
-    const [summary, setSummary] = useState<HealthSummary | null>(null);
-    const [loading, setLoading] = useState(true);
+
+    // Use shared health data from context
+    const { healthSummary: summary, isLoading: loading, refreshHealthSummary } = useHealthData();
+
     const [logDialogOpen, setLogDialogOpen] = useState(false);
     const [goalsDialogOpen, setGoalsDialogOpen] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -61,24 +64,6 @@ const HealthDashboard = () => {
                 setTempGoals(parsed);
             }
         }
-    }, [user?.uid]);
-
-    const loadHealthData = async () => {
-        if (!user?.uid) return;
-
-        setLoading(true);
-        try {
-            const data = await healthService.getHealthSummary(user.uid);
-            setSummary(data);
-        } catch (error) {
-            console.error('Error loading health data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadHealthData();
     }, [user?.uid]);
 
     const handleManualLog = async () => {
@@ -111,7 +96,8 @@ const HealthDashboard = () => {
             setLogDialogOpen(false);
             setManualData({ steps: '', sleepHours: '', caloriesBurned: '', avgHeartRate: '', activeMinutes: '' });
             setIsEditing(false);
-            loadHealthData();
+            // Refresh shared health data
+            refreshHealthSummary();
         } catch (error) {
             console.error('Error saving manual entry:', error);
             toast({ title: 'Error', description: 'Failed to save data', variant: 'destructive' });
@@ -499,8 +485,8 @@ const HealthDashboard = () => {
                                 <div className="flex items-center gap-2">
                                     <span className="font-medium">{summary?.today.activeMinutes || 0} / {goals.activeMinutes} min</span>
                                     <span className={`text-xs px-2 py-0.5 rounded-full ${calculateProgress(summary?.today.activeMinutes || 0, goals.activeMinutes) >= 100
-                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                            : 'bg-muted text-muted-foreground'
+                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                        : 'bg-muted text-muted-foreground'
                                         }`}>
                                         {calculateProgress(summary?.today.activeMinutes || 0, goals.activeMinutes)}%
                                     </span>
