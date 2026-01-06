@@ -752,8 +752,19 @@ const Dashboard = () => {
                 <TabsTrigger value="health" className="data-[state=active]:bg-background">Health</TabsTrigger>
                 <TabsTrigger value="mindfulness" className="data-[state=active]:bg-background">Mindfulness</TabsTrigger>
                 <TabsTrigger value="chat" className="data-[state=active]:bg-background">AI Assistant</TabsTrigger>
-                <TabsTrigger value="blog" className="data-[state=active]:bg-background lg:hidden" onClick={() => navigate('/blog')}>Blog</TabsTrigger>
               </TabsList>
+            </div>
+
+            {/* Blog Link - Mobile Only */}
+            <div className="lg:hidden flex justify-center -mt-4 mb-6">
+              <div className="bg-muted/50 p-1 rounded-md">
+                <button
+                  onClick={() => navigate('/blog')}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-background text-foreground shadow-sm"
+                >
+                  Aliva Blog
+                </button>
+              </div>
             </div>
 
             {/* Overview Tab */}
