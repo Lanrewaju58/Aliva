@@ -66,6 +66,7 @@ const MealPlanner = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; mealType: string } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     calories: '',
@@ -144,14 +145,18 @@ const MealPlanner = () => {
     const loadProfile = async () => {
       if (!user?.uid) {
         setProfile(null);
+        setProfileLoading(false);
         return;
       }
       try {
+        setProfileLoading(true);
         const userProfile = await profileService.getProfile(user.uid);
         setProfile(userProfile);
       } catch (error) {
         console.error('Error loading profile:', error);
         setProfile(null);
+      } finally {
+        setProfileLoading(false);
       }
     };
     loadProfile();
@@ -159,6 +164,9 @@ const MealPlanner = () => {
 
   // Check if user has active Pro plan (or if it's Monday - free Pro day)
   const isPro = useMemo(() => {
+    // Don't show upgrade prompt while still loading
+    if (profileLoading) return true;
+
     const isMonday = new Date().getDay() === 1;
     if (isMonday) return true; // Free Pro on Mondays
     if (!profile?.plan || profile.plan === 'FREE') return false;
@@ -171,7 +179,7 @@ const MealPlanner = () => {
       return expDate > new Date();
     }
     return false;
-  }, [profile]);
+  }, [profile, profileLoading]);
 
   // Load meal plan from localStorage
   useEffect(() => {
@@ -609,8 +617,17 @@ const MealPlanner = () => {
     }
   };
 
-  // Show upgrade prompt if not Pro user
-  if (!isPro) {
+  // Show loading state while checking Pro status
+  if (profileLoading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show upgrade prompt if not Pro user (double-check loading is complete)
+  if (!isPro && !profileLoading) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center p-4">
         <Card className="max-w-md w-full border-muted/60 shadow-xl rounded-2xl overflow-hidden">

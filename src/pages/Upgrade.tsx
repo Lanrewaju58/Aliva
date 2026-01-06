@@ -138,10 +138,7 @@ const Upgrade = () => {
       {/* Hero Section with Gradient */}
       <section className="relative pt-12 pb-32 overflow-hidden">
         {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-primary/90" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-dark via-primary-dark to-primary-dark/90" />
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
@@ -176,9 +173,9 @@ const Upgrade = () => {
 
       {/* Pricing Cards */}
       <section className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20">
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Free Plan */}
-          <div className="bg-card border border-border rounded-2xl p-8 relative">
+          <div className="bg-card border border-border rounded-3xl p-10 relative">
             <div className="mb-6">
               <h3 className="text-xl font-semibold text-foreground mb-1">Free</h3>
               <p className="text-muted-foreground text-sm">Get started with the basics</p>
@@ -240,17 +237,11 @@ const Upgrade = () => {
           {/* Pro Plan */}
           <div className="relative">
             {/* Glow effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-2xl blur-lg opacity-30" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary-dark via-primary-dark/50 to-primary-dark rounded-3xl blur-lg opacity-20" />
 
-            <div className="relative bg-gradient-to-br from-primary to-primary/90 rounded-2xl p-8 text-white overflow-hidden">
-              {/* Pattern */}
-              <div className="absolute inset-0 opacity-5" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3C/g%3E%3C/svg%3E")`,
-              }} />
-
+            <div className="relative bg-gradient-to-br from-primary-dark to-primary-dark/90 rounded-3xl p-10 text-white overflow-hidden">
               {/* Popular badge */}
-              <div className="absolute top-6 right-6 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                <Star className="w-3 h-3 fill-current" />
+              <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-medium">
                 Most Popular
               </div>
 
@@ -316,18 +307,19 @@ const Upgrade = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-28">
+        <div className="text-center mb-16">
+          <p className="text-sm font-medium text-primary mb-4 uppercase tracking-wide">Testimonials</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Loved by Health Enthusiasts
           </h2>
-          <p className="text-muted-foreground">See what our Pro users are saying</p>
+          <p className="text-muted-foreground text-lg">See what our Pro users are saying</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-8">
           {testimonials.map((t, i) => (
-            <div key={i} className="bg-card border border-border rounded-2xl p-6">
-              <div className="flex items-center gap-1 mb-4">
+            <div key={i} className="bg-card border border-border rounded-3xl p-8">
+              <div className="flex items-center gap-1 mb-6">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
                 ))}
@@ -348,17 +340,18 @@ const Upgrade = () => {
       </section>
 
       {/* Feature Comparison */}
-      <section id="comparison" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+      <section id="comparison" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-28">
+        <div className="text-center mb-16">
+          <p className="text-sm font-medium text-primary mb-4 uppercase tracking-wide">Comparison</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Compare Plans
           </h2>
-          <p className="text-muted-foreground">Everything you get with Pro</p>
+          <p className="text-muted-foreground text-lg">Everything you get with Pro</p>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+        <div className="bg-card border border-border rounded-3xl overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-3 bg-muted/50 p-4 border-b border-border">
+          <div className="grid grid-cols-3 bg-muted/30 p-6 border-b border-border">
             <div className="font-semibold text-foreground">Feature</div>
             <div className="text-center font-semibold text-muted-foreground">Free</div>
             <div className="text-center font-semibold text-primary">Pro</div>
@@ -411,17 +404,17 @@ const Upgrade = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-primary py-20">
+      <section className="bg-primary-dark py-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Ready to Transform Your Health?
           </h2>
-          <p className="text-white/70 text-lg mb-8">
+          <p className="text-white/70 text-lg mb-10">
             Join 1,000+ users who've upgraded their nutrition journey with Aliva Pro
           </p>
           <Button
             size="lg"
-            className="h-14 px-10 bg-white text-primary hover:bg-white/90 font-semibold text-lg"
+            className="h-14 px-10 bg-white text-primary-dark hover:bg-white/90 font-semibold text-lg rounded-full"
             onClick={() => !isPro && handleUpgrade('Pro')}
             disabled={isPro || loading}
           >

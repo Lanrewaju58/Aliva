@@ -1,14 +1,11 @@
-import { useState } from "react";
 import {
   Brain,
   Target,
   Utensils,
   TrendingUp,
-  Stethoscope,
-  ChevronRight,
-  Check,
   BarChart3,
-  MapPin
+  MapPin,
+  Check
 } from "lucide-react";
 
 const features = [
@@ -51,20 +48,15 @@ const features = [
 ];
 
 const BenefitsSection = () => {
-  const [activeFeature, setActiveFeature] = useState(0);
-
   return (
-    <section id="features" className="py-24 bg-muted/30">
+    <section id="features" className="py-28 bg-muted/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-            <Stethoscope className="w-4 h-4" />
-            <span>Powerful Features</span>
-          </div>
+        <div className="text-center mb-20">
+          <p className="text-sm font-medium text-primary mb-4 uppercase tracking-wide">Features</p>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
             Everything You Need to
-            <span className="block text-primary">Eat Smarter</span>
+            <span className="block text-primary mt-2">Eat Smarter</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Comprehensive tools designed to make healthy eating effortless, enjoyable, and sustainable.
@@ -72,50 +64,33 @@ const BenefitsSection = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`group relative p-6 rounded-2xl border transition-all duration-300 cursor-pointer ${activeFeature === index
-                ? 'bg-primary/5 border-primary/30 shadow-lg'
-                : 'bg-card border-border hover:border-primary/20 hover:shadow-md'
-                }`}
-              onClick={() => setActiveFeature(index)}
+              className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-300"
             >
               {/* Icon */}
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 transition-colors ${activeFeature === index
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
-                }`}>
-                <feature.icon className="w-6 h-6" />
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                <feature.icon className="w-7 h-7 text-primary group-hover:text-white transition-colors duration-300" />
               </div>
 
               {/* Content */}
-              <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed mb-4">{feature.description}</p>
+              <h3 className="text-xl font-semibold text-foreground mb-3">{feature.title}</h3>
+              <p className="text-muted-foreground leading-relaxed mb-6">{feature.description}</p>
 
               {/* Highlights */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {feature.highlights.map((highlight, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <Check className={`w-4 h-4 ${activeFeature === index ? 'text-primary' : 'text-muted-foreground'
-                      }`} />
+                  <div key={i} className="flex items-center gap-3 text-sm">
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span className="text-muted-foreground">{highlight}</span>
                   </div>
                 ))}
               </div>
-
-              {/* Arrow indicator */}
-              <ChevronRight className={`absolute top-6 right-6 w-5 h-5 transition-all duration-200 ${activeFeature === index
-                ? 'text-primary opacity-100'
-                : 'text-muted-foreground opacity-0 group-hover:opacity-100'
-                }`} />
             </div>
           ))}
         </div>
-
-        {/* Bottom CTA */}
-
       </div>
     </section>
   );

@@ -46,9 +46,12 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   // Check if user has active Pro plan (or if it's Monday - free Pro day)
   const isPro = useMemo(() => {
+    // Don't show upgrade prompt while still loading
+    if (profileLoading) return true;
     const isMonday = new Date().getDay() === 1;
     if (isMonday) return true; // Free Pro on Mondays
     if (!userProfile?.plan || userProfile.plan !== 'PRO') return false;
@@ -58,21 +61,25 @@ const PhotoCalorieChecker = ({ onAddMeal }: PhotoCalorieCheckerProps) => {
       ? expires.toDate()
       : (expires instanceof Date ? expires : new Date(expires));
     return expDate > new Date();
-  }, [userProfile]);
+  }, [userProfile, profileLoading]);
 
   // Load user profile
   useEffect(() => {
     const loadProfile = async () => {
       if (!user?.uid) {
         setUserProfile(null);
+        setProfileLoading(false);
         return;
       }
       try {
+        setProfileLoading(true);
         const profile = await profileService.getProfile(user.uid);
         setUserProfile(profile);
       } catch (error) {
         console.error('Error loading profile:', error);
         setUserProfile(null);
+      } finally {
+        setProfileLoading(false);
       }
     };
     loadProfile();
