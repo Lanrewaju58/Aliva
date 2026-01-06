@@ -10,7 +10,8 @@ import {
     History,
     UtensilsCrossed,
     HelpCircle,
-    Stethoscope
+    Stethoscope,
+    Newspaper
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,6 +40,7 @@ const Sidebar = ({ isPro = false, daysUntilExpiry = Infinity }: SidebarProps) =>
     const navItems = [
         { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
         { label: "Meal Planner", href: "/meal-planner", icon: UtensilsCrossed },
+        { label: "Aliva Blog", href: "/blog", icon: Newspaper },
         { label: "Progress", href: "/progress", icon: History },
         { label: "Profile", href: "/profile", icon: User },
     ];

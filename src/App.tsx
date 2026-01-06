@@ -30,6 +30,7 @@ import Upgrade from "./pages/Upgrade";
 import Onboarding from "./pages/Onboarding";
 import AdminDashboard from "./pages/AdminDashboard";
 import ChatPage from "./pages/ChatPage";
+import Blog from "./pages/Blog";
 
 // Create QueryClient with optimized settings
 const queryClient = new QueryClient({
@@ -137,6 +138,14 @@ const App: React.FC = () => {
                       element={
                         <ProtectedRoute>
                           <ChatPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/blog"
+                      element={
+                        <ProtectedRoute>
+                          <Blog />
                         </ProtectedRoute>
                       }
                     />

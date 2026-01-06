@@ -4,7 +4,8 @@ import {
   setDoc,
   updateDoc,
   serverTimestamp,
-  DocumentReference
+  DocumentReference,
+  Timestamp
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { UserProfile } from '@/types/profile';
@@ -94,6 +95,7 @@ export class ProfileService {
           email: data.email, // Ensure email is passed
           plan: plan,
           planExpiresAt: planExpiresAt,
+          isFreeTrial: data.isFreeTrial || false, // Include free trial status
           fullName: data.fullName,
           dietaryPreferences: data.dietaryPreferences || [],
           healthGoals: data.healthGoals || [],
@@ -130,18 +132,25 @@ export class ProfileService {
 
   /**
    * Create new profile
+   * New users automatically get a 3-day free Pro trial
    */
   async createProfile(userId: string, profileData: Partial<UserProfile>): Promise<void> {
     try {
       this.verifyAuth(userId);
+
+      // Calculate 3-day free trial expiration
+      const trialExpiresAt = new Date();
+      trialExpiresAt.setDate(trialExpiresAt.getDate() + 3);
 
       const profileRef = this.getProfileRef(userId);
       await setDoc(profileRef, {
         userId,
         email: auth.currentUser?.email, // Store email
         fullName: profileData.fullName || '',
-        plan: profileData.plan || 'FREE',
-        planExpiresAt: profileData.planExpiresAt || null,
+        // New users get a 3-day free Pro trial
+        plan: profileData.plan || 'PRO',
+        planExpiresAt: profileData.planExpiresAt || Timestamp.fromDate(trialExpiresAt),
+        isFreeTrial: true, // Mark as free trial user
         dietaryPreferences: profileData.dietaryPreferences || [],
         healthGoals: profileData.healthGoals || [],
         allergies: profileData.allergies || [],
@@ -164,7 +173,7 @@ export class ProfileService {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      console.log('Profile created successfully');
+      console.log('Profile created successfully with 3-day Pro trial');
     } catch (error) {
       console.error('Error creating profile:', error);
 

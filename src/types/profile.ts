@@ -56,6 +56,7 @@ export interface UserProfile {
   // Subscription
   plan?: Plan;
   planExpiresAt?: Date | null;
+  isFreeTrial?: boolean; // Indicates user is on free trial
 
   // Profile
   photoURL?: string;
