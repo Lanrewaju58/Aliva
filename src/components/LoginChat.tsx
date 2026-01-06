@@ -416,6 +416,11 @@ SAFETY:
 
     const parts: string[] = [];
 
+    // IMPORTANT: Country for localized food recommendations
+    if (userProfile.country) {
+      parts.push(`LOCATION: ${userProfile.country} (Recommend foods commonly available in this country)`);
+    }
+
     if (userProfile.age) parts.push(`Age: ${userProfile.age} years`);
     if (userProfile.gender) parts.push(`Gender: ${userProfile.gender}`);
 
@@ -459,7 +464,7 @@ SAFETY:
     }
 
     return parts.length > 0
-      ? `\n\n[User's Health Profile - Use this to personalize all recommendations]:\n${parts.join('\n')}\n[CRITICAL: Avoid all foods listed in allergies. Consider medical conditions when recommending foods.]`
+      ? `\n\n[User's Health Profile - Use this to personalize all recommendations]:\n${parts.join('\n')}\n[CRITICAL: Avoid all foods listed in allergies. Consider medical conditions when recommending foods. ALWAYS suggest foods common in the user's country.]`
       : '';
   };
 
@@ -895,10 +900,11 @@ SAFETY:
           })),
           userId: user?.uid,
           isPaid: userProfile?.plan && userProfile.plan !== 'FREE' ? true : false,
-          location: userLocation ? {
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude
-          } : undefined
+          location: {
+            latitude: userLocation?.latitude,
+            longitude: userLocation?.longitude,
+            country: userProfile?.country, // Pass country from profile for localized food recommendations
+          }
         }),
       });
 
