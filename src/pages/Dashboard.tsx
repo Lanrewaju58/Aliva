@@ -39,7 +39,8 @@ import {
   Flame,
   Clock,
   X,
-  Share2
+  Share2,
+  Newspaper
 } from "lucide-react";
 
 // ==================== TYPES ====================
@@ -751,6 +752,7 @@ const Dashboard = () => {
                 <TabsTrigger value="health" className="data-[state=active]:bg-background">Health</TabsTrigger>
                 <TabsTrigger value="mindfulness" className="data-[state=active]:bg-background">Mindfulness</TabsTrigger>
                 <TabsTrigger value="chat" className="data-[state=active]:bg-background">AI Assistant</TabsTrigger>
+                <TabsTrigger value="blog" className="data-[state=active]:bg-background lg:hidden" onClick={() => navigate('/blog')}>Blog</TabsTrigger>
               </TabsList>
             </div>
 
