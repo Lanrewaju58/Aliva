@@ -188,7 +188,7 @@ export default function Blog() {
 
                             {/* Title */}
                             <h1 className="text-2xl md:text-3xl font-bold text-center text-white mb-3">
-                                Health Insights Hub
+                                Aliva Insights Hub
                             </h1>
                             <p className="text-slate-400 text-center mb-8 text-sm md:text-base">
                                 Unlock expert-curated health articles from trusted medical sources
@@ -243,7 +243,7 @@ export default function Blog() {
                                     <Newspaper className="w-5 h-5 text-white" />
                                 </div>
                                 <h1 className="text-2xl md:text-3xl font-bold text-white">
-                                    Health Insights
+                                    Aliva Insights
                                 </h1>
                                 <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-xs">
                                     <Crown className="w-3 h-3 mr-1" />

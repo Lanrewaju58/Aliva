@@ -188,7 +188,7 @@ export const AdminUsers = () => {
         return new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
     };
 
-    const UserTableRow = ({ user, planBadgeClass, showPromote = false, showDemote = false }: { user: AdminUser; planBadgeClass?: string; showPromote?: boolean; showDemote?: boolean }) => (
+    const UserTableRow = ({ user, planBadgeClass, showPromote = false, showDemote = false, isPro = false }: { user: AdminUser; planBadgeClass?: string; showPromote?: boolean; showDemote?: boolean; isPro?: boolean }) => (
         <TableRow key={user.userId}>
             <TableCell>
                 <div className="flex items-center gap-3">
@@ -196,7 +196,15 @@ export const AdminUsers = () => {
                         {(user.fullName || user.email || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <div className="font-medium text-sm">{user.fullName}</div>
+                        <div className="font-medium text-sm flex items-center gap-2">
+                            {user.fullName}
+                            {isPro && (
+                                <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 gap-1 text-[10px] px-1.5 py-0">
+                                    <Crown className="h-3 w-3" />
+                                    PRO
+                                </Badge>
+                            )}
+                        </div>
                         <div className="text-xs text-muted-foreground">{user.email}</div>
                     </div>
                 </div>
@@ -240,7 +248,7 @@ export const AdminUsers = () => {
         </TableRow>
     );
 
-    const UserTable = ({ userList, showPromote = false, showDemote = false }: { userList: AdminUser[]; showPromote?: boolean; showDemote?: boolean }) => (
+    const UserTable = ({ userList, showPromote = false, showDemote = false, isAdminList = false }: { userList: AdminUser[]; showPromote?: boolean; showDemote?: boolean; isAdminList?: boolean }) => (
         <Table>
             <TableHeader>
                 <TableRow>
@@ -254,7 +262,15 @@ export const AdminUsers = () => {
                 {userList.length === 0 ? (
                     <TableRow><TableCell colSpan={4} className="h-16 text-center text-muted-foreground">No users in this category.</TableCell></TableRow>
                 ) : (
-                    userList.map((user) => <UserTableRow key={user.userId} user={user} showPromote={showPromote} showDemote={showDemote} />)
+                    userList.map((user) => (
+                        <UserTableRow
+                            key={user.userId}
+                            user={user}
+                            showPromote={showPromote}
+                            showDemote={showDemote}
+                            isPro={isAdminList && user.plan === 'PRO'}
+                        />
+                    ))
                 )}
             </TableBody>
         </Table>
@@ -282,7 +298,7 @@ export const AdminUsers = () => {
                     <CardDescription>Users with administrative privileges. Always have Pro access.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <UserTable userList={filterBySearch(admins)} />
+                    <UserTable userList={filterBySearch(admins)} isAdminList />
                 </CardContent>
             </Card>
 

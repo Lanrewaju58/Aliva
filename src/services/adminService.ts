@@ -200,10 +200,11 @@ export class AdminService {
     try {
       const users = await this.getAllUsers();
 
-      // Filter for active PRO users
+      // Filter for active PRO users, excluding admins (they have free Pro access)
       const activeProUsers = users.filter(u =>
         u.plan === 'PRO' &&
-        u.isActive
+        u.isActive &&
+        !this.isAdmin(u.email, u.userId)
       );
 
       // Estimate revenue: 
@@ -220,6 +221,42 @@ export class AdminService {
       console.error('Error fetching revenue stats:', error);
       throw error;
     }
+  }
+
+  /**
+   * Get daily user signup stats for the last N days
+   * @param days - Number of days to look back (default 30)
+   */
+  getDailyUserStats(users: AdminUser[], days: number = 30): { date: string; count: number; label: string }[] {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    const result: { date: string; count: number; label: string }[] = [];
+
+    // Generate array for last N days
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0);
+
+      const nextDate = new Date(date);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      // Count users created on this day
+      const count = users.filter(user => {
+        if (!user.createdAt) return false;
+        const createdAt = new Date(user.createdAt);
+        return createdAt >= date && createdAt < nextDate;
+      }).length;
+
+      result.push({
+        date: date.toISOString().split('T')[0],
+        label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        count
+      });
+    }
+
+    return result;
   }
 }
 
