@@ -757,7 +757,6 @@ const Dashboard = () => {
             <div className="flex justify-center mb-6">
               <TabsList className="bg-muted/50 p-1">
                 <TabsTrigger value="overview" className="data-[state=active]:bg-background">Overview</TabsTrigger>
-                <TabsTrigger value="meals" className="data-[state=active]:bg-background">Meals</TabsTrigger>
                 <TabsTrigger value="health" className="data-[state=active]:bg-background">Health</TabsTrigger>
                 <TabsTrigger value="wellness" className="data-[state=active]:bg-background">Wellness</TabsTrigger>
                 <TabsTrigger value="mindfulness" className="data-[state=active]:bg-background">Mindfulness</TabsTrigger>
@@ -1086,63 +1085,29 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* Recent Meals */}
+              {/* Quick link to Meal Planner for meal tracking */}
               {meals.length > 0 && (
                 <div className="bg-card border border-border rounded-xl p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-foreground">Recent Meals</h3>
-                    <Button variant="ghost" size="sm" className="text-primary" onClick={() => { }}>
-                      View All
-                      <ChevronRight className="h-4 w-4 ml-1" />
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-primary/10">
+                        <UtensilsCrossed className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground">Today's Meals</h3>
+                        <p className="text-xs text-muted-foreground">{meals.length} meals logged • {totals.calories} cal</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate('/meal-planner')}>
+                      Meal Planner
+                      <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="space-y-2">
-                    {meals.slice(-3).reverse().map((meal) => (
-                      <div key={meal.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <UtensilsCrossed className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-foreground text-sm">{meal.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{meal.mealType}</p>
-                          </div>
-                        </div>
-                        <p className="font-medium text-foreground">{meal.calories} cal</p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               )}
             </TabsContent>
 
-            {/* Meals Tab */}
-            <TabsContent value="meals" className="space-y-6">
-              <div className={`flex items-center justify-between p-4 rounded-xl ${isPro ? 'bg-gradient-to-r from-primary/5 to-transparent' : ''}`}>
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">Today's Meals</h2>
-                  {isPro && <p className="text-sm text-primary">Pro: Unlimited meal logging</p>}
-                </div>
-                <PhotoCalorieChecker onAddMeal={handleAddMeal} />
-              </div>
 
-              {showAddMeal && (
-                <AddMealForm mealType={showAddMeal} onClose={() => setShowAddMeal(null)} onAdd={handleAddMeal} />
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(mealsByType).map(([type, typeMeals]) => (
-                  <MealCard
-                    key={type}
-                    mealType={type}
-                    meals={typeMeals}
-                    onAddMeal={setShowAddMeal}
-                    onDeleteMeal={handleDeleteMeal}
-                    isPro={isPro}
-                  />
-                ))}
-              </div>
-            </TabsContent>
 
             {/* Health Tab */}
             <TabsContent value="health" className="space-y-6">

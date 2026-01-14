@@ -1,6 +1,6 @@
 // src/pages/MealPlanner.tsx
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -32,7 +32,11 @@ import {
   Search,
   Filter,
   UtensilsCrossed,
-  Loader2
+  Loader2,
+  Camera,
+  X,
+  Image as ImageIcon,
+  Check
 } from "lucide-react";
 import { profileService } from "@/services/profileService";
 import { recipeService, Recipe } from "@/services/recipeService";
@@ -81,6 +85,22 @@ const MealPlanner = () => {
   const [recipeLoading, setRecipeLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+
+  // Photo Scanning State
+  const [scanningSlot, setScanningSlot] = useState<{ date: string; mealType: string } | null>(null);
+  const [scanImage, setScanImage] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{
+    name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    servingSize: string;
+    confidence: string;
+  } | null>(null);
+  const scanFileInputRef = useRef<HTMLInputElement>(null);
+  const scanCameraInputRef = useRef<HTMLInputElement>(null);
 
   // Load saved recipes on mount
   useEffect(() => {
@@ -249,6 +269,182 @@ const MealPlanner = () => {
         description: `${mealName} removed from plan`
       });
     }
+  };
+
+  // ==================== PHOTO SCANNING HANDLERS ====================
+
+  // Helper: Compress image before upload
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_WIDTH = 1024;
+          const MAX_HEIGHT = 1024;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Failed to get canvas context'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(compressedDataUrl);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
+  const handleStartScan = (date: Date, mealType: string) => {
+    const dateStr = date.toISOString().split('T')[0];
+    setScanningSlot({ date: dateStr, mealType });
+    setScanImage(null);
+    setScanResult(null);
+  };
+
+  const handleScanFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid file',
+        description: 'Please select an image file',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const compressedImage = await compressImage(file);
+      setScanImage(compressedImage);
+      setScanResult(null);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process image. Please try another.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const analyzeFoodImage = async () => {
+    if (!scanImage || !scanningSlot) return;
+
+    if (!isPro) {
+      toast({
+        title: 'Pro feature required',
+        description: 'Photo scanning is available for Pro users only.',
+        variant: 'destructive'
+      });
+      setScanningSlot(null);
+      navigate('/upgrade');
+      return;
+    }
+
+    setIsScanning(true);
+
+    try {
+      const response = await fetch('/api/analyze-food', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: scanImage })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || 'API request failed';
+        throw new Error(errorMessage);
+      }
+
+      const nutritionData = await response.json();
+      setScanResult(nutritionData);
+
+      toast({
+        title: 'Analysis complete!',
+        description: `Found: ${nutritionData.name}`
+      });
+    } catch (error: any) {
+      console.error('Error analyzing image:', error);
+
+      let errorMessage = 'Unable to analyze image. Please try again.';
+
+      if (error.message?.includes('Service') || error.message?.includes('unavailable')) {
+        errorMessage = 'AI service temporarily unavailable. Please try again later.';
+      } else if (error.message?.includes('Invalid') || error.message?.includes('format')) {
+        errorMessage = 'Could not process the image. Please try a different photo.';
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection.';
+      }
+
+      toast({
+        title: 'Analysis failed',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleAddScannedMeal = () => {
+    if (!scanResult || !scanningSlot) return;
+
+    const newMeal: PlannedMeal = {
+      id: Date.now().toString(),
+      name: scanResult.name,
+      calories: scanResult.calories,
+      protein: scanResult.protein,
+      carbs: scanResult.carbs,
+      fat: scanResult.fat,
+    };
+
+    const newPlan = { ...mealPlan };
+    if (!newPlan[scanningSlot.date]) {
+      newPlan[scanningSlot.date] = {};
+    }
+    newPlan[scanningSlot.date][scanningSlot.mealType] = newMeal;
+
+    saveMealPlan(newPlan);
+
+    toast({
+      title: 'Meal added!',
+      description: `${newMeal.name} added to ${scanningSlot.mealType}`
+    });
+
+    // Reset scanning state
+    setScanningSlot(null);
+    setScanImage(null);
+    setScanResult(null);
+  };
+
+  const handleCloseScan = () => {
+    setScanningSlot(null);
+    setScanImage(null);
+    setScanResult(null);
   };
 
   const handleCopyDay = (sourceDate: Date) => {
@@ -577,6 +773,12 @@ const MealPlanner = () => {
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   }, [mealPlan, weekDates]);
 
+  // Calculate Today's Stats (updates in real-time)
+  const todayStats = useMemo(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return getTotalNutrition(todayStr);
+  }, [mealPlan]);
+
   // AI Recipe Generation (Moved up)
   const handleGenerateRecipes = async () => {
     setRecipeLoading(true);
@@ -745,13 +947,21 @@ const MealPlanner = () => {
         {/* Pro Stats Bar */}
         <div className="bg-card border-y sm:border sm:rounded-xl p-4 mb-6 shadow-sm overflow-x-auto">
           <div className="flex items-center justify-between min-w-[600px] gap-6">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-[180px]">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <Activity className="h-5 w-5" />
+                <Flame className="h-5 w-5" />
               </div>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">Daily Target</div>
-                <div className="text-xl font-bold text-foreground">{profile?.preferredCalorieTarget || 2000} <span className="text-xs font-normal text-muted-foreground">kcal</span></div>
+              <div className="flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Today</span>
+                  <span className="text-xs text-muted-foreground">
+                    {todayStats.calories} / {profile?.preferredCalorieTarget || 2000} kcal
+                  </span>
+                </div>
+                <Progress
+                  value={Math.min(100, (todayStats.calories / (profile?.preferredCalorieTarget || 2000)) * 100)}
+                  className="h-2 mt-1 bg-muted [&>div]:bg-primary"
+                />
               </div>
             </div>
 
@@ -902,16 +1112,27 @@ const MealPlanner = () => {
                                     </div>
                                   </div>
                                 ) : (
-                                  <Button
-                                    variant="ghost"
-                                    className="w-full h-8 flex items-center gap-2 text-muted-foreground hover:text-primary hover:bg-primary/10 text-xs font-normal justify-start px-0"
-                                    onClick={() => handleAddMeal(date, type)}
-                                  >
-                                    <div className="h-5 w-5 rounded-full border border-current flex items-center justify-center">
-                                      <Plus className="h-3 w-3" />
-                                    </div>
-                                    Add meal
-                                  </Button>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      className="flex-1 h-8 flex items-center gap-2 text-muted-foreground hover:text-primary hover:bg-primary/10 text-xs font-normal justify-start px-0"
+                                      onClick={() => handleAddMeal(date, type)}
+                                    >
+                                      <div className="h-5 w-5 rounded-full border border-current flex items-center justify-center">
+                                        <Plus className="h-3 w-3" />
+                                      </div>
+                                      Add
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                      onClick={() => handleStartScan(date, type)}
+                                      title="Scan food photo"
+                                    >
+                                      <Camera className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                 )}
                               </div>
 
@@ -1262,6 +1483,176 @@ const MealPlanner = () => {
                 Add to Plan
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Scanning Dialog */}
+      <Dialog open={!!scanningSlot} onOpenChange={(open) => !open && handleCloseScan()}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Camera className="h-4 w-4 text-primary" />
+              </div>
+              Scan Food Photo
+            </DialogTitle>
+            <DialogDescription>
+              Take or upload a photo of your {scanningSlot?.mealType.toLowerCase()} for instant nutrition info
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-2">
+            {/* Hidden file inputs */}
+            <input
+              ref={scanFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleScanFileSelect}
+              className="hidden"
+            />
+            <input
+              ref={scanCameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleScanFileSelect}
+              className="hidden"
+            />
+
+            {/* Upload Area */}
+            {!scanImage && (
+              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all duration-300 group">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <Camera className="h-8 w-8 text-primary group-hover:rotate-12 transition-transform" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Take or Upload a Photo</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Get instant AI-powered nutrition estimates
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    onClick={() => scanCameraInputRef.current?.click()}
+                    size="lg"
+                    className="gap-2"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Take Photo
+                  </Button>
+                  <Button
+                    onClick={() => scanFileInputRef.current?.click()}
+                    variant="outline"
+                    size="lg"
+                    className="gap-2"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    Upload
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Image Preview */}
+            {scanImage && (
+              <div className="space-y-4">
+                <div className="relative rounded-xl overflow-hidden border-2 border-border shadow-lg">
+                  <img
+                    src={scanImage}
+                    alt="Food"
+                    className="w-full h-56 object-cover"
+                  />
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute top-3 right-3 shadow-lg"
+                    onClick={() => {
+                      setScanImage(null);
+                      setScanResult(null);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Analyze Button */}
+                {!scanResult && !isScanning && (
+                  <Button
+                    onClick={analyzeFoodImage}
+                    className="w-full gap-2 h-11"
+                    size="lg"
+                  >
+                    <Camera className="h-5 w-5" />
+                    Analyze Food with AI
+                  </Button>
+                )}
+
+                {/* Loading State */}
+                {isScanning && (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-center space-y-4">
+                      <div className="relative">
+                        <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Analyzing your food...</p>
+                        <p className="text-xs text-muted-foreground">
+                          AI is identifying ingredients and calculating nutrition
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Results */}
+                {scanResult && (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-lg border bg-card">
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <div>
+                          <h4 className="font-semibold text-foreground">{scanResult.name}</h4>
+                          <p className="text-xs text-muted-foreground">{scanResult.servingSize}</p>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${scanResult.confidence === 'High'
+                          ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400'
+                          : scanResult.confidence === 'Medium'
+                            ? 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-400'
+                            : 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-400'
+                          }`}>
+                          {scanResult.confidence}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-3">
+                        <div className="text-center p-3 rounded-md border bg-muted/30">
+                          <p className="text-lg font-semibold text-foreground">{scanResult.calories}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">kcal</p>
+                        </div>
+                        <div className="text-center p-3 rounded-md border bg-muted/30">
+                          <p className="text-lg font-semibold text-foreground">{scanResult.protein}g</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Protein</p>
+                        </div>
+                        <div className="text-center p-3 rounded-md border bg-muted/30">
+                          <p className="text-lg font-semibold text-foreground">{scanResult.carbs}g</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Carbs</p>
+                        </div>
+                        <div className="text-center p-3 rounded-md border bg-muted/30">
+                          <p className="text-lg font-semibold text-foreground">{scanResult.fat}g</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Fat</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleAddScannedMeal}
+                      className="w-full"
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Add to {scanningSlot?.mealType}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
