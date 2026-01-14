@@ -711,10 +711,10 @@ const Dashboard = () => {
   const remainingCalories = Math.max(dailyTargets.calories - totals.calories, 0);
 
   return (
-    <div className={`min-h-screen ${isPro ? 'bg-gradient-to-br from-background via-background to-primary/5' : 'bg-background'}`}>
+    <div className={`min-h-screen overflow-x-hidden ${isPro ? 'bg-gradient-to-br from-background via-background to-primary/5' : 'bg-background'}`}>
       {/* Navigation removed - handled by AppShell */}
 
-      <main className=""> {/* Padding handled by AppShell */}
+      <main className="overflow-x-hidden"> {/* Padding handled by AppShell */}
         <div className=""> {/* Container handled by AppShell */}.
 
           {/* Header with BlurFade Animation */}
@@ -754,13 +754,13 @@ const Dashboard = () => {
 
           {/* Main Tabs */}
           <Tabs defaultValue="overview" className="space-y-8">
-            <div className="flex justify-center mb-6">
-              <TabsList className="bg-muted/50 p-1">
-                <TabsTrigger value="overview" className="data-[state=active]:bg-background">Overview</TabsTrigger>
-                <TabsTrigger value="health" className="data-[state=active]:bg-background">Health</TabsTrigger>
-                <TabsTrigger value="wellness" className="data-[state=active]:bg-background">Wellness</TabsTrigger>
-                <TabsTrigger value="mindfulness" className="data-[state=active]:bg-background">Mindfulness</TabsTrigger>
-                <TabsTrigger value="chat" className="data-[state=active]:bg-background">AI Assistant</TabsTrigger>
+            <div className="flex justify-center mb-6 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="bg-muted/50 p-1 flex-shrink-0">
+                <TabsTrigger value="overview" className="data-[state=active]:bg-background text-xs sm:text-sm">Overview</TabsTrigger>
+                <TabsTrigger value="health" className="data-[state=active]:bg-background text-xs sm:text-sm">Health</TabsTrigger>
+                <TabsTrigger value="wellness" className="data-[state=active]:bg-background text-xs sm:text-sm">Wellness</TabsTrigger>
+                <TabsTrigger value="mindfulness" className="data-[state=active]:bg-background text-xs sm:text-sm">Mindfulness</TabsTrigger>
+                <TabsTrigger value="chat" className="data-[state=active]:bg-background text-xs sm:text-sm">AI</TabsTrigger>
               </TabsList>
             </div>
 
