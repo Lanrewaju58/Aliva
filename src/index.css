@@ -10,7 +10,7 @@
   :root {
     /* Core Brand Colors - Preserved */
     --background: 0 0% 100%;
-    --foreground: 220 15% 15%;
+    --foreground: 220 15% 10%;
 
     /* Brand Identity - Preserved */
     --primary: 158 64% 39%;
@@ -36,7 +36,7 @@
 
     /* Neutral System - Refined */
     --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 46%;
+    --muted-foreground: 220 15% 30%;
 
     --card: 0 0% 100%;
     --card-foreground: 220 15% 15%;
@@ -69,7 +69,7 @@
 
   .dark {
     --background: 220 15% 6%;
-    --foreground: 0 0% 98%;
+    --foreground: 0 0% 100%;
 
     --primary: 158 64% 55%;
     --primary-foreground: 220 15% 6%;
@@ -84,7 +84,7 @@
     --accent-glow: 24 95% 80%;
 
     --muted: 220 15% 12%;
-    --muted-foreground: 220 10% 65%;
+    --muted-foreground: 220 10% 85%;
 
     --card: 220 15% 8%;
     --card-foreground: 0 0% 98%;

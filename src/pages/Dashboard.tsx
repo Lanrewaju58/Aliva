@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHealthData } from "@/contexts/HealthDataContext";
 import { useToast } from "@/hooks/use-toast";
@@ -519,11 +519,15 @@ const Dashboard = () => {
   }), [meals]);
 
   // Redirect to onboarding if profile incomplete
+  const location = useLocation();
   useEffect(() => {
+    // Skip check if we just came from onboarding to avoid race condition
+    if (location.state?.fromOnboarding) return;
+
     if (!authLoading && !isLoading && profile && !profile.preferredCalorieTarget) {
       navigate('/onboarding');
     }
-  }, [authLoading, isLoading, profile, navigate]);
+  }, [authLoading, isLoading, profile, navigate, location.state]);
 
   // ==================== HANDLERS ====================
 

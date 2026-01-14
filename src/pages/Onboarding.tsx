@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { profileService } from "@/services/profileService";
@@ -57,21 +57,33 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const saved = localStorage.getItem('aliva_onboarding_step');
+    return saved ? parseInt(saved) : 1;
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVisible] = useState(true);
-  const [data, setData] = useState<OnboardingData>({
-    age: undefined,
-    gender: '',
-    heightCm: undefined,
-    currentWeightKg: undefined,
-    targetWeightKg: undefined,
-    goal: '',
-    activityLevel: '',
-    dietaryPreferences: [],
-    allergies: [],
-    country: '',
+  const [data, setData] = useState<OnboardingData>(() => {
+    const saved = localStorage.getItem('aliva_onboarding_data');
+    return saved ? JSON.parse(saved) : {
+      age: undefined,
+      gender: '',
+      heightCm: undefined,
+      currentWeightKg: undefined,
+      targetWeightKg: undefined,
+      goal: '',
+      activityLevel: '',
+      dietaryPreferences: [],
+      allergies: [],
+      country: '',
+    };
   });
+
+  // Save state to localStorage
+  useEffect(() => {
+    localStorage.setItem('aliva_onboarding_step', currentStep.toString());
+    localStorage.setItem('aliva_onboarding_data', JSON.stringify(data));
+  }, [currentStep, data]);
 
   const updateData = (field: keyof OnboardingData, value: any) => {
     setData((prev) => ({ ...prev, [field]: value }));
@@ -213,7 +225,11 @@ const Onboarding = () => {
         description: "Your personalized nutrition plan is ready",
       });
 
-      navigate('/dashboard');
+      // Clear storage on success
+      localStorage.removeItem('aliva_onboarding_step');
+      localStorage.removeItem('aliva_onboarding_data');
+
+      navigate('/dashboard', { state: { fromOnboarding: true } });
     } catch (error) {
       console.error('Error creating profile:', error);
       toast({ title: "Error", description: "Failed to create profile. Please try again.", variant: "destructive" });
