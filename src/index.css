@@ -333,3 +333,51 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-foreground/30;
 }
+
+/* Print Styles for Health Reports */
+@media print {
+  @page {
+    margin: 20mm;
+    size: A4;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-only,
+  .print-only * {
+    visibility: visible;
+  }
+
+  .print-only {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: black !important;
+    background: white !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Force colors to print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Reset layout for print */
+  .grid {
+    display: block !important;
+  }
+
+  .card {
+    border: 1px solid #eee !important;
+    break-inside: avoid;
+    margin-bottom: 1rem;
+    box-shadow: none !important;
+  }
+}

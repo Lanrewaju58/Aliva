@@ -20,6 +20,7 @@ import MeditationTab from "@/components/dashboard/MeditationTab";
 import WomenHealthDashboard from "@/components/WomenHealthDashboard";
 import HealthDashboard from "@/components/HealthDashboard";
 import { Label } from "@/components/ui/label";
+import WellnessTab from "@/components/dashboard/WellnessTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Droplet,
@@ -40,7 +41,8 @@ import {
   Clock,
   X,
   Share2,
-  Newspaper
+  Newspaper,
+  Smile,
 } from "lucide-react";
 
 // ==================== TYPES ====================
@@ -754,6 +756,7 @@ const Dashboard = () => {
                 <TabsTrigger value="overview" className="data-[state=active]:bg-background">Overview</TabsTrigger>
                 <TabsTrigger value="meals" className="data-[state=active]:bg-background">Meals</TabsTrigger>
                 <TabsTrigger value="health" className="data-[state=active]:bg-background">Health</TabsTrigger>
+                <TabsTrigger value="wellness" className="data-[state=active]:bg-background">Wellness</TabsTrigger>
                 <TabsTrigger value="mindfulness" className="data-[state=active]:bg-background">Mindfulness</TabsTrigger>
                 <TabsTrigger value="chat" className="data-[state=active]:bg-background">AI Assistant</TabsTrigger>
               </TabsList>
@@ -772,6 +775,10 @@ const Dashboard = () => {
             </div>
 
             {/* Overview Tab */}
+            <TabsContent value="wellness" className="space-y-6">
+              <WellnessTab />
+            </TabsContent>
+
             <TabsContent value="overview" className="space-y-8">
               {/* Calorie Summary + Quick Stats */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

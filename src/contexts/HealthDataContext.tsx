@@ -139,14 +139,21 @@ export const HealthDataProvider = ({ children }: HealthDataProviderProps) => {
         [meals]
     );
 
-    // Computed: daily targets
-    const dailyTargets = useMemo(() => ({
-        calories: profile?.preferredCalorieTarget || 2000,
-        protein: profile?.currentWeightKg ? Math.round(profile.currentWeightKg * 1.8) : 150,
-        carbs: 200,
-        fat: 65,
-        water: 8,
-    }), [profile]);
+    const dailyTargets = useMemo(() => {
+        // Hydration: ~35ml per kg of body weight
+        // 1 glass = 250ml (0.25L)
+        // Cups = (weight * 0.035) / 0.25
+        const weight = profile?.currentWeightKg || 70;
+        const waterTargetCups = Math.max(6, Math.min(16, Math.round((weight * 0.035) / 0.25)));
+
+        return {
+            calories: profile?.preferredCalorieTarget || 2000,
+            protein: profile?.currentWeightKg ? Math.round(profile.currentWeightKg * 1.8) : 150,
+            carbs: 200,
+            fat: 65,
+            water: waterTargetCups,
+        };
+    }, [profile]);
 
     const value: HealthDataContextType = {
         profile,
