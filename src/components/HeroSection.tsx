@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import Particles from "@/components/ui/magicui/particles";
+import { BlurFade } from "@/components/ui/magicui/blur-fade";
+import { ShimmerButton } from "@/components/ui/magicui/shimmer-button";
 
 const HeroSection = () => {
   const { user } = useAuth();
@@ -32,6 +35,16 @@ const HeroSection = () => {
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary-dark via-primary-dark to-primary-dark/90" />
 
+      {/* Magic UI Particles */}
+      <Particles
+        className="absolute inset-0"
+        quantity={80}
+        color="#ffffff"
+        size={0.5}
+        staticity={30}
+        ease={80}
+      />
+
       {/* Gradient orbs for depth */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
@@ -48,19 +61,21 @@ const HeroSection = () => {
                 <span>Trusted by 100+ users</span>
               </div>
 
-              {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] tracking-tight">
-                Your AI-Powered
-                <span className="block mt-2">
-                  <span className="relative">
-                    Nutrition
-                    <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M2 8C50 2 150 2 198 8" stroke="rgba(255,255,255,0.3)" strokeWidth="4" strokeLinecap="round" />
-                    </svg>
+              {/* Headline with Magic UI BlurFade */}
+              <BlurFade delay={0.1} inView>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] tracking-tight">
+                  Your AI-Powered
+                  <span className="block mt-2">
+                    <span className="relative">
+                      Nutrition
+                      <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 8C50 2 150 2 198 8" stroke="rgba(255,255,255,0.3)" strokeWidth="4" strokeLinecap="round" />
+                      </svg>
+                    </span>
+                    {" "}Partner
                   </span>
-                  {" "}Partner
-                </span>
-              </h1>
+                </h1>
+              </BlurFade>
 
               {/* Description */}
               <p className="mt-6 text-lg sm:text-xl text-white/80 leading-relaxed max-w-lg">
@@ -82,25 +97,32 @@ const HeroSection = () => {
               </div>
 
               {/* CTA Buttons */}
-              <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                <Button
-                  size="lg"
-                  className="h-14 px-8 rounded-xl bg-white text-primary hover:bg-white/95 font-semibold text-base shadow-xl hover:shadow-2xl transition-all duration-200"
-                  onClick={handleGetStarted}
-                >
-                  {user ? 'Go to Dashboard' : 'Start Free Trial'}
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  className="h-14 px-8 rounded-xl text-white border border-white/20 hover:bg-white/10 transition-all duration-200 font-medium text-base"
-                  onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  See How It Works
-                </Button>
-              </div>
+              <BlurFade delay={0.4} inView>
+                <div className="mt-10 flex flex-col sm:flex-row gap-4">
+                  <ShimmerButton
+                    className="h-14 px-8 text-base font-semibold"
+                    shimmerColor="#ffffff"
+                    shimmerSize="0.1em"
+                    background="rgba(255, 255, 255, 1)"
+                    borderRadius="12px"
+                    onClick={handleGetStarted}
+                  >
+                    <span className="text-primary flex items-center">
+                      {user ? 'Go to Dashboard' : 'Start Free Trial'}
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </span>
+                  </ShimmerButton>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    className="h-14 px-8 rounded-xl text-white border border-white/20 hover:bg-white/10 transition-all duration-200 font-medium text-base"
+                    onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    See How It Works
+                  </Button>
+                </div>
+              </BlurFade>
 
               {/* Social proof */}
               <div className="mt-12 pt-8 border-t border-white/10">

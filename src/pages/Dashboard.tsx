@@ -22,6 +22,7 @@ import HealthDashboard from "@/components/HealthDashboard";
 import { Label } from "@/components/ui/label";
 import WellnessTab from "@/components/dashboard/WellnessTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BlurFade } from "@/components/ui/magicui/blur-fade";
 import {
   Droplet,
   TrendingUp,
@@ -716,31 +717,33 @@ const Dashboard = () => {
       <main className=""> {/* Padding handled by AppShell */}
         <div className=""> {/* Container handled by AppShell */}.
 
-          {/* Header */}
-          <div className="flex items-start justify-between mb-8">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
-                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user.displayName?.split(' ')[0] || 'there'}
-                </h1>
-                {isPro && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium">
-                    <Crown className="w-3 h-3" />
-                    PRO
-                  </span>
-                )}
+          {/* Header with BlurFade Animation */}
+          <BlurFade delay={0.1} inView>
+            <div className="flex items-start justify-between mb-8">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
+                    Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user.displayName?.split(' ')[0] || 'there'}
+                  </h1>
+                  {isPro && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium">
+                      <Crown className="w-3 h-3" />
+                      PRO
+                    </span>
+                  )}
+                </div>
+                <p className="text-muted-foreground">
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </p>
               </div>
-              <p className="text-muted-foreground">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => navigate('/profile')} className="hidden sm:flex">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/profile')} className="hidden sm:flex">
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-            </div>
-          </div>
+          </BlurFade>
 
           {/* Error Alert */}
           {error && (
@@ -781,91 +784,93 @@ const Dashboard = () => {
 
             <TabsContent value="overview" className="space-y-8">
               {/* Calorie Summary + Quick Stats */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Calorie Ring Card */}
-                <div className={`relative rounded-xl p-6 lg:col-span-1 overflow-hidden ${isPro
-                  ? 'bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 shadow-lg shadow-primary/5'
-                  : 'bg-card border border-border'
-                  }`}>
-                  {isPro && (
-                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-medium">
-                      <Crown className="w-2.5 h-2.5" />
-                      PRO
-                    </div>
-                  )}
-                  <div className="text-center">
-                    <CircularProgress value={totals.calories} max={dailyTargets.calories} size={160} strokeWidth={12}>
-                      <div className="text-center">
-                        <p className="text-3xl font-semibold text-foreground">{totals.calories}</p>
-                        <p className="text-xs text-muted-foreground">of {dailyTargets.calories} cal</p>
+              <BlurFade delay={0.2} inView>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Calorie Ring Card */}
+                  <div className={`relative rounded-xl p-6 lg:col-span-1 overflow-hidden ${isPro
+                    ? 'bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 shadow-lg shadow-primary/5'
+                    : 'bg-card border border-border'
+                    }`}>
+                    {isPro && (
+                      <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-medium">
+                        <Crown className="w-2.5 h-2.5" />
+                        PRO
                       </div>
-                    </CircularProgress>
+                    )}
+                    <div className="text-center">
+                      <CircularProgress value={totals.calories} max={dailyTargets.calories} size={160} strokeWidth={12}>
+                        <div className="text-center">
+                          <p className="text-3xl font-semibold text-foreground">{totals.calories}</p>
+                          <p className="text-xs text-muted-foreground">of {dailyTargets.calories} cal</p>
+                        </div>
+                      </CircularProgress>
 
-                    <div className="mt-6 pt-6 border-t border-border/50">
-                      <div className="flex justify-between items-center">
-                        <div className="text-center">
-                          <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{remainingCalories}</p>
-                          <p className="text-xs text-muted-foreground">Remaining</p>
-                        </div>
-                        <div className="h-8 w-px bg-border/50" />
-                        <div className="text-center">
-                          <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{dailyStreak}</p>
-                          <p className="text-xs text-muted-foreground">Day streak</p>
-                        </div>
-                        <div className="h-8 w-px bg-border/50" />
-                        <div className="text-center">
-                          <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{meals.length}</p>
-                          <p className="text-xs text-muted-foreground">Meals</p>
+                      <div className="mt-6 pt-6 border-t border-border/50">
+                        <div className="flex justify-between items-center">
+                          <div className="text-center">
+                            <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{remainingCalories}</p>
+                            <p className="text-xs text-muted-foreground">Remaining</p>
+                          </div>
+                          <div className="h-8 w-px bg-border/50" />
+                          <div className="text-center">
+                            <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{dailyStreak}</p>
+                            <p className="text-xs text-muted-foreground">Day streak</p>
+                          </div>
+                          <div className="h-8 w-px bg-border/50" />
+                          <div className="text-center">
+                            <p className={`text-lg font-semibold ${isPro ? 'text-primary' : 'text-foreground'}`}>{meals.length}</p>
+                            <p className="text-xs text-muted-foreground">Meals</p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Stats Grid */}
-                <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-                  <StatCard
-                    icon={Target}
-                    label="Protein"
-                    value={totals.protein}
-                    target={dailyTargets.protein}
-                    unit="g"
-                    color="text-blue-500"
-                    bgColor="bg-blue-500/10"
-                    isPro={isPro}
-                  />
-                  <StatCard
-                    icon={Apple}
-                    label="Carbs"
-                    value={totals.carbs}
-                    target={dailyTargets.carbs}
-                    unit="g"
-                    color="text-amber-500"
-                    bgColor="bg-amber-500/10"
-                    isPro={isPro}
-                  />
-                  <StatCard
-                    icon={Zap}
-                    label="Fat"
-                    value={totals.fat}
-                    target={dailyTargets.fat}
-                    unit="g"
-                    color="text-purple-500"
-                    bgColor="bg-purple-500/10"
-                    isPro={isPro}
-                  />
-                  <StatCard
-                    icon={Droplet}
-                    label="Water"
-                    value={waterIntake}
-                    target={dailyTargets.water}
-                    unit=" glasses"
-                    color="text-cyan-500"
-                    bgColor="bg-cyan-500/10"
-                    isPro={isPro}
-                  />
+                  {/* Stats Grid */}
+                  <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+                    <StatCard
+                      icon={Target}
+                      label="Protein"
+                      value={totals.protein}
+                      target={dailyTargets.protein}
+                      unit="g"
+                      color="text-blue-500"
+                      bgColor="bg-blue-500/10"
+                      isPro={isPro}
+                    />
+                    <StatCard
+                      icon={Apple}
+                      label="Carbs"
+                      value={totals.carbs}
+                      target={dailyTargets.carbs}
+                      unit="g"
+                      color="text-amber-500"
+                      bgColor="bg-amber-500/10"
+                      isPro={isPro}
+                    />
+                    <StatCard
+                      icon={Zap}
+                      label="Fat"
+                      value={totals.fat}
+                      target={dailyTargets.fat}
+                      unit="g"
+                      color="text-purple-500"
+                      bgColor="bg-purple-500/10"
+                      isPro={isPro}
+                    />
+                    <StatCard
+                      icon={Droplet}
+                      label="Water"
+                      value={waterIntake}
+                      target={dailyTargets.water}
+                      unit=" glasses"
+                      color="text-cyan-500"
+                      bgColor="bg-cyan-500/10"
+                      isPro={isPro}
+                    />
+                  </div>
                 </div>
-              </div>
+              </BlurFade>
 
               {/* Quick Actions */}
               <div className="grid grid-cols-3 gap-3">

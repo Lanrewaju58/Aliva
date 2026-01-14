@@ -2,6 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NumberTicker } from "@/components/ui/magicui/number-ticker";
 
 const TestimonialBanner = () => {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ const TestimonialBanner = () => {
               <p className="text-sm font-medium text-primary mb-6 uppercase tracking-wide">User Success Rate</p>
 
               <div className="text-7xl md:text-8xl font-bold bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent mb-8">
-                92%
+                <NumberTicker value={92} />%
               </div>
 
               <p className="text-muted-foreground text-lg max-w-md leading-relaxed mb-8">
