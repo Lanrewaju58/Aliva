@@ -56,14 +56,14 @@ const HydrationCoach = () => {
 
     return (
         <div className="grid gap-6 md:grid-cols-2">
-            <Card className="relative overflow-hidden border-2 border-blue-100 dark:border-blue-900 shadow-sm">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <Droplet className="w-24 h-24 text-blue-500 fill-blue-500" />
+            <Card>
+                <div className="absolute top-4 right-4 opacity-10">
+                    <Droplet className="w-20 h-20 text-primary" />
                 </div>
 
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                        <Droplet className="w-5 h-5 fill-current" />
+                    <CardTitle className="flex items-center gap-2">
+                        <Droplet className="w-5 h-5 text-primary" />
                         Hydration Coach
                     </CardTitle>
                     <CardDescription>Target: {dailyTargets.water} glasses daily</CardDescription>
@@ -71,12 +71,12 @@ const HydrationCoach = () => {
 
                 <CardContent className="space-y-6">
                     <div className="text-center space-y-2">
-                        <span className="text-5xl font-bold text-blue-600 dark:text-blue-400">{waterIntake}</span>
+                        <span className="text-4xl font-bold text-foreground">{waterIntake}</span>
                         <span className="text-muted-foreground ml-2">/ {dailyTargets.water} glasses</span>
                     </div>
 
                     <div className="space-y-2">
-                        <Progress value={percentage} className="h-3 bg-blue-100 dark:bg-blue-950" />
+                        <Progress value={percentage} className="h-2" />
                         <p className="text-xs text-center text-muted-foreground">
                             {remaining === 0 ? "Goal reached! Amazing job staying hydrated." : `${remaining} glasses to go!`}
                         </p>
@@ -86,34 +86,34 @@ const HydrationCoach = () => {
                         <Button
                             variant="outline"
                             size="icon"
-                            className="rounded-full h-12 w-12 border-blue-200 hover:bg-blue-50"
+                            className="rounded-full h-10 w-10"
                             onClick={() => handleUpdateWater(-1)}
                             disabled={waterIntake <= 0 || saving}
                         >
-                            <Minus className="w-5 h-5" />
+                            <Minus className="w-4 h-4" />
                         </Button>
                         <Button
                             size="icon"
-                            className="rounded-full h-16 w-16 bg-blue-500 hover:bg-blue-600 text-white shadow-lg"
+                            className="rounded-full h-12 w-12"
                             onClick={() => handleUpdateWater(1)}
                             disabled={saving}
                         >
-                            <Plus className="w-8 h-8" />
+                            <Plus className="w-6 h-6" />
                         </Button>
                     </div>
                 </CardContent>
             </Card>
 
             <div className="space-y-6">
-                <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
+                <Card className="bg-muted/50">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-500">
-                            <Lightbulb className="w-4 h-4" />
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <Lightbulb className="w-4 h-4 text-muted-foreground" />
                             Coach's Tip
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm italic text-amber-800 dark:text-amber-400">
+                        <p className="text-sm text-muted-foreground">
                             "{randomTip}"
                         </p>
                     </CardContent>
@@ -134,7 +134,7 @@ const HydrationCoach = () => {
                             "Regulates body temperature"
                         ].map((benefit, i) => (
                             <div key={i} className="flex items-center gap-2 text-sm">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                <CheckCircle2 className="w-4 h-4 text-primary" />
                                 <span>{benefit}</span>
                             </div>
                         ))}

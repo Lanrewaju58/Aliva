@@ -59,47 +59,39 @@ const FeaturesSection = () => {
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Our comprehensive platform combines cutting-edge AI technology with practical tools 
+            Our comprehensive platform combines cutting-edge AI technology with practical tools
             to make healthy eating simple, enjoyable, and sustainable.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <Card 
+              <Card
                 key={index}
-                className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-0 bg-white/50 backdrop-blur-sm card-hover"
-                style={{ animationDelay: feature.delay }}
+                className="relative overflow-hidden group border bg-card hover:border-primary/20 transition-colors"
               >
-                <div className="p-8">
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-8 h-8 text-white" />
+                <div className="p-6">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-primary" />
                   </div>
-                  
-                  <h3 className="text-xl font-bold mb-4 text-foreground group-hover:text-primary transition-colors">
+
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">
                     {feature.title}
                   </h3>
-                  
-                  <p className="text-muted-foreground leading-relaxed mb-6">
+
+                  <p className="text-muted-foreground text-sm leading-relaxed">
                     {feature.description}
                   </p>
-                  
-                  <Button variant="ghost" className="group-hover:text-primary group-hover:bg-primary/5 transition-all">
-                    Learn More →
-                  </Button>
                 </div>
-                
-                {/* Gradient overlay on hover */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
               </Card>
             );
           })}
         </div>
 
-        <div className="text-center mt-16">
-          <Button variant="hero" size="xl">
+        <div className="text-center mt-12">
+          <Button size="lg">
             Start Your Health Journey
           </Button>
         </div>

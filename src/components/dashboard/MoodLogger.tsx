@@ -82,7 +82,7 @@ const MoodLogger = () => {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Smile className="w-5 h-5 text-emerald-500" />
+                        <Smile className="w-5 h-5 text-muted-foreground" />
                         How are you feeling?
                     </CardTitle>
                 </CardHeader>

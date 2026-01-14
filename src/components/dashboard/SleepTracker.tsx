@@ -114,7 +114,7 @@ const SleepTracker = () => {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Moon className="w-5 h-5 text-indigo-500" />
+                        <Moon className="w-5 h-5 text-muted-foreground" />
                         Log Sleep
                     </CardTitle>
                     <CardDescription>How did you sleep last night?</CardDescription>
@@ -155,10 +155,10 @@ const SleepTracker = () => {
 
                     {/* Auto-calculated Quality Display */}
                     {hours && calculatedQuality && (
-                        <div className="p-4 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                        <div className="p-4 rounded-lg bg-muted">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 text-indigo-500" />
+                                    <Sparkles className="w-4 h-4 text-muted-foreground" />
                                     <Label className="text-sm font-medium">Sleep Quality</Label>
                                 </div>
                                 <div className="text-lg font-semibold">
@@ -171,7 +171,7 @@ const SleepTracker = () => {
                         </div>
                     )}
 
-                    <Button onClick={handleSave} disabled={saving || !hours} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                    <Button onClick={handleSave} disabled={saving || !hours} className="w-full">
                         {saving ? "Saving..." : "Save Sleep Log"}
                     </Button>
                 </CardContent>

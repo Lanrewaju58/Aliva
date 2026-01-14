@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Particles from "@/components/ui/magicui/particles";
 import { BlurFade } from "@/components/ui/magicui/blur-fade";
-import { ShimmerButton } from "@/components/ui/magicui/shimmer-button";
 
 const HeroSection = () => {
   const { user } = useAuth();
@@ -99,23 +98,18 @@ const HeroSection = () => {
               {/* CTA Buttons */}
               <BlurFade delay={0.4} inView>
                 <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                  <ShimmerButton
-                    className="h-14 px-8 text-base font-semibold"
-                    shimmerColor="#ffffff"
-                    shimmerSize="0.1em"
-                    background="rgba(255, 255, 255, 1)"
-                    borderRadius="12px"
+                  <Button
+                    size="lg"
+                    className="h-12 px-8 text-base font-medium bg-white text-primary hover:bg-white/90 shadow-lg"
                     onClick={handleGetStarted}
                   >
-                    <span className="text-primary flex items-center">
-                      {user ? 'Go to Dashboard' : 'Start Free Trial'}
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </span>
-                  </ShimmerButton>
+                    {user ? 'Go to Dashboard' : 'Start Free Trial'}
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="lg"
-                    className="h-14 px-8 rounded-xl text-white border border-white/20 hover:bg-white/10 transition-all duration-200 font-medium text-base"
+                    className="h-12 px-8 text-white border border-white/20 hover:bg-white/10 font-medium text-base"
                     onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                   >
                     <Play className="w-4 h-4 mr-2" />

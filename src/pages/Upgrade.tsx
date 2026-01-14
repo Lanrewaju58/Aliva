@@ -414,7 +414,7 @@ const Upgrade = () => {
           </p>
           <Button
             size="lg"
-            className="h-14 px-10 bg-white text-primary-dark hover:bg-white/90 font-semibold text-lg rounded-full"
+            className="h-12 px-8 bg-white text-primary hover:bg-white/90 font-medium"
             onClick={() => !isPro && handleUpgrade('Pro')}
             disabled={isPro || loading}
           >

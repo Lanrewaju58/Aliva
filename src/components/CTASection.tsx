@@ -35,7 +35,7 @@ const CTASection = () => {
         <Button
           size="lg"
           onClick={() => navigate(user ? '/dashboard' : '/auth')}
-          className="h-14 px-10 text-lg rounded-xl bg-white text-primary hover:bg-white/95 font-semibold shadow-2xl hover:shadow-3xl transition-all duration-200"
+          className="h-12 px-8 bg-white text-primary hover:bg-white/90 font-medium"
         >
           {user ? 'Go to Dashboard' : 'Get Started Free'}
           <ArrowRight className="w-5 h-5 ml-2" />
