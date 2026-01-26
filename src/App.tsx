@@ -87,6 +87,7 @@ const App: React.FC = () => {
                   {/* Public Routes */}
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/upgrade" element={<Upgrade />} />
 
                   {/* Onboarding - Protected but outside AppShell for full-screen experience */}
                   <Route
@@ -149,14 +150,7 @@ const App: React.FC = () => {
                         </ProtectedRoute>
                       }
                     />
-                    <Route
-                      path="/upgrade"
-                      element={
-                        <ProtectedRoute>
-                          <Upgrade />
-                        </ProtectedRoute>
-                      }
-                    />
+
                     <Route
                       path="/admin"
                       element={

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import Navigation from "@/components/Navigation";
 import { useEffect, useState } from "react";
 import { Check, Crown, X, ArrowRight, Shield, Zap, Users, Star, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -134,6 +135,8 @@ const Upgrade = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
+
 
       {/* Hero Section with Gradient */}
       <section className="relative pt-12 pb-32 overflow-hidden">
