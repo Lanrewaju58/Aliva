@@ -1,0 +1,183 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - allow authenticated users to read (admin check is done in app code)
+    // Note: In production, use Firebase Custom Claims for better security
+    match /users/{userId} {
+      // Allow users to read their own profile
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow authenticated users to read all profiles (for admin dashboard)
+      // Admin access is verified in application code (adminService.isAdmin)
+      allow read: if request.auth != null;
+      
+      // Allow users to create/update their own profile
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow admins to update any user profile (for promoting/demoting users)
+      allow update: if request.auth.token.email == 'mohammedodunlami@gmail.com' || 
+                   request.auth.token.email == 'iamezekieljeremiah@gmail.com';
+      
+      // Allow specific admins to delete users
+      allow delete: if request.auth.token.email == 'mohammedodunlami@gmail.com' || 
+                   request.auth.token.email == 'iamezekieljeremiah@gmail.com';
+    }
+    
+    // Allow authenticated users to list all users (for admin dashboard)
+    // Admin verification happens in the application layer
+    match /users {
+      allow list: if request.auth != null;
+    }
+
+    // Allow authenticated users to read global settings
+    match /settings/global {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null; // Ideally restrict to admins, but app logic handles it for now
+    }
+    
+    // User profiles collection (if separate from users)
+    match /profiles/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow authenticated users to read (admin check in app code)
+      allow read: if request.auth != null;
+    }
+    
+    // Meals subcollection - users can only access their own meals
+    match /users/{userId}/meals/{mealId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Daily logs subcollection - users can only access their own logs
+    match /users/{userId}/dailyLogs/{logId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow listing meals and dailyLogs subcollections
+    match /users/{userId}/meals {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/dailyLogs {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Exercises subcollection - users can only access their own exercises
+    match /users/{userId}/exercises/{exerciseId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow listing exercises subcollection
+    match /users/{userId}/exercises {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Menstrual Health - Period tracking subcollection
+    match /users/{userId}/menstrualPeriods/{periodId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/menstrualPeriods {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Menstrual Health - Symptoms subcollection
+    match /users/{userId}/menstrualSymptoms/{symptomId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/menstrualSymptoms {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Menstrual Health - Settings subcollection
+    match /users/{userId}/menstrualSettings/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Health Data collection - for steps, sleep, calories, heart rate
+    match /healthData/{userId}/entries/{entryId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /healthData/{userId}/entries {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /healthData/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Connected Providers collection - for health device connections
+    match /connectedProviders/{docId} {
+      allow read, write: if request.auth != null && 
+                          (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    match /connectedProviders {
+      allow list: if request.auth != null;
+    }
+
+    // Saved Recipes subcollection - users can only access their own saved recipes
+    match /users/{userId}/savedRecipes/{recipeId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /users/{userId}/savedRecipes {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Sleep Logs subcollection
+    match /users/{userId}/sleepLogs/{logId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /users/{userId}/sleepLogs {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Mood Logs subcollection
+    match /users/{userId}/moodLogs/{logId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /users/{userId}/moodLogs {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Medication & Supplements subcollections
+    match /users/{userId}/medications/{medId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /users/{userId}/medications {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+    match /users/{userId}/medicationLogs/{logId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /users/{userId}/medicationLogs {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Blog articles cache - all authenticated users can read, admins can write
+    match /blog/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.token.email == 'mohammedodunlami@gmail.com' || 
+                   request.auth.token.email == 'iamezekieljeremiah@gmail.com' ||
+                   request.auth != null; // Allow any authenticated user to cache articles
+    }
+
+    // Meditation Videos - authenticated users can read, admins can write
+    match /meditationVideos/{videoId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.token.email == 'mohammedodunlami@gmail.com' ||
+                   request.auth.token.email == 'iamezekieljeremiah@gmail.com';
+    }
+    
+    // Default: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

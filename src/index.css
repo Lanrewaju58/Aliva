@@ -3,102 +3,96 @@
 @tailwind utilities;
 
 /* Aliva Design System - Professional Nutrition Platform
-All colors MUST be HSL for perfect theme integration.
+   Refined for modern, luxurious aesthetics
 */
 
 @layer base {
   :root {
-    /* Core Brand Colors */
+    /* Core Brand Colors - Preserved */
     --background: 0 0% 100%;
-    --foreground: 220 15% 15%;
-    
-    /* Brand Identity */
-    --primary: 158 64% 39%; /* Emerald Green */
+    --foreground: 220 15% 10%;
+
+    /* Brand Identity - Preserved */
+    --primary: 158 64% 39%;
+    /* Emerald Green */
     --primary-foreground: 0 0% 100%;
     --primary-glow: 158 64% 52%;
     --primary-dark: 158 64% 28%;
-    
-    --secondary: 158 100% 30%; /* Deep Teal */
+
+    --secondary: 158 100% 30%;
+    /* Deep Teal */
     --secondary-foreground: 0 0% 100%;
     --secondary-glow: 158 100% 42%;
-    
-    --accent: 24 95% 53%; /* Warm Coral */
+
+    --accent: 24 95% 53%;
+    /* Warm Coral */
     --accent-foreground: 0 0% 100%;
     --accent-glow: 24 95% 65%;
-    
-    --lavender: 258 90% 66%; /* Soft Lavender */
+
+    --lavender: 258 90% 66%;
+    /* Soft Lavender */
     --lavender-foreground: 0 0% 100%;
     --lavender-glow: 258 90% 78%;
-    
-    /* Neutral System */
+
+    /* Neutral System - Refined */
     --muted: 220 14% 96%;
-    --muted-foreground: 220 10% 46%;
-    
+    --muted-foreground: 220 15% 30%;
+
     --card: 0 0% 100%;
     --card-foreground: 220 15% 15%;
-    
+
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
-    
+
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 158 64% 39%;
-    
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
-    --radius: 0.75rem;
-    
-    /* Beautiful Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-glow)));
-    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-glow)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
-    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-    
-    /* Elegant Shadows */
-    --shadow-soft: 0 2px 8px -2px hsl(var(--primary) / 0.1);
-    --shadow-medium: 0 4px 16px -4px hsl(var(--primary) / 0.15);
-    --shadow-strong: 0 8px 32px -8px hsl(var(--primary) / 0.2);
-    --shadow-glow: 0 0 32px hsl(var(--primary-glow) / 0.3);
-    
-    /* Smooth Transitions */
-    --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Radius */
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 220 15% 8%;
-    --foreground: 0 0% 95%;
-    
-    --primary: 158 64% 52%;
-    --primary-foreground: 220 15% 8%;
-    --primary-glow: 158 64% 65%;
-    
-    --secondary: 158 100% 42%;
-    --secondary-foreground: 220 15% 8%;
-    --secondary-glow: 158 100% 55%;
-    
-    --accent: 24 95% 65%;
-    --accent-foreground: 220 15% 8%;
-    --accent-glow: 24 95% 78%;
-    
-    --muted: 220 15% 15%;
-    --muted-foreground: 220 10% 60%;
-    
-    --card: 220 15% 10%;
-    --card-foreground: 0 0% 95%;
-    
-    --popover: 220 15% 10%;
-    --popover-foreground: 0 0% 95%;
-    
-    --border: 220 15% 20%;
-    --input: 220 15% 20%;
-    --ring: 158 64% 52%;
-    
+    --background: 220 15% 6%;
+    --foreground: 0 0% 100%;
+
+    --primary: 158 64% 55%;
+    --primary-foreground: 220 15% 6%;
+    --primary-glow: 158 64% 68%;
+
+    --secondary: 158 100% 45%;
+    --secondary-foreground: 220 15% 6%;
+    --secondary-glow: 158 100% 58%;
+
+    --accent: 24 95% 68%;
+    --accent-foreground: 220 15% 6%;
+    --accent-glow: 24 95% 80%;
+
+    --muted: 220 15% 12%;
+    --muted-foreground: 220 10% 85%;
+
+    --card: 220 15% 8%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 220 15% 8%;
+    --popover-foreground: 0 0% 98%;
+
+    --border: 220 15% 16%;
+    --input: 220 15% 16%;
+    --ring: 158 64% 55%;
+
     --destructive: 0 75% 60%;
     --destructive-foreground: 0 0% 100%;
+
+    /* Dark mode shadows */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.15);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.25), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.25);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.35), 0 8px 10px -6px rgb(0 0 0 / 0.3);
   }
 }
 
@@ -107,106 +101,174 @@ All colors MUST be HSL for perfect theme integration.
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground font-sans;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-  
-  /* Glassmorphism Base */
-  .glass {
-    background: var(--gradient-glass);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
-  /* Smooth Scrolling */
   html {
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    line-height: 1.6;
+  }
+
+  /* Premium Typography Scale */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  p {
+    @apply text-muted-foreground;
+    line-height: 1.7;
+  }
+
+  /* Safe area padding for mobile handling */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Focus states - visible and accessible */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
 
 @layer components {
-  /* Hero Gradients */
-  .gradient-hero {
-    background: var(--gradient-hero);
-  }
-  
-  .gradient-primary {
-    background: var(--gradient-primary);
-  }
-  
-  .gradient-accent {
-    background: var(--gradient-accent);
-  }
-  
-  /* Interactive Elements */
-  .btn-glow:hover {
-    box-shadow: var(--shadow-glow);
-    transform: translateY(-2px);
-  }
-  
-  .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-strong);
-  }
-  
-  /* Animations */
-  .fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
-  }
-  
-  .slide-up {
-    animation: slideUp 0.8s ease-out forwards;
-  }
-  
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(40px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-  
-  .float-animation {
-    animation: float 3s ease-in-out infinite;
+
+  /* Card Surface */
+  .card-surface {
+    @apply bg-card border border-border rounded-xl shadow-sm;
   }
 
-  /* Soft grid background used on hero */
-  .grid-overlay {
-    background-image:
-      linear-gradient(to right, rgba(255,255,255,0.28) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255,255,255,0.24) 1px, transparent 1px);
-    background-size: 64px 64px;
-    background-position: center;
+  /* Glass effect */
+  .glass {
+    @apply bg-background/80 backdrop-blur-sm border border-border;
   }
 
-  /* simple vertical slide animation for quotes */
-  @keyframes quotes-ticker {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-100%); }
-    100% { transform: translateY(-200%); }
+  /* Section spacing */
+  .section-padding {
+    @apply py-16 md:py-20 lg:py-24;
+  }
+
+  /* Container */
+  .container-tight {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-wide {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Badge styles */
+  .badge-subtle {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded-full;
+    @apply bg-primary/10 text-primary;
+  }
+
+  /* Divider */
+  .divider {
+    @apply h-px w-full bg-border;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/30;
+}
+
+/* Print Styles for Health Reports */
+@media print {
+  @page {
+    margin: 20mm;
+    size: A4;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-only,
+  .print-only * {
+    visibility: visible;
+  }
+
+  .print-only {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: black !important;
+    background: white !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Force colors to print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Reset layout for print */
+  .grid {
+    display: block !important;
+  }
+
+  .card {
+    border: 1px solid #eee !important;
+    break-inside: avoid;
+    margin-bottom: 1rem;
+    box-shadow: none !important;
   }
 }

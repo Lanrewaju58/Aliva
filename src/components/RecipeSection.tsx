@@ -9,7 +9,7 @@ const RecipeSection = () => {
 
   const handleRecipeSearch = () => {
     toast({
-      title: "Recipe Generator Coming Soon! 👨‍🍳",
+      title: "Recipe Generator Coming Soon!",
       description: "We're creating an AI-powered recipe generator that creates custom meals based on your preferences.",
     });
   };
@@ -22,7 +22,7 @@ const RecipeSection = () => {
       calories: 420,
       difficulty: "Easy",
       tags: ["Vegetarian", "High Protein"],
-      image: "🥗",
+      image: null,
       description: "Fresh quinoa bowl with roasted vegetables, feta, and lemon herb dressing."
     },
     {
@@ -32,7 +32,7 @@ const RecipeSection = () => {
       calories: 380,
       difficulty: "Medium",
       tags: ["Keto", "High Protein", "Omega-3"],
-      image: "🐟",
+      image: null,
       description: "Perfectly grilled salmon with garlic butter asparagus and herbs."
     },
     {
@@ -42,7 +42,7 @@ const RecipeSection = () => {
       calories: 280,
       difficulty: "Easy",
       tags: ["Vegan", "Antioxidants", "Quick"],
-      image: "🥤",
+      image: null,
       description: "Energizing smoothie bowl with spinach, banana, berries, and superfoods."
     }
   ];
@@ -110,7 +110,11 @@ const RecipeSection = () => {
           {sampleRecipes.map((recipe, index) => (
             <Card key={index} className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-0 bg-white/50 backdrop-blur-sm card-hover">
               <div className="p-6">
-                <div className="text-4xl mb-4 text-center">{recipe.image}</div>
+                <div className="h-16 mb-4 flex items-center justify-center">
+                  <div className="h-14 w-14 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                    <ChefHat className="h-7 w-7 text-primary" />
+                  </div>
+                </div>
                 
                 <h3 className="text-xl font-bold mb-2 text-foreground">{recipe.name}</h3>
                 

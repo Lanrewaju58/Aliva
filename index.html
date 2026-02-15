@@ -17,9 +17,22 @@
     <meta name="twitter:title" content="Aliva - AI Nutrition Expert" />
     <meta name="twitter:description" content="Transform your health with AI-powered nutrition consultation, smart restaurant discovery, and personalised meal planning." />
     <meta name="twitter:image" content=/>
+
+  
   </head>
 
   <body>
+    <script>
+      // Apply saved theme immediately to prevent flash
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        document.documentElement.classList.add(savedTheme);
+      } else {
+        // Default to dark if no saved theme
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

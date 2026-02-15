@@ -27,59 +27,66 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section className="py-24 bg-gradient-to-b from-background to-muted/20">
+    <section className="py-20 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-            Loved by Thousands of
-            <span className="block bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-              Health-Conscious People
-            </span>
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">
+            What Our Users Say
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             See how Aliva is helping people achieve their health goals with personalized AI guidance.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Testimonial Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((testimonial, index) => (
-            <Card key={index} className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-0 bg-white/50 backdrop-blur-sm card-hover">
-              <div className="p-8">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary rounded-full flex items-center justify-center text-white font-bold mr-4">
-                    {testimonial.avatar}
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground">{testimonial.name}</h4>
-                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                  </div>
-                  <Quote className="w-8 h-8 text-primary/20 ml-auto" />
+            <Card
+              key={index}
+              className="p-6 bg-card"
+            >
+              {/* Header with avatar */}
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-semibold text-sm mr-3">
+                  {testimonial.avatar}
                 </div>
-
-                <div className="flex mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-primary fill-current" />
-                  ))}
+                <div className="flex-1">
+                  <h4 className="font-medium text-foreground">{testimonial.name}</h4>
+                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                 </div>
-
-                <p className="text-muted-foreground italic leading-relaxed">
-                  "{testimonial.content}"
-                </p>
+                <Quote className="w-6 h-6 text-muted-foreground/30" />
               </div>
-              
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+              {/* Star Rating */}
+              <div className="flex mb-3 gap-0.5">
+                {[...Array(testimonial.rating)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className="w-4 h-4 text-primary fill-current"
+                  />
+                ))}
+              </div>
+
+              {/* Content */}
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                "{testimonial.content}"
+              </p>
             </Card>
           ))}
         </div>
 
-        <div className="text-center mt-16">
-          <div className="inline-flex items-center space-x-2 text-muted-foreground mb-8">
-            <div className="flex">
+        {/* Bottom Rating */}
+        <div className="text-center mt-12">
+          <div className="inline-flex items-center gap-2 text-muted-foreground">
+            <div className="flex gap-0.5">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 text-primary fill-current" />
+                <Star key={i} className="w-4 h-4 text-primary fill-current" />
               ))}
             </div>
-            <span className="text-lg font-semibold">4.9/5 from 50,000+ users</span>
+            <span className="text-sm font-medium">
+              4.9/5 from 50,000+ users
+            </span>
           </div>
         </div>
       </div>

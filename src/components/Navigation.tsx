@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,220 +9,336 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, MessageCircle, ChefHat, MapPin, MoreHorizontal, User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, Crown, Sun, Moon, ChevronDown, LayoutDashboard, Stethoscope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { profileService } from "@/services/profileService";
+import Logo from "@/components/Logo";
 
 const Navigation = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const { toast } = useToast();
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [accountPlan, setAccountPlan] = useState<string>('');
 
-  // Quotes data (text + gradient)
-  const quotes = [
-    { t: "Eat well, live well.", g: "from-primary to-primary-dark" },
-    { t: "Small choices, big changes.", g: "from-secondary to-primary" },
-    { t: "Food is fuel. Choose quality.", g: "from-accent to-primary" },
-    { t: "Healthy today, stronger tomorrow.", g: "from-lavender to-primary" },
-    { t: "Good food, good mood.", g: "from-primary to-secondary" },
-    { t: "Eat simple, feel amazing.", g: "from-primary-dark to-primary" },
-    { t: "Healthy plate, happy life.", g: "from-secondary to-primary" },
-    { t: "Choose greens, gain energy.", g: "from-accent to-primary" },
-    { t: "Nourish to flourish.", g: "from-lavender to-primary" },
-    { t: "Better bites, better days.", g: "from-primary to-primary-dark" },
-    { t: "Whole foods, whole you.", g: "from-secondary to-primary" },
-    { t: "Eat natural, feel powerful.", g: "from-accent to-primary" },
-  ];
-
-  // Quote index controlled by page scroll direction
-  const [quoteIdx, setQuoteIdx] = useState(0);
-  const [lineH, setLineH] = useState(40); // default h-10
-  const lineRef = useRef<HTMLDivElement | null>(null);
-  const lastScrollRef = useRef<number>(0);
-  const touchStartYRef = useRef<number | null>(null);
-
+  // Handle post-payment activation with verification
   useEffect(() => {
-    if (lineRef.current) {
-      const rect = lineRef.current.getBoundingClientRect();
-      setLineH(rect.height || 40);
+    const params = new URLSearchParams(location.search);
+    const upgradeOk = params.get('upgrade');
+    const trxRef = params.get('trxref');
+
+    if (upgradeOk === 'success' && user?.uid) {
+      const raw = localStorage.getItem('upgrade_plan_intent');
+      if (raw) {
+        try {
+          const intent = JSON.parse(raw);
+          const reference = trxRef || intent.reference;
+
+          if (!reference) {
+            console.error('No transaction reference found');
+            toast({
+              title: 'Payment verification failed',
+              description: 'Transaction reference not found. Please contact support.',
+              variant: 'destructive'
+            });
+            localStorage.removeItem('upgrade_plan_intent');
+            return;
+          }
+
+          (async () => {
+            try {
+              const apiBase = (import.meta.env.VITE_API_BASE_URL?.includes('localhost') && import.meta.env.PROD) ? '' : (import.meta.env.VITE_API_BASE_URL || '');
+              const verifyResponse = await fetch(`${apiBase}/api/payments/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reference, userId: user.uid })
+              });
+
+              if (!verifyResponse.ok) {
+                const error = await verifyResponse.json().catch(() => ({}));
+                throw new Error(error.error || 'Payment verification failed');
+              }
+
+              const verifyData = await verifyResponse.json();
+
+              if (!verifyData.verified || !verifyData.plan) {
+                throw new Error('Payment verification unsuccessful');
+              }
+
+              const plan = verifyData.plan;
+              const planExpiresAt = new Date(verifyData.planExpiresAt);
+
+              await profileService.upsertProfile(user.uid, { plan, planExpiresAt });
+
+              toast({
+                title: 'Upgrade successful!',
+                description: `${plan} plan activated. Expires on ${planExpiresAt.toLocaleDateString()}`
+              });
+
+              localStorage.removeItem('upgrade_plan_intent');
+
+              const url = new URL(window.location.href);
+              url.searchParams.delete('upgrade');
+              url.searchParams.delete('trxref');
+              window.history.replaceState({}, '', url.toString());
+              window.location.reload();
+
+            } catch (e: any) {
+              console.error('Payment verification/activation error:', e);
+              toast({
+                title: 'Activation failed',
+                description: e.message || 'Please contact support if payment was completed.',
+                variant: 'destructive'
+              });
+              localStorage.removeItem('upgrade_plan_intent');
+            }
+          })();
+        } catch (e) {
+          console.error('Error parsing upgrade intent:', e);
+          localStorage.removeItem('upgrade_plan_intent');
+        }
+      }
     }
+  }, [location.search, user, toast]);
+
+  // Load profile
+  useEffect(() => {
+    (async () => {
+      if (!user?.uid) {
+        setAccountPlan('');
+        return;
+      }
+      try {
+        const profile = await profileService.getProfile(user.uid);
+        const plan = (profile as any)?.plan || 'FREE';
+        setAccountPlan(plan);
+      } catch { }
+    })();
+  }, [user]);
+
+  // Scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Entrance animation
   useEffect(() => {
-    const onWheel = (e: WheelEvent) => {
-      const now = Date.now();
-      if (now - lastScrollRef.current < 350) return; // throttle ~0.35s
-      lastScrollRef.current = now;
-      setQuoteIdx((prev) => {
-        const dir = e.deltaY > 0 ? 1 : -1;
-        const next = (prev + dir + quotes.length) % quotes.length;
-        return next;
-      });
-    };
+    setTimeout(() => setIsVisible(true), 100);
+  }, []);
 
-    const onTouchStart = (e: TouchEvent) => {
-      touchStartYRef.current = e.touches[0].clientY;
-    };
-    const onTouchEnd = (e: TouchEvent) => {
-      const startY = touchStartYRef.current;
-      if (startY == null) return;
-      const dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dy) < 24) return; // small swipe ignored
-      const now = Date.now();
-      if (now - lastScrollRef.current < 350) return;
-      lastScrollRef.current = now;
-      setQuoteIdx((prev) => {
-        const dir = dy < 0 ? 1 : -1; // swipe up -> next
-        const next = (prev + dir + quotes.length) % quotes.length;
-        return next;
-      });
-    };
+  const getUserInitials = (name: string | null, email: string | null): string => {
+    if (name && name.trim()) {
+      return name.trim().split(' ').map(part => part.charAt(0).toUpperCase()).slice(0, 2).join('');
+    }
+    if (email && email.trim()) {
+      return email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
 
-    window.addEventListener('wheel', onWheel, { passive: true });
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
-    return () => {
-      window.removeEventListener('wheel', onWheel as any);
-      window.removeEventListener('touchstart', onTouchStart as any);
-      window.removeEventListener('touchend', onTouchEnd as any);
-    };
-  }, [quotes.length]);
+  const userInitials = getUserInitials(user?.displayName, user?.email);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
-      setIsMenuOpen(false);
     }
-  };
-
-  const handleGetStarted = () => {
-    toast({
-      title: "Welcome to Aliva! 🎉",
-      description: "AI consultation is starting soon. Get ready for personalized nutrition advice!",
-    });
-    scrollToSection('consultation');
   };
 
   const handleAuthAction = () => {
     if (user) {
       signOut();
-      toast({
-        title: "Signed out successfully",
-        description: "See you next time!",
-      });
+      toast({ title: "Signed out successfully", description: "See you next time!" });
     } else {
       navigate('/auth');
     }
   };
 
-  const handleFeatureClick = (feature: string) => {
-    toast({
-      title: `${feature}`,
-      description: `Section coming soon`,
-    });
-  };
+  const isPremiumUser = accountPlan === 'PRO';
+  const isLandingPage = location.pathname === '/';
+
+  // Navigation links for landing page
+  const navLinks = [
+    { label: 'Features', href: '#features' },
+    { label: 'About', href: '/about' },
+    { label: 'Pricing', href: '/upgrade' },
+  ];
 
   return (
-    <nav className="fixed top-6 left-0 right-0 z-50">
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 relative">
-        <div className="h-14 sm:h-16 rounded-full bg-white shadow-xl border border-black/5 flex items-center justify-between px-3 sm:px-6 overflow-hidden">
-          {/* Logo */}
-          <div 
-            className="flex items-center space-x-3 cursor-pointer group"
-            onClick={() => scrollToSection('home')}
-          >
-            <div className="flex items-center justify-center group-hover:scale-110 transition-transform">
-              <img 
-                src="/logo.svg" 
-                alt="Aliva Logo" 
-                className="h-10 w-auto shrink-0"
-                onError={(e) => {
-                  // Fallback in case logo.svg is not found
-                  console.warn("Logo image not found, check if /logo.svg exists in public folder");
-                }}
-              />
-            </div>
-          </div>
+    <>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-white/10 ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+        } ${isScrolled
+          ? 'bg-background/80 backdrop-blur-xl shadow-sm border-white/20'
+          : 'bg-background/0 backdrop-blur-none border-transparent'
+        }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <button
+              onClick={() => {
+                if (location.pathname !== '/') {
+                  navigate('/');
+                } else {
+                  scrollToSection('home');
+                }
+              }}
+              className="flex items-center gap-2 group"
+            >
+              <Logo className="h-8 w-auto transition-transform group-hover:scale-105" />
+            </button>
 
-          {/* Animated quotes (desktop only) */}
-          <div className="hidden md:flex flex-1 min-w-0 justify-center text-base sm:text-lg md:text-2xl font-semibold">
-            <div ref={lineRef} className="overflow-hidden h-8 sm:h-10 md:h-12 relative w-full max-w-[1000px] text-center min-w-0">
-              <div
-                className="absolute left-0 right-0 top-0"
-                style={{ transform: `translateY(-${quoteIdx * lineH}px)`, transition: 'transform 320ms ease' }}
+            {/* Center Navigation - Desktop */}
+            <div className="hidden lg:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => {
+                    if (link.href.startsWith('#')) {
+                      if (location.pathname !== '/') {
+                        navigate('/' + link.href);
+                      } else {
+                        scrollToSection(link.href.slice(1));
+                      }
+                    } else {
+                      navigate(link.href);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-foreground/80 hover:text-foreground hover:bg-white/10 dark:hover:bg-white/5"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-2">
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleTheme}
+                className="rounded-full h-9 w-9 p-0 transition-all duration-200 hover:bg-white/10 dark:hover:bg-white/5 text-foreground"
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               >
-                {quotes.map((q, i) => (
-                  <div key={i} className={`h-8 sm:h-10 md:h-12 flex items-center justify-center bg-gradient-to-r ${q.g} bg-clip-text text-transparent`}>
-                    {`“${q.t}”`}
-                  </div>
-                ))}
-              </div>
+                {theme === 'light' ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </Button>
+
+              {user ? (
+                <>
+
+                  {/* User Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 rounded-full p-1 pr-2 transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5">
+                        <div className="relative">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ring-2 transition-all ${isPremiumUser
+                            ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white ring-amber-300/50'
+                            : isScrolled || !isLandingPage
+                              ? 'bg-primary text-primary-foreground ring-primary/20'
+                              : 'bg-white text-primary ring-white/30'
+                            }`}>
+                            {userInitials}
+                          </div>
+                          {isPremiumUser && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center shadow-sm">
+                              <Crown className="w-2.5 h-2.5 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 transition-colors text-foreground/70" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 p-2">
+                      <div className="px-2 py-3 mb-2 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${isPremiumUser
+                            ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white'
+                            : 'bg-primary text-primary-foreground'
+                            }`}>
+                            {userInitials}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {user.displayName || 'User'}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                        {isPremiumUser && (
+                          <div className="mt-3 flex items-center gap-2 px-2 py-1.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-md border border-amber-500/20">
+                            <Crown className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="text-xs font-medium text-amber-600">Pro Member</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <DropdownMenuItem
+                        onClick={() => navigate('/profile')}
+                        className="cursor-pointer rounded-lg h-10"
+                      >
+                        <Settings className="w-4 h-4 mr-3 text-muted-foreground" />
+                        Settings
+                      </DropdownMenuItem>
+
+                      {!isPremiumUser && (
+                        <>
+                          <DropdownMenuSeparator className="my-2" />
+                          <DropdownMenuItem
+                            onClick={() => navigate('/upgrade')}
+                            className="cursor-pointer rounded-lg h-10 bg-gradient-to-r from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20"
+                          >
+                            <Stethoscope className="w-4 h-4 mr-3 text-amber-500" />
+                            <span className="text-amber-600 font-medium">Upgrade to Pro</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      <DropdownMenuSeparator className="my-2" />
+                      <DropdownMenuItem
+                        onClick={handleAuthAction}
+                        className="cursor-pointer rounded-lg h-10 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => navigate('/auth')}
+                    className="rounded-lg h-9 px-4 font-medium shadow-lg transition-all duration-200 bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    Get Started
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Profile button (desktop only) */}
-          <div className="hidden md:flex items-center space-x-3 shrink-0">
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="rounded-full">
-                    <User className="w-4 h-4 mr-2" />
-                    {user.user_metadata?.full_name || user.email}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Profile Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleAuthAction}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button size="sm" onClick={() => navigate('/auth')} className="rounded-full">
-                <User className="w-4 h-4 mr-2" />
-                Sign In
-              </Button>
-            )}
-          </div>
-
-          {/* Mobile menu icon on the far right */}
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-primary/10 transition-colors"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Menu"
-          >
-            {isMenuOpen ? (
-              <X className="w-6 h-6 text-primary" />
-            ) : (
-              <Menu className="w-6 h-6 text-primary" />
-            )}
-          </button>
         </div>
+      </nav >
 
-        {/* Mobile flyout with a single action button */}
-        {isMenuOpen && (
-          <div className="md:hidden absolute right-3 top-full mt-2 bg-white border border-black/5 rounded-xl shadow-xl p-2">
-            {user ? (
-              <Button size="sm" className="rounded-full" onClick={() => { setIsMenuOpen(false); navigate('/profile'); }}>
-                <User className="w-4 h-4 mr-2" /> Profile
-              </Button>
-            ) : (
-              <Button size="sm" className="rounded-full" onClick={() => { setIsMenuOpen(false); navigate('/auth'); }}>
-                <User className="w-4 h-4 mr-2" /> Sign In
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-    </nav>
+      {/* Spacer */}
+      <div className="h-16" />
+    </>
   );
 };
 

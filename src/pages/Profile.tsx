@@ -1,380 +1,795 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { ALL_COUNTRIES } from '@/lib/countries';
+import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Plus, X, User, Target, Shield, Activity } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
+import { profileService } from '@/services/profileService';
+import MobileNav from "@/components/MobileNav";
+import { ACTIVITY_LEVELS, UserProfile } from '@/types/profile';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import { Line, LineChart, XAxis, YAxis } from 'recharts';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, LogOut } from 'lucide-react';
 
-interface UserProfile {
-  id?: string;
-  full_name?: string;
-  dietary_preferences?: string[];
-  health_goals?: string[];
-  allergies?: string[];
-  age?: number;
-  activity_level?: string;
-}
-
-const Profile = () => {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<UserProfile>({});
-  const [newDietaryPref, setNewDietaryPref] = useState('');
-  const [newHealthGoal, setNewHealthGoal] = useState('');
-  const [newAllergy, setNewAllergy] = useState('');
-  
-  const { user } = useAuth();
+const Profile: React.FC = () => {
+  const { user, loading, signOut } = useAuth();
+  const { theme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Predefined options
-  const dietaryOptions = [
-    'Vegetarian', 'Vegan', 'Pescatarian', 'Keto', 'Paleo', 'Mediterranean', 
-    'Low Carb', 'Low Fat', 'Gluten Free', 'Dairy Free', 'Intermittent Fasting'
-  ];
-  
-  const healthGoalOptions = [
-    'Weight Loss', 'Weight Gain', 'Muscle Building', 'Improved Energy', 
-    'Better Sleep', 'Reduced Inflammation', 'Heart Health', 'Digestive Health',
-    'Mental Clarity', 'Athletic Performance', 'General Wellness'
-  ];
+  const [pageLoading, setPageLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newWeightKg, setNewWeightKg] = useState<string>("");
+  const [newWeightDate, setNewWeightDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const weightSaveTimerRef = useRef<number | null>(null);
+  const [calorieGoal, setCalorieGoal] = useState<'loss' | 'maintain' | 'gain'>('maintain');
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
+  const defaults = useMemo<UserProfile>(() => ({
+    userId: user?.uid || '',
+    fullName: user?.displayName || '',
+    dietaryPreferences: [],
+    healthGoals: [],
+    allergies: [],
+    age: undefined,
+    activityLevel: undefined,
+    gender: undefined,
+    heightCm: undefined,
+    currentWeightKg: undefined,
+    targetWeightKg: undefined,
+    medicalConditions: [],
+    smokingStatus: undefined,
+    alcoholFrequency: undefined,
+    weightHistory: [],
+  }), [user]);
+
+  // Helper function to get user initials
+  const getUserInitials = (name: string | null, email: string | null): string => {
+    if (name && name.trim()) {
+      return name
+        .trim()
+        .split(' ')
+        .map(part => part.charAt(0).toUpperCase())
+        .slice(0, 2)
+        .join('');
     }
-    fetchProfile();
-  }, [user, navigate]);
-
-  const fetchProfile = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user!.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        setProfile(data);
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Error loading profile',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+    if (email && email.trim()) {
+      return email.charAt(0).toUpperCase();
     }
+    return 'U'; // fallback to 'U' for User
   };
 
-  const saveProfile = async () => {
-    if (!user) return;
-    
+  const userInitials = getUserInitials(profile?.fullName || user?.displayName, user?.email);
+
+  useEffect(() => {
+    if (!user || loading) return;
+    let active = true;
+    (async () => {
+      try {
+        const existing = await profileService.getProfile(user.uid);
+        if (!active) return;
+        setProfile(existing || { ...defaults, userId: user.uid });
+      } catch (e) {
+        // Graceful fallback to editable defaults so the page remains usable
+        console.warn('Profile load failed, using defaults', e);
+        setProfile({ ...defaults, userId: user.uid });
+        toast({ title: 'Profile unavailable', description: 'Using defaults. You can still edit and save.' });
+      } finally {
+        if (active) setPageLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [user, loading, defaults, toast]);
+
+  // Derived memos must be declared before any early returns to keep hook order stable
+  const weightData = useMemo(() => (
+    ((profile?.weightHistory) || [])
+      .slice()
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map(w => ({ date: new Date(w.date).toLocaleDateString(), kg: w.weightKg }))
+  ), [profile?.weightHistory]);
+
+  const bmr = useMemo(() => {
+    const age = profile?.age ?? 0;
+    const height = profile?.heightCm ?? 0;
+    const weight = profile?.currentWeightKg ?? 0;
+    if (!age || !height || !weight || !profile?.gender) return 0;
+    const s = profile.gender === 'male' ? 5 : -161;
+    return Math.round(10 * weight + 6.25 * height - 5 * age + s);
+  }, [profile?.age, profile?.heightCm, profile?.currentWeightKg, profile?.gender]);
+
+  const tdee = useMemo(() => {
+    if (!bmr) return 0;
+    const factorMap: Record<string, number> = {
+      sedentary: 1.2,
+      lightly_active: 1.375,
+      moderately_active: 1.55,
+      very_active: 1.725,
+      extremely_active: 1.9,
+    };
+    const f = profile?.activityLevel ? factorMap[profile.activityLevel] || 1.2 : 1.2;
+    return Math.round(bmr * f);
+  }, [bmr, profile?.activityLevel]);
+
+  const suggestedCalories = useMemo(() => {
+    if (!tdee) return 0;
+    const map = {
+      loss: Math.max(1200, tdee - 500),
+      maintain: tdee,
+      gain: tdee + 300,
+    } as const;
+    return map[calorieGoal];
+  }, [tdee, calorieGoal]);
+
+  const macroBreakdown = useMemo(() => {
+    if (!suggestedCalories) return { proteinG: 0, fatG: 0, carbG: 0 };
+    const weight = profile?.currentWeightKg || 0;
+    const proteinG = weight > 0 ? Math.round(weight * 1.8) : 0;
+    const fatKcal = Math.round(suggestedCalories * 0.25);
+    const fatG = Math.round(fatKcal / 9);
+    const remainingKcal = Math.max(0, suggestedCalories - (proteinG * 4 + fatG * 9));
+    const carbG = Math.round(remainingKcal / 4);
+    return { proteinG, fatG, carbG };
+  }, [suggestedCalories, profile?.currentWeightKg]);
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm text-muted-foreground">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
+  if (pageLoading || !profile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const updateField = <K extends keyof UserProfile>(key: K, value: UserProfile[K]) => {
+    setProfile(prev => prev ? { ...prev, [key]: value } : prev);
+  };
+
+  const parseCSV = (value: string) => value.split(',').map(s => s.trim()).filter(Boolean);
+
+  const handleSave = async () => {
+    if (!profile) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          full_name: profile.full_name,
-          dietary_preferences: profile.dietary_preferences || [],
-          health_goals: profile.health_goals || [],
-          allergies: profile.allergies || [],
-          age: profile.age,
-          activity_level: profile.activity_level,
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Profile updated!',
-        description: 'Your nutrition profile has been saved successfully.',
+      await profileService.upsertProfile(user.uid, {
+        ...profile,
+        userId: user.uid,
       });
-    } catch (error: any) {
-      toast({
-        title: 'Error saving profile',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast({ title: 'Profile saved', description: 'Your changes have been saved.' });
+      navigate('/dashboard');
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.' });
     } finally {
       setSaving(false);
     }
   };
 
-  const addItem = (type: 'dietary_preferences' | 'health_goals' | 'allergies', value: string) => {
-    if (!value.trim()) return;
-    
-    const currentItems = profile[type] || [];
-    if (!currentItems.includes(value)) {
-      setProfile({
-        ...profile,
-        [type]: [...currentItems, value]
-      });
+  const addWeightEntry = () => {
+    setNewWeightKg("");
+    setNewWeightDate(new Date().toISOString().slice(0, 10));
+    setAddDialogOpen(true);
+  };
+
+  const saveWeightHistoryDebounced = (nextHistory: NonNullable<UserProfile['weightHistory']>, newCurrentWeight?: number) => {
+    if (!user) return;
+    if (weightSaveTimerRef.current) {
+      window.clearTimeout(weightSaveTimerRef.current);
     }
-    
-    // Reset input
-    if (type === 'dietary_preferences') setNewDietaryPref('');
-    if (type === 'health_goals') setNewHealthGoal('');
-    if (type === 'allergies') setNewAllergy('');
+    weightSaveTimerRef.current = window.setTimeout(async () => {
+      try {
+        // Sort to find the most recent weight entry
+        const sorted = [...nextHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const latestWeight = newCurrentWeight ?? sorted[0]?.weightKg;
+
+        // Update both weightHistory and currentWeightKg
+        const updateData: Partial<UserProfile> = { weightHistory: nextHistory };
+        if (latestWeight !== undefined) {
+          updateData.currentWeightKg = latestWeight;
+        }
+
+        await profileService.updateProfile(user.uid, updateData);
+
+        // Also update local state for currentWeightKg
+        if (latestWeight !== undefined) {
+          setProfile(prev => prev ? { ...prev, currentWeightKg: latestWeight } : prev);
+        }
+
+        toast({ title: 'Weight updated' });
+      } catch (e) {
+        toast({ title: 'Autosave failed', description: 'We will retry on next change.' });
+      }
+    }, 700);
   };
 
-  const removeItem = (type: 'dietary_preferences' | 'health_goals' | 'allergies', value: string) => {
-    const currentItems = profile[type] || [];
-    setProfile({
-      ...profile,
-      [type]: currentItems.filter(item => item !== value)
+  const handleSignOut = () => {
+    signOut();
+    toast({
+      title: "Signed out successfully",
+      description: "See you next time!",
     });
+    navigate('/');
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-            Your Nutrition Profile
-          </h1>
-          <p className="text-muted-foreground">
-            Help us personalize your nutrition experience
-          </p>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                Basic Information
-              </CardTitle>
-              <CardDescription>
-                Your personal details for better recommendations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={profile.full_name || ''}
-                  onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                  placeholder="Enter your full name"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="age">Age</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={profile.age || ''}
-                  onChange={(e) => setProfile({ ...profile, age: parseInt(e.target.value) || undefined })}
-                  placeholder="Enter your age"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="activityLevel">Activity Level</Label>
-                <Select
-                  value={profile.activity_level || ''}
-                  onValueChange={(value) => setProfile({ ...profile, activity_level: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your activity level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sedentary">Sedentary (little to no exercise)</SelectItem>
-                    <SelectItem value="lightly_active">Lightly Active (light exercise 1-3 days/week)</SelectItem>
-                    <SelectItem value="moderately_active">Moderately Active (moderate exercise 3-5 days/week)</SelectItem>
-                    <SelectItem value="very_active">Very Active (hard exercise 6-7 days/week)</SelectItem>
-                    <SelectItem value="extremely_active">Extremely Active (very hard exercise, physical job)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Health Goals */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                Health Goals
-              </CardTitle>
-              <CardDescription>
-                What are you hoping to achieve?
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Select
-                  value={newHealthGoal}
-                  onValueChange={setNewHealthGoal}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select a health goal" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {healthGoalOptions.map(goal => (
-                      <SelectItem key={goal} value={goal}>{goal}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  onClick={() => addItem('health_goals', newHealthGoal)}
-                  size="sm"
-                  disabled={!newHealthGoal}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                {(profile.health_goals || []).map(goal => (
-                  <Badge key={goal} variant="secondary" className="flex items-center gap-1">
-                    {goal}
-                    <X 
-                      className="h-3 w-3 cursor-pointer" 
-                      onClick={() => removeItem('health_goals', goal)}
-                    />
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dietary Preferences */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary" />
-                Dietary Preferences
-              </CardTitle>
-              <CardDescription>
-                Your eating style and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Select
-                  value={newDietaryPref}
-                  onValueChange={setNewDietaryPref}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select dietary preference" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dietaryOptions.map(pref => (
-                      <SelectItem key={pref} value={pref}>{pref}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  onClick={() => addItem('dietary_preferences', newDietaryPref)}
-                  size="sm"
-                  disabled={!newDietaryPref}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                {(profile.dietary_preferences || []).map(pref => (
-                  <Badge key={pref} variant="secondary" className="flex items-center gap-1">
-                    {pref}
-                    <X 
-                      className="h-3 w-3 cursor-pointer" 
-                      onClick={() => removeItem('dietary_preferences', pref)}
-                    />
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Allergies & Restrictions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                Allergies & Restrictions
-              </CardTitle>
-              <CardDescription>
-                Foods you need to avoid for safety
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  value={newAllergy}
-                  onChange={(e) => setNewAllergy(e.target.value)}
-                  placeholder="Enter allergy or restriction"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      addItem('allergies', newAllergy);
-                    }
-                  }}
-                />
-                <Button 
-                  onClick={() => addItem('allergies', newAllergy)}
-                  size="sm"
-                  disabled={!newAllergy}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                {(profile.allergies || []).map(allergy => (
-                  <Badge key={allergy} variant="destructive" className="flex items-center gap-1">
-                    {allergy}
-                    <X 
-                      className="h-3 w-3 cursor-pointer" 
-                      onClick={() => removeItem('allergies', allergy)}
-                    />
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Save Button */}
-        <div className="flex justify-center mt-8">
-          <Button 
-            onClick={saveProfile}
-            disabled={saving}
-            className="gradient-primary px-8 py-2"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving Profile...
-              </>
-            ) : (
-              'Save Profile'
-            )}
+    <div className="min-h-screen bg-background">
+      {/* Navigation Bar removed - handled by AppShell */}
+      <div className="pt-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-2">
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="md:hidden gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Back
           </Button>
         </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Plan Status Banner */}
+        <div className="mb-8">
+          <div className="bg-card border rounded-xl p-5 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wide ${profile?.plan && profile.plan !== 'FREE' ? 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200' : 'bg-muted text-muted-foreground border border-border'}`}>
+              {profile?.plan || 'FREE'}
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-foreground">
+                {profile?.plan && profile.plan !== 'FREE' ? 'Premium Plan Active' : 'Free Plan'}
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {profile?.plan && profile.plan !== 'FREE' ? (
+                  <>
+                    {profile?.planExpiresAt && (
+                      <>Expires on {new Date((profile as any).planExpiresAt?.toDate ? (profile as any).planExpiresAt.toDate() : (profile as any).planExpiresAt).toLocaleDateString()}</>
+                    )}
+                  </>
+                ) : (
+                  'daily chat limit applies'
+                )}
+              </div>
+            </div>
+            {profile?.plan === 'FREE' && (
+              <Button className="ml-auto" onClick={() => navigate('/upgrade')}>Upgrade Plan</Button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Left Column - Main Profile Info */}
+          <div className="xl:col-span-2 space-y-8">
+            {/* Basic Information */}
+            <Card className="overflow-hidden">
+              <div className="border-b bg-muted/30 px-6 py-4">
+                <h3 className="text-lg font-semibold text-foreground">Basic Information</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">Your personal details and account info</p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      value={profile.fullName || ''}
+                      onChange={e => updateField('fullName', e.target.value)}
+                      className="mt-1.5"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Email Address</Label>
+                    <Input
+                      value={user.email || ''}
+                      disabled
+                      className="mt-1.5 bg-muted/50"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Country / Region</Label>
+                    <Select value={profile.country || ''} onValueChange={v => updateField('country', v)}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select your country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ALL_COUNTRIES.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="age" className="text-sm font-medium">Age</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      min={0}
+                      value={profile.age ?? ''}
+                      onChange={e => updateField('age', e.target.value ? Number(e.target.value) : undefined)}
+                      className="mt-1.5"
+                      placeholder="Enter your age"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Gender</Label>
+                    <Select value={profile.gender || ''} onValueChange={v => updateField('gender', v as any)}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Physical Metrics */}
+            <Card className="overflow-hidden">
+              <div className="border-b bg-muted/30 px-6 py-4">
+                <h3 className="text-lg font-semibold text-foreground">Physical Metrics</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">Height, weight, and activity information</p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="height" className="text-sm font-medium">Height (cm)</Label>
+                    <Input
+                      id="height"
+                      type="number"
+                      min={0}
+                      value={profile.heightCm ?? ''}
+                      onChange={e => updateField('heightCm', e.target.value ? Number(e.target.value) : undefined)}
+                      className="mt-1.5"
+                      placeholder="e.g., 175"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="currentWeight" className="text-sm font-medium">Current Weight (kg)</Label>
+                    <Input
+                      id="currentWeight"
+                      type="number"
+                      min={0}
+                      value={profile.currentWeightKg ?? ''}
+                      onChange={e => updateField('currentWeightKg', e.target.value ? Number(e.target.value) : undefined)}
+                      className="mt-1.5"
+                      placeholder="e.g., 70"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="targetWeight" className="text-sm font-medium">Target Weight (kg)</Label>
+                    <Input
+                      id="targetWeight"
+                      type="number"
+                      min={0}
+                      value={profile.targetWeightKg ?? ''}
+                      onChange={e => updateField('targetWeightKg', e.target.value ? Number(e.target.value) : undefined)}
+                      className="mt-1.5"
+                      placeholder="e.g., 65"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Activity Level</Label>
+                    <Select value={profile.activityLevel || ''} onValueChange={v => updateField('activityLevel', v as UserProfile['activityLevel'])}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select activity level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ACTIVITY_LEVELS.map(l => (
+                          <SelectItem key={l} value={l}>
+                            {l.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Health & Lifestyle */}
+            <Card className="overflow-hidden">
+              <div className="border-b bg-muted/30 px-6 py-4">
+                <h3 className="text-lg font-semibold text-foreground">Health & Lifestyle</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">Dietary preferences, allergies, and health information</p>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-sm font-medium">Dietary Preferences</Label>
+                    <Input
+                      value={(profile.dietaryPreferences || []).join(', ')}
+                      onChange={e => updateField('dietaryPreferences', parseCSV(e.target.value))}
+                      className="mt-1.5"
+                      placeholder="e.g., Vegetarian, Vegan"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Separate multiple items with commas</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Health Goals</Label>
+                    <Input
+                      value={(profile.healthGoals || []).join(', ')}
+                      onChange={e => updateField('healthGoals', parseCSV(e.target.value))}
+                      className="mt-1.5"
+                      placeholder="e.g., Weight loss, Muscle gain"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Separate multiple items with commas</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Allergies</Label>
+                    <Input
+                      value={(profile.allergies || []).join(', ')}
+                      onChange={e => updateField('allergies', parseCSV(e.target.value))}
+                      className="mt-1.5"
+                      placeholder="e.g., Peanuts, Shellfish"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Separate multiple items with commas</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Medical Conditions</Label>
+                    <Input
+                      value={(profile.medicalConditions || []).join(', ')}
+                      onChange={e => updateField('medicalConditions', parseCSV(e.target.value))}
+                      className="mt-1.5"
+                      placeholder="e.g., Diabetes, Hypertension"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Separate multiple items with commas</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Smoking Status</Label>
+                    <Select value={profile.smokingStatus || ''} onValueChange={v => updateField('smokingStatus', v as any)}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="never">Never</SelectItem>
+                        <SelectItem value="former">Former Smoker</SelectItem>
+                        <SelectItem value="current">Current Smoker</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Alcohol Frequency</Label>
+                    <Select value={profile.alcoholFrequency || ''} onValueChange={v => updateField('alcoholFrequency', v as any)}>
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="never">Never</SelectItem>
+                        <SelectItem value="occasional">Occasional</SelectItem>
+                        <SelectItem value="regular">Regular</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Additional Notes</Label>
+                  <Textarea
+                    placeholder="Any additional information to help personalize your diet plan..."
+                    className="mt-1.5 min-h-[100px]"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Optional: Share any other relevant information</p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Save Button */}
+            <div className="flex gap-3">
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                size="lg"
+                className="px-8"
+              >
+                {saving ? 'Saving Changes...' : 'Save All Changes'}
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/dashboard')}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Column - Calculators & Tracking */}
+          <div className="space-y-8">
+            {/* Calorie Calculator */}
+            <Card className="overflow-hidden">
+              <div className="border-b bg-muted/30 px-6 py-4">
+                <h3 className="text-lg font-semibold text-foreground">Calorie Calculator</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">Personalized daily targets</p>
+              </div>
+              <div className="p-6 space-y-6">
+                {/* Metrics Display */}
+                <div className="space-y-3">
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">BMR</div>
+                    <div className="text-2xl font-bold text-foreground mt-1">
+                      {bmr ? `${bmr} cal` : '—'}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Basal Metabolic Rate</div>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">TDEE</div>
+                    <div className="text-2xl font-bold text-foreground mt-1">
+                      {tdee ? `${tdee} cal` : '—'}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Total Daily Energy Expenditure</div>
+                  </div>
+                </div>
+
+                {/* Goal Selection */}
+                <div>
+                  <Label className="text-sm font-medium">Your Goal</Label>
+                  <Select value={calorieGoal} onValueChange={(v) => setCalorieGoal(v as any)}>
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select your goal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="loss">🔥 Lose Weight</SelectItem>
+                      <SelectItem value="maintain">⚖️ Maintain Weight</SelectItem>
+                      <SelectItem value="gain">💪 Gain Muscle</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Suggested Calories */}
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                  <div className="text-xs font-medium text-primary uppercase tracking-wide">Suggested Daily Calories</div>
+                  <div className="text-3xl font-bold text-primary mt-1">
+                    {suggestedCalories ? `${suggestedCalories}` : '—'}
+                  </div>
+                </div>
+
+                {/* Macro Breakdown */}
+                <div>
+                  <div className="text-sm font-medium mb-3">Macro Breakdown</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Protein</div>
+                      <div className="text-lg font-bold text-foreground mt-1">{macroBreakdown.proteinG}g</div>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Fat</div>
+                      <div className="text-lg font-bold text-foreground mt-1">{macroBreakdown.fatG}g</div>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Carbs</div>
+                      <div className="text-lg font-bold text-foreground mt-1">{macroBreakdown.carbG}g</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Custom Target */}
+                <div className="pt-4 border-t">
+                  <Label className="text-sm font-medium">Custom Daily Target (optional)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={profile.preferredCalorieTarget ?? ''}
+                    onChange={e => updateField('preferredCalorieTarget', e.target.value ? Number(e.target.value) : undefined)}
+                    className="mt-1.5"
+                    placeholder="Enter custom target"
+                  />
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={async () => {
+                        if (!user) return;
+                        try {
+                          await profileService.updateProfile(user.uid, { preferredCalorieTarget: profile.preferredCalorieTarget });
+                          toast({ title: 'Calorie target saved' });
+                        } catch (e) {
+                          toast({ title: 'Save failed', description: 'Please try again.' });
+                        }
+                      }}
+                    >
+                      Save Target
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="flex-1"
+                      onClick={() => updateField('preferredCalorieTarget', suggestedCalories || undefined)}
+                      disabled={!suggestedCalories}
+                    >
+                      Use Suggested
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Weight Journey */}
+            <Card className="overflow-hidden">
+              <div className="border-b bg-muted/30 px-6 py-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Weight Journey</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">Track your progress over time</p>
+                </div>
+                <Button variant="default" size="sm" onClick={addWeightEntry} className="shadow-sm">
+                  Add Entry
+                </Button>
+              </div>
+              <div className="p-6 space-y-4">
+                {/* Chart */}
+                {weightData.length > 0 ? (
+                  <div className="h-48">
+                    <ChartContainer
+                      config={{ kg: { label: 'Weight (kg)', color: 'hsl(var(--primary))' } }}
+                      className="w-full h-full"
+                    >
+                      <LineChart data={weightData} margin={{ left: 12, right: 12, top: 12, bottom: 12 }}>
+                        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />
+                        <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} fontSize={11} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line type="monotone" dataKey="kg" stroke="var(--color-kg)" strokeWidth={2} dot={{ r: 4, fill: 'var(--color-kg)' }} />
+                      </LineChart>
+                    </ChartContainer>
+                  </div>
+                ) : (
+                  <div className="h-48 flex items-center justify-center bg-muted/30 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-4xl mb-2">📊</div>
+                      <div className="text-sm text-muted-foreground">No weight data yet</div>
+                      <div className="text-xs text-muted-foreground mt-1">Add your first entry to start tracking</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Entry List */}
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {(profile.weightHistory || [])
+                    .slice()
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .map((w, idx) => (
+                      <div key={idx} className="flex items-center justify-between gap-3 p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                        <span className="text-sm text-muted-foreground min-w-[90px]">
+                          {new Date(w.date).toLocaleDateString()}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            className="h-9 w-20 text-sm"
+                            value={w.weightKg}
+                            onChange={e => {
+                              const val = Number(e.target.value);
+                              setProfile(prev => {
+                                if (!prev) return prev;
+                                const next = [...(prev.weightHistory || [])];
+                                next[idx] = { ...next[idx], weightKg: Number.isNaN(val) ? next[idx].weightKg : val };
+                                return { ...prev, weightHistory: next };
+                              });
+                            }}
+                            onBlur={() => {
+                              const nextHistory = (profile.weightHistory || []).slice();
+                              saveWeightHistoryDebounced(nextHistory);
+                            }}
+                          />
+                          <span className="text-xs text-muted-foreground">kg</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-9 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              setProfile(prev => {
+                                if (!prev) return prev;
+                                const next = (prev.weightHistory || []).filter((_, i) => i !== idx);
+                                return { ...prev, weightHistory: next };
+                              });
+                              const nextHistory = (profile.weightHistory || []).filter((_, i) => i !== idx);
+                              saveWeightHistoryDebounced(nextHistory as any);
+                            }}
+                          >
+                            ✕
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+        {/* Add Weight Entry Dialog */}
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">Add Weight Entry</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-5 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="weight" className="text-sm font-medium">
+                  Weight (kg)
+                </Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  step="0.1"
+                  value={newWeightKg}
+                  onChange={(e) => setNewWeightKg(e.target.value)}
+                  className="h-11"
+                  placeholder="Enter your weight"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date" className="text-sm font-medium">
+                  Date
+                </Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={newWeightDate}
+                  onChange={(e) => setNewWeightDate(e.target.value)}
+                  className="h-11"
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => {
+                if (!newWeightKg || !newWeightDate) return;
+                const val = parseFloat(newWeightKg);
+                if (isNaN(val)) return;
+
+                setProfile(prev => {
+                  if (!prev) return prev;
+                  const newEntry = { date: new Date(newWeightDate).toISOString(), weightKg: val };
+                  const nextHistory = [...(prev.weightHistory || []), newEntry];
+                  saveWeightHistoryDebounced(nextHistory, val);
+                  // Also update currentWeightKg locally
+                  return { ...prev, weightHistory: nextHistory, currentWeightKg: val };
+                });
+                setAddDialogOpen(false);
+              }}>
+                Save Entry
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

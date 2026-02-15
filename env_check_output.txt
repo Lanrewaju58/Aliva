@@ -1,0 +1,9 @@
+Environment Variable Check:
+VITE_FIREBASE_API_KEY: ✅ Present (Length: 39)
+VITE_FIREBASE_AUTH_DOMAIN: ✅ Present (Length: 27)
+VITE_FIREBASE_PROJECT_ID: ✅ Present (Length: 11)
+VITE_FIREBASE_STORAGE_BUCKET: ✅ Present (Length: 31)
+VITE_FIREBASE_MESSAGING_SENDER_ID: ✅ Present (Length: 12)
+VITE_FIREBASE_APP_ID: ✅ Present (Length: 41)
+VITE_GOOGLE_MAPS_API_KEY: ✅ Present (Length: 39)
+OPENAI_API_KEY: ✅ Present (Length: 164)
