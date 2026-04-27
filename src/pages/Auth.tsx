@@ -93,13 +93,13 @@ const PasswordInput = ({
       onChange={onChange}
       required
       minLength={VALIDATION.MIN_PASSWORD_LENGTH}
-      className="h-12 pr-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:ring-white/20"
+      className="h-12 pr-12"
     />
     <Button
       type="button"
       variant="ghost"
       size="sm"
-      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/60 hover:text-white"
+      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-muted-foreground hover:text-foreground"
       onClick={onTogglePassword}
       aria-label={showPassword ? "Hide password" : "Show password"}
     >
@@ -288,9 +288,9 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-primary flex">
+    <div className="min-h-screen bg-background flex">
       {/* Left Panel - Branding */}
-      <div className={`hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative overflow-hidden bg-primary transition-all duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
@@ -355,22 +355,22 @@ const Auth = () => {
       </div>
 
       {/* Right Panel - Auth Form */}
-      <div className={`w-full lg:w-1/2 flex flex-col justify-center p-6 sm:p-12 bg-primary lg:bg-gradient-to-br lg:from-primary lg:to-primary/95 transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div className={`w-full lg:w-1/2 flex flex-col justify-center p-6 sm:p-12 bg-background transition-all duration-1000 delay-200 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
         <div className="w-full max-w-md mx-auto">
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8 text-center">
             <button onClick={() => navigate('/')} className="inline-flex items-center gap-2">
-              <Logo className="h-10 w-auto [&_text]:fill-white" />
+              <Logo className="h-10 w-auto" />
             </button>
-            <p className="text-white/70 mt-2">Your AI-powered nutrition partner</p>
+            <p className="text-muted-foreground mt-2">Your AI-powered nutrition partner</p>
           </div>
 
           {/* Form Header */}
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
               {showForgotPassword ? 'Reset Password' : activeTab === 'signin' ? 'Welcome back' : 'Create account'}
             </h2>
-            <p className="text-white/60 mt-2">
+            <p className="text-muted-foreground mt-2">
               {showForgotPassword
                 ? 'Enter your email to receive a reset link'
                 : activeTab === 'signin'
@@ -381,12 +381,12 @@ const Auth = () => {
 
           {/* Tab Switcher */}
           {!showForgotPassword && (
-            <div className="flex bg-white/10 rounded-xl p-1 mb-6">
+            <div className="flex bg-muted rounded-xl p-1 mb-6">
               <button
                 onClick={() => setActiveTab('signin')}
                 className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === 'signin'
-                  ? 'bg-white text-primary shadow-lg'
-                  : 'text-white/70 hover:text-white'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Sign In
@@ -394,8 +394,8 @@ const Auth = () => {
               <button
                 onClick={() => setActiveTab('signup')}
                 className={`flex-1 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === 'signup'
-                  ? 'bg-white text-primary shadow-lg'
-                  : 'text-white/70 hover:text-white'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Sign Up
@@ -407,7 +407,7 @@ const Auth = () => {
           {showForgotPassword ? (
             <form onSubmit={handleForgotPassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="reset-email" className="text-white/80">Email</Label>
+                <Label htmlFor="reset-email">Email</Label>
                 <Input
                   id="reset-email"
                   type="email"
@@ -415,13 +415,13 @@ const Auth = () => {
                   value={formData.email}
                   onChange={(e) => updateFormData('email', e.target.value)}
                   required
-                  className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40"
+                  className="h-12"
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-white text-primary font-semibold hover:bg-white/90 transition-all"
+                className="w-full h-12 font-semibold transition-all"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -436,7 +436,7 @@ const Auth = () => {
 
               <button
                 type="button"
-                className="flex items-center justify-center gap-2 w-full py-3 text-white/70 hover:text-white transition-colors"
+                className="flex items-center justify-center gap-2 w-full py-3 text-muted-foreground hover:text-foreground transition-colors"
                 onClick={() => setShowForgotPassword(false)}
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -449,7 +449,7 @@ const Auth = () => {
               {activeTab === 'signin' && (
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email" className="text-white/80">Email</Label>
+                    <Label htmlFor="signin-email">Email</Label>
                     <Input
                       id="signin-email"
                       type="email"
@@ -457,16 +457,16 @@ const Auth = () => {
                       value={formData.email}
                       onChange={(e) => updateFormData('email', e.target.value)}
                       required
-                      className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40"
+                      className="h-12"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="signin-password" className="text-white/80">Password</Label>
+                      <Label htmlFor="signin-password">Password</Label>
                       <button
                         type="button"
-                        className="text-sm text-white/60 hover:text-white transition-colors"
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                         onClick={() => setShowForgotPassword(true)}
                       >
                         Forgot password?
@@ -482,18 +482,18 @@ const Auth = () => {
                   </div>
 
                   <Button
-                    type="submit"
-                    className="w-full h-12 bg-white text-primary font-semibold hover:bg-white/90 transition-all"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      'Sign In'
-                    )}
+                     type="submit"
+                     className="w-full h-12 font-semibold transition-all"
+                     disabled={isLoading}
+                   >
+                     {isLoading ? (
+                       <>
+                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                         Signing in...
+                       </>
+                     ) : (
+                       'Sign In'
+                     )}
                   </Button>
                 </form>
               )}
@@ -502,7 +502,7 @@ const Auth = () => {
               {activeTab === 'signup' && (
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name" className="text-white/80">Full Name</Label>
+                    <Label htmlFor="signup-name">Full Name</Label>
                     <Input
                       id="signup-name"
                       type="text"
@@ -510,12 +510,12 @@ const Auth = () => {
                       value={formData.fullName}
                       onChange={(e) => updateFormData('fullName', e.target.value)}
                       required
-                      className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40"
+                      className="h-12"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-white/80">Email</Label>
+                    <Label htmlFor="signup-email">Email</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -523,12 +523,12 @@ const Auth = () => {
                       value={formData.email}
                       onChange={(e) => updateFormData('email', e.target.value)}
                       required
-                      className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/40 focus:border-white/40"
+                      className="h-12"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-white/80">Password</Label>
+                    <Label htmlFor="signup-password">Password</Label>
                     <PasswordInput
                       id="signup-password"
                       value={formData.password}
@@ -541,7 +541,7 @@ const Auth = () => {
 
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-white text-primary font-semibold hover:bg-white/90 transition-all"
+                    className="w-full h-12 font-semibold transition-all"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -559,10 +559,10 @@ const Auth = () => {
               {/* Divider */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/20" />
+                  <span className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-primary px-3 text-white/50">Or continue with</span>
+                  <span className="bg-background px-3 text-muted-foreground">Or continue with</span>
                 </div>
               </div>
 
@@ -570,7 +570,7 @@ const Auth = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full h-12 bg-white hover:bg-white/90 text-gray-700 border-0 font-medium"
+                className="w-full h-12 font-medium"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
               >
@@ -581,11 +581,11 @@ const Auth = () => {
           )}
 
           {/* Terms */}
-          <p className="text-center text-sm text-white/50 mt-8">
+          <p className="text-center text-sm text-muted-foreground mt-8">
             By continuing, you agree to our{' '}
-            <a href="/terms" className="text-white/70 hover:text-white underline">Terms</a>
+            <a href="/terms" className="text-primary hover:text-primary/80 underline">Terms</a>
             {' '}and{' '}
-            <a href="/privacy" className="text-white/70 hover:text-white underline">Privacy Policy</a>
+            <a href="/privacy" className="text-primary hover:text-primary/80 underline">Privacy Policy</a>
           </p>
         </div>
       </div>
